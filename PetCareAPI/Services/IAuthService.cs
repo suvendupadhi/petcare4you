@@ -5,7 +5,7 @@ namespace PetCareAPI.Services
 {
     public interface IAuthService
     {
-        Task<AuthResponse> RegisterAsync(RegisterRequest request);
-        Task<AuthResponse> LoginAsync(LoginRequest request);
+        Task<AuthResponseDto?> LoginAsync(LoginDto loginDto);
+        Task<bool> RegisterAsync(RegisterDto registerDto);
     }
 }

@@ -10,7 +10,7 @@ namespace PetCareAPI.Models
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
         public bool IsBooked { get; set; } = false;
-        public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public virtual Provider? Provider { get; set; }
     }

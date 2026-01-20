@@ -15,8 +15,8 @@ namespace PetCareAPI.Models
         public string PetType { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public decimal TotalPrice { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime UpdatedAt { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         public virtual User? Owner { get; set; }
         public virtual Provider? Provider { get; set; }

@@ -1,12 +1,11 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using PetCareAPI.Data;
 using PetCareAPI.Models;
 using PetCareAPI.Models.DTOs;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace PetCareAPI.Services
 {
@@ -21,110 +20,62 @@ namespace PetCareAPI.Services
             _configuration = configuration;
         }
 
-        public async Task<AuthResponse> RegisterAsync(RegisterRequest request)
+        public async Task<AuthResponseDto?> LoginAsync(LoginDto loginDto)
         {
-            var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
-            if (existingUser != null)
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == loginDto.Email);
+            if (user == null || loginDto.Password != user.PasswordHash)
+                return null;
+
+            var token = GenerateJwtToken(user);
+            return new AuthResponseDto
             {
-                return new AuthResponse { Success = false, Message = "Email already exists" };
-            }
+                Token = token,
+                UserId = user.Id,
+                UserType = user.UserType
+            };
+        }
+
+        public async Task<bool> RegisterAsync(RegisterDto registerDto)
+        {
+            if (await _context.Users.AnyAsync(u => u.Email == registerDto.Email))
+                return false;
 
             var user = new User
             {
-                Email = request.Email,
-                FirstName = request.FirstName,
-                LastName = request.LastName,
-                PhoneNumber = request.PhoneNumber,
-                UserType = request.UserType,
-                PasswordHash = HashPassword(request.Password),
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                IsActive = true
+                Email = registerDto.Email,
+                PasswordHash = registerDto.Password,
+                FirstName = registerDto.FirstName,
+                LastName = registerDto.LastName,
+                UserType = registerDto.UserType
             };
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
-
-            var token = GenerateJwtToken(user);
-
-            return new AuthResponse
-            {
-                Success = true,
-                Message = "User registered successfully",
-                Token = token,
-                User = new UserDto
-                {
-                    Id = user.Id,
-                    Email = user.Email,
-                    FirstName = user.FirstName,
-                    LastName = user.LastName,
-                    UserType = user.UserType
-                }
-            };
+            return true;
         }
 
-        public async Task<AuthResponse> LoginAsync(LoginRequest request)
+        private string GenerateJwtToken(User user)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
-            if (user == null || !VerifyPassword(request.Password, user.PasswordHash))
-            {
-                return new AuthResponse { Success = false, Message = "Invalid email or password" };
-            }
-
-            var token = GenerateJwtToken(user);
-
-            return new AuthResponse
-            {
-                Success = true,
-                Message = "Login successful",
-                Token = token,
-                User = new UserDto
-                {
-                    Id = user.Id,
-                    Email = user.Email,
-                    FirstName = user.FirstName,
-                    LastName = user.LastName,
-                    UserType = user.UserType
-                }
-            };
-        }
-
-        public string GenerateJwtToken(User user)
-        {
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? "YourVeryLongSecretKeyForJwtTokenGenerationWithAtLeast32Characters1234567890"));
-            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var jwtSettings = _configuration.GetSection("Jwt");
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"] ?? "YourVeryLongSecretKeyForJwtTokenGenerationWithAtLeast32Characters1234567890"));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var claims = new List<Claim>
             {
-                new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new(ClaimTypes.Email, user.Email),
-                new("UserType", user.UserType)
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim("UserType", user.UserType)
             };
 
             var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Audience"],
+                issuer: jwtSettings["Issuer"],
+                audience: jwtSettings["Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddHours(24),
-                signingCredentials: credentials
+                expires: DateTime.Now.AddDays(7),
+                signingCredentials: creds
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
-        }
-
-        private string HashPassword(string password)
-        {
-            using (var sha256 = SHA256.Create())
-            {
-                var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-                return Convert.ToBase64String(hashedBytes);
-            }
-        }
-
-        private bool VerifyPassword(string password, string hash)
-        {
-            var hashOfInput = HashPassword(password);
-            return hashOfInput.Equals(hash);
         }
     }
 }

@@ -19,8 +19,8 @@ namespace PetCareAPI.Models
         public decimal Longitude { get; set; }
         public string? ProfileImageUrl { get; set; }
         public bool IsVerified { get; set; } = false;
-        public DateTime CreatedAt { get; set; }
-        public DateTime UpdatedAt { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         public virtual User? User { get; set; }
         public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();

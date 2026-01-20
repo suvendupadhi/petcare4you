@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PetCareAPI.Models;
+using System.Text.RegularExpressions;
 
 namespace PetCareAPI.Data
 {
@@ -64,6 +65,38 @@ namespace PetCareAPI.Data
                 .WithMany(u => u.Payments)
                 .HasForeignKey(p => p.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Force all table and column names to snake_case for PostgreSQL compatibility
+            foreach (var entity in modelBuilder.Model.GetEntityTypes())
+            {
+                entity.SetTableName(ToSnakeCase(entity.GetTableName()));
+
+                foreach (var property in entity.GetProperties())
+                {
+                    property.SetColumnName(ToSnakeCase(property.GetColumnName()));
+                }
+
+                foreach (var key in entity.GetKeys())
+                {
+                    key.SetName(ToSnakeCase(key.GetName()));
+                }
+
+                foreach (var foreignKey in entity.GetForeignKeys())
+                {
+                    foreignKey.SetConstraintName(ToSnakeCase(foreignKey.GetConstraintName()));
+                }
+
+                foreach (var index in entity.GetIndexes())
+                {
+                    index.SetDatabaseName(ToSnakeCase(index.GetDatabaseName()));
+                }
+            }
+        }
+
+        private string? ToSnakeCase(string? input)
+        {
+            if (string.IsNullOrEmpty(input)) return input;
+            return Regex.Replace(input, "([a-z0-9])([A-Z])", "$1_$2").ToLowerInvariant();
         }
     }
 }

@@ -37,9 +37,8 @@ namespace PetCareAPI.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Provider>> GetProvider(int id)
         {
-            var provider = new Provider();
-            var user = await _context.Users
-                //.Include(p => p.User)
+            var provider = await _context.Providers
+                .Include(p => p.User)
                 .FirstOrDefaultAsync(p => p.Id == id);
 
             if (provider == null)

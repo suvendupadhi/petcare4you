@@ -15,24 +15,24 @@ namespace PetCareAPI.Controllers
             _authService = authService;
         }
 
-        [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            var result = await _authService.LoginAsync(loginDto);
+            if (result == null)
+                return Unauthorized();
 
-            var result = await _authService.RegisterAsync(request);
-            return result.Success ? Ok(result) : BadRequest(result);
+            return Ok(result);
         }
 
-        [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] RegisterDto registerDto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            var result = await _authService.RegisterAsync(registerDto);
+            if (!result)
+                return BadRequest("User already exists");
 
-            var result = await _authService.LoginAsync(request);
-            return result.Success ? Ok(result) : Unauthorized(result);
+            return Ok();
         }
     }
 }

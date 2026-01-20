@@ -12,7 +12,7 @@ namespace PetCareAPI.Models
         public string PaymentMethod { get; set; } = string.Empty;
         public string TransactionId { get; set; } = string.Empty;
         public DateTime PaymentDate { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public virtual Appointment? Appointment { get; set; }
         public virtual User? User { get; set; }
