@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  cassandra:
+    image: cassandra:4.1
+    container_name: petcare-cassandra
+    ports:
+      - "9042:9042"
+      - "7199:7199"
+    environment:
+      CASSANDRA_CLUSTER_NAME: PetCareCluster
+      CASSANDRA_DC: dc1
+      CASSANDRA_RACK: rack1
+      CASSANDRA_RPC_ADDRESS: 0.0.0.0
+      CASSANDRA_LISTEN_ADDRESS: cassandra
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+      - ./cassandra-init.cql:/docker-entrypoint-initdb.d/init.cql
+    healthcheck:
+      test: ["CMD", "cqlsh", "-e", "describe cluster"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - petcare-network
+
+volumes:
+  cassandra_data:
+
+networks:
+  petcare-network:
+    driver: bridge
