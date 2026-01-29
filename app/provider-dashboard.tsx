@@ -17,72 +17,16 @@ import {
   Phone
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
-
-// Mock data - Replace with API calls
-const mockTodayAppointments = [
-  {
-    id: '1',
-    petOwnerName: 'Sarah Johnson',
-    petName: 'Max',
-    serviceType: 'Grooming',
-    time: '10:00 AM',
-    duration: '1 hour',
-    status: 'confirmed',
-    phone: '(555) 123-4567'
-  },
-  {
-    id: '2',
-    petOwnerName: 'Mike Chen',
-    petName: 'Luna',
-    serviceType: 'Daycare',
-    time: '11:30 AM',
-    duration: '4 hours',
-    status: 'confirmed',
-    phone: '(555) 234-5678'
-  },
-  {
-    id: '3',
-    petOwnerName: 'Emily Davis',
-    petName: 'Charlie',
-    serviceType: 'Grooming',
-    time: '2:00 PM',
-    duration: '1.5 hours',
-    status: 'pending',
-    phone: '(555) 345-6789'
-  }
-];
-
-const mockUpcomingAppointments = [
-  {
-    id: '4',
-    date: 'Tomorrow',
-    petOwnerName: 'John Smith',
-    petName: 'Bella',
-    serviceType: 'Daycare',
-    time: '9:00 AM'
-  },
-  {
-    id: '5',
-    date: 'Jan 26',
-    petOwnerName: 'Lisa Brown',
-    petName: 'Rocky',
-    serviceType: 'Grooming',
-    time: '3:00 PM'
-  }
-];
-
-const mockRevenueData = {
-  today: 450,
-  week: 2850,
-  month: 12400
-};
+import { appointmentService, Appointment, userService, User, Provider } from '@/services/petCareService';
 
 export default function ProviderDashboard() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [todayAppointments, setTodayAppointments] = useState(mockTodayAppointments);
-  const [upcomingAppointments, setUpcomingAppointments] = useState(mockUpcomingAppointments);
-  const [revenue, setRevenue] = useState(mockRevenueData);
+  const [user, setUser] = useState<User | null>(null);
+  const [provider, setProvider] = useState<Provider | null>(null);
+  const [todayAppointments, setTodayAppointments] = useState<Appointment[]>([]);
+  const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([]);
+  const [revenue, setRevenue] = useState({ today: 0, week: 0, month: 0 });
 
   useEffect(() => {
     loadDashboardData();
@@ -90,21 +34,43 @@ export default function ProviderDashboard() {
 
   const loadDashboardData = async () => {
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch('/api/provider/dashboard', {
-      //   headers: { Authorization: `Bearer ${userToken}` }
-      // });
-      // const data = await response.json();
-      // setTodayAppointments(data.todayAppointments);
-      // setUpcomingAppointments(data.upcomingAppointments);
-      // setRevenue(data.revenue);
+      const [currentUser, appointments] = await Promise.all([
+        userService.getCurrentUser(),
+        appointmentService.getProviderAppointments()
+      ]);
+      
+      setUser(currentUser);
+      if (currentUser.provider) {
+        setProvider(currentUser.provider);
+      }
+      
+      const today = new Date().toISOString().split('T')[0];
+      const todayApps = appointments.filter(a => a.appointmentDate.startsWith(today));
+      const upcomingApps = appointments.filter(a => {
+        const appDate = a.appointmentDate.split('T')[0];
+        return appDate > today && a.status !== 'cancelled';
+      });
+      
+      setTodayAppointments(todayApps);
+      setUpcomingAppointments(upcomingApps);
+      
+      // Calculate simple revenue
+      const todayRevenue = todayApps
+        .filter(a => a.status === 'confirmed' || a.status === 'completed')
+        .reduce((sum, a) => sum + (a.totalPrice || 0), 0);
+        
+      const totalRevenue = appointments
+        .filter(a => a.status === 'confirmed' || a.status === 'completed')
+        .reduce((sum, a) => sum + (a.totalPrice || 0), 0);
 
-      // Simulate API call
-      setTimeout(() => {
-        setLoading(false);
-      }, 800);
+      setRevenue({
+        today: todayRevenue,
+        week: totalRevenue, // Simplification
+        month: totalRevenue // Simplification
+      });
     } catch (error) {
       console.error('Error loading dashboard:', error);
+    } finally {
       setLoading(false);
     }
   };
@@ -133,7 +99,7 @@ export default function ProviderDashboard() {
         <View className="p-6 flex-row justify-between items-center">
           <View>
             <Text className="text-muted-foreground text-sm">Welcome back,</Text>
-            <Text className="text-foreground text-2xl font-bold mt-1">Pawsome Grooming</Text>
+            <Text className="text-foreground text-2xl font-bold mt-1">{user?.firstName || 'Provider'}</Text>
           </View>
           <View className="flex-row items-center gap-4">
             <ThemeToggle />
@@ -185,7 +151,7 @@ export default function ProviderDashboard() {
           <View className="flex-row gap-3">
             <TouchableOpacity 
               className="flex-1 bg-primary rounded-2xl p-4 items-center"
-              onPress={() => router.push('/availability-management')}
+              onPress={() => router.push('/manage-availability')}
             >
               <Calendar className="text-primary-foreground mb-2" size={24} />
               <Text className="text-primary-foreground font-semibold text-center">Manage Availability</Text>
@@ -223,8 +189,10 @@ export default function ProviderDashboard() {
                   key={appointment.id}
                   className="bg-card border border-border rounded-2xl p-4"
                   onPress={() => {
-                    // TODO: Navigate to appointment details
-                    // router.push(`/appointment-details?id=${appointment.id}`);
+                    router.push({
+                      pathname: '/appointment-detail',
+                      params: { id: appointment.id }
+                    });
                   }}
                 >
                   <View className="flex-row items-center justify-between mb-3">
@@ -234,7 +202,9 @@ export default function ProviderDashboard() {
                       </View>
                       <View>
                         <Text className="text-foreground font-semibold">{appointment.petName}</Text>
-                        <Text className="text-muted-foreground text-sm">{appointment.petOwnerName}</Text>
+                        <Text className="text-muted-foreground text-sm">
+                          {appointment.owner?.firstName} {appointment.owner?.lastName}
+                        </Text>
                       </View>
                     </View>
                     <View className={`${getStatusBgColor(appointment.status)} px-3 py-1 rounded-full`}>
@@ -247,21 +217,18 @@ export default function ProviderDashboard() {
                   <View className="flex-row items-center gap-4">
                     <View className="flex-row items-center gap-1">
                       <Clock className="text-muted-foreground" size={14} />
-                      <Text className="text-muted-foreground text-sm">{appointment.time}</Text>
+                      <Text className="text-muted-foreground text-sm">
+                        {new Date(appointment.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </Text>
                     </View>
                     <View className="flex-row items-center gap-1">
-                      <Calendar className="text-muted-foreground" size={14} />
-                      <Text className="text-muted-foreground text-sm">{appointment.duration}</Text>
+                      <DollarSign className="text-muted-foreground" size={14} />
+                      <Text className="text-muted-foreground text-sm">${appointment.totalPrice}</Text>
                     </View>
                     <View className="flex-row items-center gap-1">
                       <Users className="text-muted-foreground" size={14} />
-                      <Text className="text-muted-foreground text-sm">{appointment.serviceType}</Text>
+                      <Text className="text-muted-foreground text-sm">{appointment.petType}</Text>
                     </View>
-                  </View>
-
-                  <View className="flex-row items-center gap-1 mt-2">
-                    <Phone className="text-muted-foreground" size={14} />
-                    <Text className="text-muted-foreground text-sm">{appointment.phone}</Text>
                   </View>
                 </TouchableOpacity>
               ))}
@@ -292,6 +259,12 @@ export default function ProviderDashboard() {
                 <TouchableOpacity
                   key={appointment.id}
                   className="bg-card border border-border rounded-xl p-3"
+                  onPress={() => {
+                    router.push({
+                      pathname: '/appointment-detail',
+                      params: { id: appointment.id }
+                    });
+                  }}
                 >
                   <View className="flex-row items-center justify-between">
                     <View className="flex-row items-center gap-3">
@@ -300,12 +273,18 @@ export default function ProviderDashboard() {
                       </View>
                       <View>
                         <Text className="text-foreground font-medium">{appointment.petName}</Text>
-                        <Text className="text-muted-foreground text-xs">{appointment.petOwnerName}</Text>
+                        <Text className="text-muted-foreground text-xs">
+                          {appointment.owner?.firstName} {appointment.owner?.lastName}
+                        </Text>
                       </View>
                     </View>
                     <View className="items-end">
-                      <Text className="text-foreground text-sm font-medium">{appointment.date}</Text>
-                      <Text className="text-muted-foreground text-xs">{appointment.time}</Text>
+                      <Text className="text-foreground text-sm font-medium">
+                        {new Date(appointment.appointmentDate).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                      </Text>
+                      <Text className="text-muted-foreground text-xs">
+                        {new Date(appointment.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </Text>
                     </View>
                   </View>
                 </TouchableOpacity>

@@ -77,22 +77,24 @@ const mockPhotos = [
   'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=400',
 ];
 
+import { authService, userService, User, Provider, providerService } from '@/services/petCareService';
+
 export default function ProfileProviderScreen() {
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
-  const [businessData, setBusinessData] = useState(mockBusinessData);
+  const [userData, setUserData] = useState<User | null>(null);
+  const [provider, setProvider] = useState<Provider | null>(null);
   const [services, setServices] = useState(mockServices);
-  const [businessHours, setBusinessHours] = useState(mockBusinessHours);
   const [photos, setPhotos] = useState(mockPhotos);
 
   // Edit form state
   const [editForm, setEditForm] = useState({
-    businessName: mockBusinessData.businessName,
-    ownerName: mockBusinessData.ownerName,
-    email: mockBusinessData.email,
-    phone: mockBusinessData.phone,
-    address: mockBusinessData.address,
-    description: mockBusinessData.description,
+    companyName: '',
+    description: '',
+    hourlyRate: 0,
+    address: '',
+    city: '',
+    serviceType: ''
   });
 
   useEffect(() => {
@@ -101,30 +103,32 @@ export default function ProfileProviderScreen() {
 
   const loadProfileData = async () => {
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch('/api/provider/profile');
-      // const data = await response.json();
-      // setBusinessData(data.business);
-      // setServices(data.services);
-      // setBusinessHours(data.hours);
-      // setPhotos(data.photos);
-      
-      setTimeout(() => setLoading(false), 1000);
+      setLoading(true);
+      const user = await userService.getCurrentUser();
+      setUserData(user);
+      if (user.provider) {
+        setProvider(user.provider);
+        setEditForm({
+          companyName: user.provider.companyName,
+          description: user.provider.description,
+          hourlyRate: user.provider.hourlyRate,
+          address: user.provider.address,
+          city: user.provider.city,
+          serviceType: user.provider.serviceType
+        });
+      }
     } catch (error) {
       console.error('Error loading profile:', error);
+    } finally {
       setLoading(false);
     }
   };
 
   const handleSaveProfile = async () => {
+    if (!provider) return;
     try {
-      // TODO: API call to update profile
-      // await fetch('/api/provider/profile', {
-      //   method: 'PUT',
-      //   body: JSON.stringify(editForm)
-      // });
-      
-      setBusinessData({ ...businessData, ...editForm });
+      await providerService.updateProvider(provider.id, editForm);
+      setProvider({ ...provider, ...editForm });
       setEditMode(false);
       Alert.alert('Success', 'Profile updated successfully');
     } catch (error) {
@@ -204,8 +208,8 @@ export default function ProfileProviderScreen() {
         {
           text: 'Logout',
           style: 'destructive',
-          onPress: () => {
-            // TODO: Clear auth tokens and navigate to login
+          onPress: async () => {
+            await authService.logout();
             router.replace('/');
           },
         },
@@ -239,26 +243,26 @@ export default function ProfileProviderScreen() {
             <View className="flex-row items-center justify-between mb-4">
               <View className="flex-row items-center flex-1">
                 <Image
-                  source={{ uri: businessData.logo }}
+                  source={{ uri: 'https://images.unsplash.com/photo-1522276498395-f4f68f7f8454?w=400' }}
                   className="w-20 h-20 rounded-xl"
                 />
                 <View className="flex-1 ml-4">
                   {editMode ? (
                     <TextInput
-                      value={editForm.businessName}
-                      onChangeText={(text) => setEditForm({ ...editForm, businessName: text })}
+                      value={editForm.companyName}
+                      onChangeText={(text) => setEditForm({ ...editForm, companyName: text })}
                       className="text-xl font-bold text-foreground bg-muted rounded-lg px-3 py-2 mb-2"
                       placeholder="Business Name"
                     />
                   ) : (
-                    <Text className="text-xl font-bold text-foreground">{businessData.businessName}</Text>
+                    <Text className="text-xl font-bold text-foreground">{provider?.companyName}</Text>
                   )}
                   <View className="flex-row items-center mt-1">
                     <Star className="text-yellow-500 mr-1" size={16} />
-                    <Text className="text-foreground font-semibold">{businessData.rating}</Text>
-                    <Text className="text-muted-foreground ml-1">({businessData.reviewCount} reviews)</Text>
+                    <Text className="text-foreground font-semibold">4.8</Text>
+                    <Text className="text-muted-foreground ml-1">(127 reviews)</Text>
                   </View>
-                  <Text className="text-muted-foreground text-sm mt-1">Member since {businessData.memberSince}</Text>
+                  <Text className="text-muted-foreground text-sm mt-1">Provider since 2024</Text>
                 </View>
               </View>
               {!editMode && (
@@ -271,32 +275,22 @@ export default function ProfileProviderScreen() {
             {editMode ? (
               <View className="gap-3">
                 <View>
-                  <Text className="text-sm text-muted-foreground mb-1">Owner Name</Text>
+                  <Text className="text-sm text-muted-foreground mb-1">Service Type</Text>
                   <TextInput
-                    value={editForm.ownerName}
-                    onChangeText={(text) => setEditForm({ ...editForm, ownerName: text })}
+                    value={editForm.serviceType}
+                    onChangeText={(text) => setEditForm({ ...editForm, serviceType: text })}
                     className="text-foreground bg-muted rounded-lg px-3 py-2"
-                    placeholder="Owner Name"
+                    placeholder="e.g. Grooming"
                   />
                 </View>
                 <View>
-                  <Text className="text-sm text-muted-foreground mb-1">Email</Text>
+                  <Text className="text-sm text-muted-foreground mb-1">Hourly Rate ($)</Text>
                   <TextInput
-                    value={editForm.email}
-                    onChangeText={(text) => setEditForm({ ...editForm, email: text })}
+                    value={editForm.hourlyRate.toString()}
+                    onChangeText={(text) => setEditForm({ ...editForm, hourlyRate: parseFloat(text) || 0 })}
                     className="text-foreground bg-muted rounded-lg px-3 py-2"
-                    placeholder="Email"
-                    keyboardType="email-address"
-                  />
-                </View>
-                <View>
-                  <Text className="text-sm text-muted-foreground mb-1">Phone</Text>
-                  <TextInput
-                    value={editForm.phone}
-                    onChangeText={(text) => setEditForm({ ...editForm, phone: text })}
-                    className="text-foreground bg-muted rounded-lg px-3 py-2"
-                    placeholder="Phone"
-                    keyboardType="phone-pad"
+                    placeholder="50"
+                    keyboardType="numeric"
                   />
                 </View>
                 <View>
@@ -306,7 +300,15 @@ export default function ProfileProviderScreen() {
                     onChangeText={(text) => setEditForm({ ...editForm, address: text })}
                     className="text-foreground bg-muted rounded-lg px-3 py-2"
                     placeholder="Address"
-                    multiline
+                  />
+                </View>
+                <View>
+                  <Text className="text-sm text-muted-foreground mb-1">City</Text>
+                  <TextInput
+                    value={editForm.city}
+                    onChangeText={(text) => setEditForm({ ...editForm, city: text })}
+                    className="text-foreground bg-muted rounded-lg px-3 py-2"
+                    placeholder="City"
                   />
                 </View>
                 <View>
@@ -342,22 +344,22 @@ export default function ProfileProviderScreen() {
               <View className="gap-3">
                 <View className="flex-row items-center">
                   <Building2 className="text-muted-foreground mr-3" size={18} />
-                  <Text className="text-foreground flex-1">{businessData.ownerName}</Text>
+                  <Text className="text-foreground flex-1">{userData?.firstName} {userData?.lastName}</Text>
                 </View>
                 <View className="flex-row items-center">
                   <Mail className="text-muted-foreground mr-3" size={18} />
-                  <Text className="text-foreground flex-1">{businessData.email}</Text>
+                  <Text className="text-foreground flex-1">{userData?.email}</Text>
                 </View>
                 <View className="flex-row items-center">
-                  <Phone className="text-muted-foreground mr-3" size={18} />
-                  <Text className="text-foreground flex-1">{businessData.phone}</Text>
+                  <DollarSign className="text-muted-foreground mr-3" size={18} />
+                  <Text className="text-foreground flex-1">${provider?.hourlyRate}/hr</Text>
                 </View>
                 <View className="flex-row items-center">
                   <MapPin className="text-muted-foreground mr-3" size={18} />
-                  <Text className="text-foreground flex-1">{businessData.address}</Text>
+                  <Text className="text-foreground flex-1">{provider?.address}, {provider?.city}</Text>
                 </View>
                 <View className="mt-2 pt-3 border-t border-border">
-                  <Text className="text-foreground">{businessData.description}</Text>
+                  <Text className="text-foreground">{provider?.description}</Text>
                 </View>
               </View>
             )}
@@ -464,6 +466,19 @@ export default function ProfileProviderScreen() {
           <Text className="text-lg font-bold text-foreground mb-4">Settings</Text>
 
           <View className="gap-2">
+            <TouchableOpacity 
+              onPress={() => router.push('/payment-invoice')}
+              className="bg-card rounded-xl border border-border"
+            >
+              <View className="flex-row items-center justify-between p-4">
+                <View className="flex-row items-center flex-1">
+                  <DollarSign className="text-foreground mr-3" size={20} />
+                  <Text className="text-foreground">Payments & Invoices</Text>
+                </View>
+                <ChevronRight className="text-muted-foreground" size={20} />
+              </View>
+            </TouchableOpacity>
+
             <TouchableOpacity className="bg-card rounded-xl border border-border">
               <View className="flex-row items-center justify-between p-4">
                 <View className="flex-row items-center flex-1">

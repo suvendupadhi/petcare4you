@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { ArrowLeft, User, Phone, Mail, Lock, CheckCircle2, ArrowRight } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+import { authService } from '@/services/petCareService';
 
 export default function RegisterOwnerScreen() {
   const router = useRouter();
@@ -13,7 +14,6 @@ export default function RegisterOwnerScreen() {
   const [lastName, setLastName] = useState('');
   const [contactNumber, setContactNumber] = useState('');
   const [email, setEmail] = useState('');
-  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -28,16 +28,12 @@ export default function RegisterOwnerScreen() {
       Alert.alert('Validation Error', 'Please enter your last name');
       return false;
     }
-    if (!contactNumber.trim() || contactNumber.length < 10) {
-      Alert.alert('Validation Error', 'Please enter a valid contact number');
+    if (!contactNumber.trim()) {
+      Alert.alert('Validation Error', 'Please enter your contact number');
       return false;
     }
     if (!email.trim() || !email.includes('@')) {
       Alert.alert('Validation Error', 'Please enter a valid email address');
-      return false;
-    }
-    if (!username.trim() || username.length < 4) {
-      Alert.alert('Validation Error', 'Username must be at least 4 characters');
       return false;
     }
     if (!password || password.length < 6) {
@@ -56,42 +52,16 @@ export default function RegisterOwnerScreen() {
 
     setLoading(true);
 
-    // TODO: Connect to your backend registration API
-    // Example API call:
-    /*
     try {
-      const response = await fetch('https://your-api.com/api/auth/register/owner', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          firstName,
-          lastName,
-          contactNumber,
-          email,
-          username,
-          password,
-        }),
+      await authService.register({
+        email,
+        password,
+        firstName,
+        lastName,
+        phoneNumber: contactNumber,
+        userType: 'owner'
       });
       
-      const data = await response.json();
-      
-      if (response.ok) {
-        Alert.alert('Success', 'Account created successfully!', [
-          { text: 'OK', onPress: () => router.push('/') }
-        ]);
-      } else {
-        Alert.alert('Error', data.message || 'Registration failed');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Network error. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-    */
-
-    // Mock registration - Remove this and use actual API call
-    setTimeout(() => {
-      setLoading(false);
       Alert.alert(
         'Success! 🎉',
         'Your account has been created successfully. Please sign in to continue.',
@@ -102,7 +72,11 @@ export default function RegisterOwnerScreen() {
           },
         ]
       );
-    }, 1500);
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Registration failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -214,27 +188,6 @@ export default function RegisterOwnerScreen() {
           <View>
             <Text className="text-lg font-bold text-foreground mb-4">Account Credentials</Text>
             
-            {/* Username */}
-            <View className="mb-4">
-              <Text className="text-sm font-semibold text-foreground mb-2">
-                Username <Text className="text-destructive">*</Text>
-              </Text>
-              <View className="flex-row items-center bg-card border border-border rounded-xl px-4 py-3">
-                <User className="text-muted-foreground mr-3" size={20} />
-                <TextInput
-                  value={username}
-                  onChangeText={setUsername}
-                  placeholder="Choose a username"
-                  placeholderTextColor="#9CA3AF"
-                  autoCapitalize="none"
-                  className="flex-1 text-foreground text-base"
-                />
-              </View>
-              <Text className="text-xs text-muted-foreground mt-1">
-                Minimum 4 characters
-              </Text>
-            </View>
-
             {/* Password */}
             <View className="mb-4">
               <Text className="text-sm font-semibold text-foreground mb-2">

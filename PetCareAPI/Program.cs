@@ -91,7 +91,7 @@ if (app.Environment.IsDevelopment() || true) // Ensure it works for now
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();

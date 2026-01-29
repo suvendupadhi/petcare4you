@@ -18,29 +18,38 @@ import {
   ArrowRight,
 } from "lucide-react-native";
 import { useRouter } from "expo-router";
+import { authService } from "@/services/petCareService";
 
 export default function LoginScreen() {
   const router = useRouter();
   const [userType, setUserType] = useState<"owner" | "provider">("owner");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    // TODO: Connect to your backend authentication API
-    // Example: POST /api/auth/login with { email, password, userType }
-
+  const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert("Error", "Please enter email and password");
       return;
     }
 
-    // Mock login - Replace with actual API call
-    if (userType === "owner") {
-      // Navigate to pet owner dashboard
-      router.push("/owner-dashboard");
-    } else {
-      // Navigate to service provider dashboard
-      router.push("/provider-dashboard");
+    setLoading(true);
+    try {
+      const result = await authService.login({ email, password });
+      
+      if (result.userType !== userType) {
+        Alert.alert("Warning", `Logging in as ${result.userType} instead of ${userType}`);
+      }
+
+      if (result.userType === "owner") {
+        router.push("/owner-dashboard");
+      } else {
+        router.push("/provider-dashboard");
+      }
+    } catch (error: any) {
+      Alert.alert("Login Failed", error.message || "Invalid credentials");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -231,12 +240,13 @@ export default function LoginScreen() {
           {/* Login Button */}
           <TouchableOpacity
             onPress={handleLogin}
-            className="bg-primary rounded-xl py-4 flex-row items-center justify-center gap-2 mt-4"
+            disabled={loading}
+            className={`bg-primary rounded-xl py-4 flex-row items-center justify-center gap-2 mt-4 ${loading ? 'opacity-70' : ''}`}
           >
             <Text className="text-primary-foreground font-bold text-base">
-              Sign In
+              {loading ? "Signing In..." : "Sign In"}
             </Text>
-            <ArrowRight className="text-primary-foreground" size={20} />
+            {!loading && <ArrowRight className="text-primary-foreground" size={20} />}
           </TouchableOpacity>
 
           {/* Divider */}

@@ -18,11 +18,13 @@ import {
   ChevronRight,
   Plus,
   Star,
-  Trash2
+  Trash2,
+  CreditCard
 } from 'lucide-react-native';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
 // Mock data - replace with API calls
+/*
 const mockUserData = {
   id: '1',
   name: 'Sarah Johnson',
@@ -32,6 +34,7 @@ const mockUserData = {
   avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
   memberSince: 'January 2024',
 };
+*/
 
 const mockPets = [
   {
@@ -71,9 +74,11 @@ const mockSavedProviders = [
   },
 ];
 
+import { authService, userService, User as UserType } from '@/services/petCareService';
+
 export default function ProfileOwnerScreen() {
   const [loading, setLoading] = useState(true);
-  const [userData, setUserData] = useState(mockUserData);
+  const [userData, setUserData] = useState<UserType | null>(null);
   const [pets, setPets] = useState(mockPets);
   const [savedProviders, setSavedProviders] = useState(mockSavedProviders);
 
@@ -83,16 +88,12 @@ export default function ProfileOwnerScreen() {
 
   const loadProfileData = async () => {
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch('/api/owner/profile');
-      // const data = await response.json();
-      // setUserData(data.user);
-      // setPets(data.pets);
-      // setSavedProviders(data.savedProviders);
-      
-      setTimeout(() => setLoading(false), 1000);
+      setLoading(true);
+      const user = await userService.getCurrentUser();
+      setUserData(user);
     } catch (error) {
       console.error('Error loading profile:', error);
+    } finally {
       setLoading(false);
     }
   };
@@ -157,8 +158,8 @@ export default function ProfileOwnerScreen() {
         {
           text: 'Logout',
           style: 'destructive',
-          onPress: () => {
-            // TODO: Clear auth tokens and navigate to login
+          onPress: async () => {
+            await authService.logout();
             router.replace('/');
           },
         },
@@ -191,12 +192,12 @@ export default function ProfileOwnerScreen() {
           <View className="bg-card rounded-2xl p-6 border border-border">
             <View className="flex-row items-center">
               <Image
-                source={{ uri: userData.avatar }}
+                source={{ uri: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400' }}
                 className="w-20 h-20 rounded-full"
               />
               <View className="flex-1 ml-4">
-                <Text className="text-xl font-bold text-foreground">{userData.name}</Text>
-                <Text className="text-muted-foreground mt-1">Member since {userData.memberSince}</Text>
+                <Text className="text-xl font-bold text-foreground">{userData?.firstName} {userData?.lastName}</Text>
+                <Text className="text-muted-foreground mt-1">Pet Owner</Text>
               </View>
               <TouchableOpacity onPress={handleEditProfile}>
                 <Edit className="text-primary" size={20} />
@@ -206,16 +207,9 @@ export default function ProfileOwnerScreen() {
             <View className="mt-6 gap-3">
               <View className="flex-row items-center">
                 <Mail className="text-muted-foreground mr-3" size={18} />
-                <Text className="text-foreground flex-1">{userData.email}</Text>
+                <Text className="text-foreground flex-1">{userData?.email}</Text>
               </View>
-              <View className="flex-row items-center">
-                <Phone className="text-muted-foreground mr-3" size={18} />
-                <Text className="text-foreground flex-1">{userData.phone}</Text>
-              </View>
-              <View className="flex-row items-center">
-                <MapPin className="text-muted-foreground mr-3" size={18} />
-                <Text className="text-foreground flex-1">{userData.address}</Text>
-              </View>
+              {/* Phone and Address not in current User model but can be added later */}
             </View>
           </View>
         </View>
@@ -312,6 +306,19 @@ export default function ProfileOwnerScreen() {
           <Text className="text-lg font-bold text-foreground mb-4">Settings</Text>
 
           <View className="gap-2">
+            <TouchableOpacity 
+              onPress={() => router.push('/payment-invoice')}
+              className="bg-card rounded-xl border border-border"
+            >
+              <View className="flex-row items-center justify-between p-4">
+                <View className="flex-row items-center flex-1">
+                  <CreditCard className="text-foreground mr-3" size={20} />
+                  <Text className="text-foreground">Payments & Invoices</Text>
+                </View>
+                <ChevronRight className="text-muted-foreground" size={20} />
+              </View>
+            </TouchableOpacity>
+
             <TouchableOpacity className="bg-card rounded-xl border border-border">
               <View className="flex-row items-center justify-between p-4">
                 <View className="flex-row items-center flex-1">

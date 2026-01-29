@@ -89,13 +89,21 @@ const mockStats = {
   transactionCount: 3,
 };
 
+import { paymentService, Payment, userService, User } from "@/services/petCareService";
+
 export default function PaymentInvoiceScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [invoices, setInvoices] = useState<any[]>([]);
-  const [stats, setStats] = useState<any>(null);
+  const [invoices, setInvoices] = useState<Payment[]>([]);
+  const [user, setUser] = useState<User | null>(null);
+  const [stats, setStats] = useState({
+    totalRevenue: 0,
+    pendingPayments: 0,
+    paidThisMonth: 0,
+    transactionCount: 0,
+  });
   const [filterStatus, setFilterStatus] = useState<
-    "all" | "paid" | "pending" | "failed"
+    "all" | "Paid" | "Pending" | "Failed"
   >("all");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -106,16 +114,30 @@ export default function PaymentInvoiceScreen() {
   const loadPaymentData = async () => {
     try {
       setLoading(true);
-      // TODO: Replace with actual API call
-      // const response = await fetch('/api/provider/invoices');
-      // const data = await response.json();
+      const currentUser = await userService.getCurrentUser();
+      setUser(currentUser);
 
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const data = currentUser.userType === 'provider' 
+        ? await paymentService.getProviderPayments()
+        : await paymentService.getOwnerPayments();
 
-      setInvoices(mockInvoices);
-      setStats(mockStats);
+      const totalRevenue = data
+        .filter(p => p.status.toLowerCase() === 'paid')
+        .reduce((sum, p) => sum + p.amount, 0);
+        
+      const pendingPayments = data
+        .filter(p => p.status.toLowerCase() === 'pending')
+        .reduce((sum, p) => sum + p.amount, 0);
+
+      setInvoices(data);
+      setStats({
+        totalRevenue,
+        pendingPayments,
+        paidThisMonth: totalRevenue, // Simplification
+        transactionCount: data.length
+      });
     } catch (error) {
+      console.error('Error loading payment data:', error);
       Alert.alert("Error", "Failed to load payment data");
     } finally {
       setLoading(false);
@@ -156,7 +178,7 @@ export default function PaymentInvoiceScreen() {
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case "paid":
         return "text-green-600";
       case "pending":
@@ -169,7 +191,7 @@ export default function PaymentInvoiceScreen() {
   };
 
   const getStatusBgColor = (status: string) => {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case "paid":
         return "bg-green-50";
       case "pending":
@@ -182,7 +204,7 @@ export default function PaymentInvoiceScreen() {
   };
 
   const getStatusIcon = (status: string) => {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case "paid":
         return CheckCircle;
       case "pending":
@@ -196,11 +218,13 @@ export default function PaymentInvoiceScreen() {
 
   const filteredInvoices = invoices.filter((invoice) => {
     const matchesStatus =
-      filterStatus === "all" || invoice.status === filterStatus;
+      filterStatus === "all" || invoice.status.toLowerCase() === filterStatus.toLowerCase();
     const matchesSearch =
       searchQuery === "" ||
-      invoice.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      invoice.id.toLowerCase().includes(searchQuery.toLowerCase());
+      (user?.userType === 'provider' 
+        ? invoice.appointment?.owner?.firstName.toLowerCase().includes(searchQuery.toLowerCase())
+        : invoice.appointment?.provider?.companyName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      invoice.id.toString().includes(searchQuery.toLowerCase());
     return matchesStatus && matchesSearch;
   });
 
@@ -226,7 +250,7 @@ export default function PaymentInvoiceScreen() {
                 Payments & Invoices
               </Text>
               <Text className="text-sm text-muted-foreground">
-                Manage your earnings
+                {user?.userType === 'provider' ? 'Manage your earnings' : 'View your payment history'}
               </Text>
             </View>
           </View>
@@ -242,7 +266,7 @@ export default function PaymentInvoiceScreen() {
                 ${stats.totalRevenue.toFixed(2)}
               </Text>
               <Text className="text-xs text-muted-foreground">
-                Total Revenue
+                {user?.userType === 'provider' ? 'Total Revenue' : 'Total Spent'}
               </Text>
             </View>
             <View className="flex-1 bg-card rounded-2xl p-4 border border-border">
@@ -260,7 +284,7 @@ export default function PaymentInvoiceScreen() {
                 ${stats.paidThisMonth.toFixed(2)}
               </Text>
               <Text className="text-xs text-muted-foreground">
-                Paid This Month
+                {user?.userType === 'provider' ? 'Paid This Month' : 'Spent This Month'}
               </Text>
             </View>
             <View className="flex-1 bg-card rounded-2xl p-4 border border-border">
@@ -278,7 +302,7 @@ export default function PaymentInvoiceScreen() {
         {/* Filters */}
         <View className="px-6 mb-4">
           <View className="flex-row gap-2">
-            {["all", "paid", "pending", "failed"].map((status) => (
+            {["all", "Paid", "Pending", "Failed"].map((status) => (
               <TouchableOpacity
                 key={status}
                 onPress={() => setFilterStatus(status as any)}
@@ -341,23 +365,25 @@ export default function PaymentInvoiceScreen() {
                   </View>
 
                   <View className="p-4">
-                    {/* Customer Info */}
+                    {/* Customer/Provider Info */}
                     <View className="mb-3">
                       <Text className="text-lg font-bold text-foreground">
-                        {invoice.customerName}
+                        {user?.userType === 'provider' 
+                          ? `${invoice.appointment?.owner?.firstName} ${invoice.appointment?.owner?.lastName}`
+                          : invoice.appointment?.provider?.companyName}
                       </Text>
                       <Text className="text-sm text-muted-foreground">
-                        Pet: {invoice.petName}
+                        Pet: {invoice.appointment?.petName}
                       </Text>
                     </View>
 
                     {/* Service & Date */}
                     <View className="mb-3">
                       <Text className="text-sm font-medium text-foreground">
-                        {invoice.service}
+                        {invoice.appointment?.petType} Service
                       </Text>
                       <Text className="text-xs text-muted-foreground">
-                        {new Date(invoice.date).toLocaleDateString("en-US", {
+                        {new Date(invoice.paymentDate).toLocaleDateString("en-US", {
                           weekday: "long",
                           year: "numeric",
                           month: "long",
@@ -373,15 +399,7 @@ export default function PaymentInvoiceScreen() {
                           Service Amount
                         </Text>
                         <Text className="text-sm font-medium text-foreground">
-                          ${invoice.amount.toFixed(2)}
-                        </Text>
-                      </View>
-                      <View className="flex-row justify-between mb-2">
-                        <Text className="text-sm text-muted-foreground">
-                          Service Fee (10%)
-                        </Text>
-                        <Text className="text-sm font-medium text-foreground">
-                          ${invoice.serviceFee.toFixed(2)}
+                          ${(invoice.amount || 0).toFixed(2)}
                         </Text>
                       </View>
                       <View className="border-t border-border pt-2 flex-row justify-between">
@@ -389,7 +407,7 @@ export default function PaymentInvoiceScreen() {
                           Total
                         </Text>
                         <Text className="text-base font-bold text-primary">
-                          ${invoice.total.toFixed(2)}
+                          ${(invoice.amount || 0).toFixed(2)}
                         </Text>
                       </View>
                     </View>

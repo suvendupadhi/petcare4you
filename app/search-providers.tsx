@@ -13,9 +13,11 @@ import {
   ChevronLeft
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+import { providerService, Provider } from '@/services/petCareService';
 
-type ServiceType = 'all' | 'grooming' | 'daycare';
+type ServiceCategory = 'all' | 'grooming' | 'daycare';
 
+/*
 interface Provider {
   id: string;
   businessName: string;
@@ -28,17 +30,19 @@ interface Provider {
   isLicensed: boolean;
   nextAvailable: string;
 }
+*/
 
 export default function SearchProvidersScreen() {
   const router = useRouter();
-  const [zipCode, setZipCode] = useState('');
+  const [city, setCity] = useState('');
   const [radius, setRadius] = useState(10);
-  const [serviceType, setServiceType] = useState<ServiceType>('all');
+  const [serviceType, setServiceType] = useState<ServiceCategory>('all');
   const [showFilters, setShowFilters] = useState(false);
   const [results, setResults] = useState<Provider[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
   // Mock search results - Replace with actual API call
+  /*
   const mockResults: Provider[] = [
     {
       id: '1',
@@ -89,30 +93,25 @@ export default function SearchProvidersScreen() {
       nextAvailable: 'Wed at 10:00 AM'
     }
   ];
+  */
 
-  const handleSearch = () => {
-    // TODO: Connect to your backend search API
-    // Example: GET /api/providers/search?zipCode=12345&radius=10&serviceType=grooming
-    
-    if (!zipCode) {
+  const handleSearch = async () => {
+    if (!city) {
       return;
     }
 
     setIsSearching(true);
-    
-    // Mock API delay
-    setTimeout(() => {
-      // Filter mock results based on service type
-      let filtered = mockResults;
-      if (serviceType === 'grooming') {
-        filtered = mockResults.filter(p => p.services.includes('Grooming'));
-      } else if (serviceType === 'daycare') {
-        filtered = mockResults.filter(p => p.services.includes('Daycare'));
-      }
-      
-      setResults(filtered);
+    try {
+      const data = await providerService.getProviders(
+        serviceType === 'all' ? undefined : serviceType,
+        city
+      );
+      setResults(data);
+    } catch (error) {
+      console.error('Error searching providers:', error);
+    } finally {
       setIsSearching(false);
-    }, 800);
+    }
   };
 
   const radiusOptions = [5, 10, 15, 25, 50];
@@ -120,8 +119,7 @@ export default function SearchProvidersScreen() {
   const renderProviderCard = ({ item }: { item: Provider }) => (
     <TouchableOpacity
       onPress={() => {
-        // TODO: Navigate to provider detail screen
-        // router.push(`/provider-detail?id=${item.id}`);
+        router.push(`/provider-detail?id=${item.id}`);
       }}
       className="bg-card rounded-2xl p-4 mb-4 border border-border"
     >
@@ -129,38 +127,34 @@ export default function SearchProvidersScreen() {
       <View className="flex-row items-start justify-between mb-3">
         <View className="flex-1">
           <Text className="text-foreground font-bold text-lg mb-1">
-            {item.businessName}
+            {item.companyName}
           </Text>
           <View className="flex-row items-center gap-2">
             <View className="flex-row items-center gap-1">
               <Star className="text-yellow-500" size={16} fill="#EAB308" />
-              <Text className="text-foreground font-semibold">{item.rating}</Text>
-              <Text className="text-muted-foreground text-sm">({item.reviewCount})</Text>
+              <Text className="text-foreground font-semibold">4.8</Text>
+              <Text className="text-muted-foreground text-sm">(124)</Text>
             </View>
-            {item.isLicensed && (
-              <View className="bg-green-500/10 px-2 py-0.5 rounded">
-                <Text className="text-green-600 text-xs font-medium">Licensed</Text>
-              </View>
-            )}
+            <View className="bg-green-500/10 px-2 py-0.5 rounded">
+              <Text className="text-green-600 text-xs font-medium">Licensed</Text>
+            </View>
           </View>
         </View>
         <View className="bg-primary/10 px-3 py-1 rounded-full">
-          <Text className="text-primary font-semibold">{item.priceRange}</Text>
+          <Text className="text-primary font-semibold">${item.hourlyRate}/hr</Text>
         </View>
       </View>
 
       {/* Services */}
       <View className="flex-row flex-wrap gap-2 mb-3">
-        {item.services.map((service, idx) => (
-          <View key={idx} className="bg-muted px-3 py-1 rounded-full flex-row items-center gap-1">
-            {service.includes('Grooming') ? (
-              <Scissors className="text-muted-foreground" size={12} />
-            ) : (
-              <HomeIcon className="text-muted-foreground" size={12} />
-            )}
-            <Text className="text-muted-foreground text-xs font-medium">{service}</Text>
-          </View>
-        ))}
+        <View className="bg-muted px-3 py-1 rounded-full flex-row items-center gap-1">
+          {item.serviceType.toLowerCase().includes('grooming') ? (
+            <Scissors className="text-muted-foreground" size={12} />
+          ) : (
+            <HomeIcon className="text-muted-foreground" size={12} />
+          )}
+          <Text className="text-muted-foreground text-xs font-medium">{item.serviceType}</Text>
+        </View>
       </View>
 
       {/* Location & Distance */}
@@ -168,19 +162,19 @@ export default function SearchProvidersScreen() {
         <View className="flex-row items-center gap-2 flex-1">
           <MapPin className="text-muted-foreground" size={16} />
           <Text className="text-muted-foreground text-sm flex-1" numberOfLines={1}>
-            {item.address}
+            {item.address}, {item.city}
           </Text>
         </View>
         <View className="flex-row items-center gap-1">
           <Navigation className="text-primary" size={14} />
-          <Text className="text-primary font-semibold text-sm">{item.distance} mi</Text>
+          <Text className="text-primary font-semibold text-sm">2.3 mi</Text>
         </View>
       </View>
 
       {/* Next Available */}
       <View className="mt-2 bg-accent/50 px-3 py-2 rounded-lg">
         <Text className="text-accent-foreground text-xs">
-          Next available: <Text className="font-semibold">{item.nextAvailable}</Text>
+          Next available: <Text className="font-semibold">Today at 2:00 PM</Text>
         </Text>
       </View>
     </TouchableOpacity>
@@ -202,18 +196,16 @@ export default function SearchProvidersScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
         {/* Search Form */}
         <View className="p-6 gap-4">
-          {/* Zip Code Input */}
+          {/* City Input */}
           <View>
             <Text className="text-foreground font-semibold mb-2">Location</Text>
             <View className="bg-card border border-border rounded-xl flex-row items-center px-4 py-3">
               <MapPin className="text-muted-foreground mr-3" size={20} />
               <TextInput
-                placeholder="Enter ZIP code or address"
+                placeholder="Enter city name"
                 placeholderTextColor="#999"
-                value={zipCode}
-                onChangeText={setZipCode}
-                keyboardType="numeric"
-                maxLength={5}
+                value={city}
+                onChangeText={setCity}
                 className="flex-1 text-foreground text-base"
               />
             </View>
@@ -222,7 +214,7 @@ export default function SearchProvidersScreen() {
           {/* Radius Selector */}
           <View>
             <Text className="text-foreground font-semibold mb-2">
-              Search Radius: {radius} miles
+              Search Radius: {radius} miles (Demo)
             </Text>
             <View className="flex-row gap-2">
               {radiusOptions.map((option) => (
@@ -313,18 +305,18 @@ export default function SearchProvidersScreen() {
           {/* Search Button */}
           <TouchableOpacity
             onPress={handleSearch}
-            disabled={!zipCode || isSearching}
+            disabled={!city || isSearching}
             className={`py-4 rounded-xl flex-row items-center justify-center gap-2 ${
-              !zipCode || isSearching ? 'bg-muted' : 'bg-primary'
+              !city || isSearching ? 'bg-muted' : 'bg-primary'
             }`}
           >
             <Search
-              className={!zipCode || isSearching ? 'text-muted-foreground' : 'text-primary-foreground'}
+              className={!city || isSearching ? 'text-muted-foreground' : 'text-primary-foreground'}
               size={20}
             />
             <Text
               className={`font-bold text-base ${
-                !zipCode || isSearching ? 'text-muted-foreground' : 'text-primary-foreground'
+                !city || isSearching ? 'text-muted-foreground' : 'text-primary-foreground'
               }`}
             >
               {isSearching ? 'Searching...' : 'Search Providers'}
@@ -351,14 +343,14 @@ export default function SearchProvidersScreen() {
             <FlatList
               data={results}
               renderItem={renderProviderCard}
-              keyExtractor={(item) => item.id}
+              keyExtractor={(item) => item.id.toString()}
               scrollEnabled={false}
             />
           </View>
         )}
 
         {/* Empty State */}
-        {!isSearching && results.length === 0 && zipCode && (
+        {!isSearching && results.length === 0 && city && (
           <View className="items-center py-12 px-6">
             <View className="bg-muted rounded-full p-6 mb-4">
               <Search className="text-muted-foreground" size={48} />

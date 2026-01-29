@@ -46,6 +46,7 @@ namespace PetCareAPI.Services
                 PasswordHash = registerDto.Password,
                 FirstName = registerDto.FirstName,
                 LastName = registerDto.LastName,
+                PhoneNumber = registerDto.PhoneNumber,
                 UserType = registerDto.UserType
             };
 

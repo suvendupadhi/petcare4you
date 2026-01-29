@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image, Dimensions } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, Image, Dimensions, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { 
@@ -16,91 +16,56 @@ import {
   Check,
   ChevronRight
 } from 'lucide-react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { providerService, appointmentService, availabilityService, Provider, Availability } from '@/services/petCareService';
 
 const { width } = Dimensions.get('window');
 
-interface Service {
-  id: string;
-  name: string;
-  description: string;
-  duration: string;
-  price: string;
-}
-
-interface Review {
-  id: string;
-  userName: string;
-  rating: number;
-  date: string;
-  comment: string;
-}
-
-interface TimeSlot {
-  id: string;
-  time: string;
-  available: boolean;
-}
-
 export default function ProviderDetailScreen() {
   const router = useRouter();
+  const { id } = useLocalSearchParams();
+  const [provider, setProvider] = useState<Provider | null>(null);
+  const [availabilities, setAvailabilities] = useState<Availability[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [selectedService, setSelectedService] = useState<string>('');
   const [showBooking, setShowBooking] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // TODO: Fetch from API - GET /api/providers/:id
-  const provider = {
-    id: '1',
-    businessName: 'Paws & Claws Grooming',
-    rating: 4.8,
-    reviewCount: 127,
-    isLicensed: true,
-    address: '123 Main Street, Springfield, IL 62701',
-    phone: '(555) 123-4567',
-    website: 'www.pawsandclaws.com',
-    description: 'Professional pet grooming services with over 10 years of experience. We specialize in breed-specific cuts, spa treatments, and gentle handling for anxious pets.',
-    services: ['Grooming', 'Daycare'],
-    businessHours: 'Mon-Sat: 8:00 AM - 6:00 PM',
-    photos: [
-      'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800',
-      'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=800',
-      'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=800',
-    ]
+  useEffect(() => {
+    if (id) {
+      loadProviderData();
+    }
+  }, [id]);
+
+  const loadProviderData = async () => {
+    try {
+      setLoading(true);
+      const [providerData, availabilityData] = await Promise.all([
+        providerService.getProvider(Number(id)),
+        availabilityService.getProviderAvailability(Number(id))
+      ]);
+      setProvider(providerData);
+      setAvailabilities(availabilityData);
+      // Automatically select the provider's service type
+      setSelectedService(providerData.serviceType);
+    } catch (error) {
+      console.error('Error loading provider data:', error);
+      Alert.alert('Error', 'Failed to load provider details');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const services: Service[] = [
-    {
-      id: '1',
-      name: 'Full Grooming',
-      description: 'Bath, haircut, nail trim, ear cleaning',
-      duration: '2 hours',
-      price: '$65'
-    },
-    {
-      id: '2',
-      name: 'Bath & Brush',
-      description: 'Bath, brush, nail trim',
-      duration: '1 hour',
-      price: '$45'
-    },
-    {
-      id: '3',
-      name: 'Nail Trim Only',
-      description: 'Quick nail trimming service',
-      duration: '15 min',
-      price: '$15'
-    },
-    {
-      id: '4',
-      name: 'Full Day Daycare',
-      description: 'Supervised play and socialization',
-      duration: '8 hours',
-      price: '$35'
-    }
+  // Mock data for things not yet in backend
+  const photos = [
+    'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800',
+    'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=800',
+    'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=800',
   ];
 
-  const reviews: Review[] = [
+  const reviews = [
     {
       id: '1',
       userName: 'Sarah M.',
@@ -114,50 +79,93 @@ export default function ProviderDetailScreen() {
       rating: 5,
       date: 'March 10, 2024',
       comment: 'Best groomer in town! Very professional and my dog actually enjoys going there.'
-    },
-    {
-      id: '3',
-      userName: 'Jennifer L.',
-      rating: 4,
-      date: 'March 5, 2024',
-      comment: 'Great experience overall. A bit pricey but worth it for the quality of service.'
     }
   ];
 
-  // TODO: Fetch available dates from API
-  const availableDates = [
-    { date: '2024-03-20', dayName: 'Wed', dayNum: '20' },
-    { date: '2024-03-21', dayName: 'Thu', dayNum: '21' },
-    { date: '2024-03-22', dayName: 'Fri', dayNum: '22' },
-    { date: '2024-03-23', dayName: 'Sat', dayNum: '23' },
-    { date: '2024-03-25', dayName: 'Mon', dayNum: '25' },
-  ];
+  const availableDates = Array.from(new Set(availabilities.map(a => a.date.split('T')[0])))
+    .sort()
+    .map(dateStr => {
+      const date = new Date(dateStr);
+      return {
+        date: dateStr,
+        dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
+        dayNum: date.getDate().toString()
+      };
+    });
 
-  // TODO: Fetch time slots based on selected date
-  const timeSlots: TimeSlot[] = [
-    { id: '1', time: '9:00 AM', available: true },
-    { id: '2', time: '10:00 AM', available: true },
-    { id: '3', time: '11:00 AM', available: false },
-    { id: '4', time: '1:00 PM', available: true },
-    { id: '5', time: '2:00 PM', available: true },
-    { id: '6', time: '3:00 PM', available: true },
-    { id: '7', time: '4:00 PM', available: false },
-  ];
+  const timeSlots = availabilities
+    .filter(a => a.date.split('T')[0] === selectedDate)
+    .map(a => ({
+      id: a.id?.toString() || a.startTime,
+      time: a.startTime.split('T')[1].substring(0, 5),
+      label: new Date(a.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      available: !a.isBooked
+    }))
+    .sort((a, b) => a.time.localeCompare(b.time));
 
-  const handleBooking = () => {
-    if (!selectedService || !selectedDate || !selectedTime) {
-      alert('Please select a service, date, and time');
+  const handleBooking = async () => {
+    if (!selectedDate || !selectedTime) {
+      Alert.alert('Error', 'Please select a date and time');
       return;
     }
 
-    // TODO: POST /api/bookings
-    // Body: { providerId, serviceId, date, time, petId }
-    console.log('Booking:', { selectedService, selectedDate, selectedTime });
-    
-    // Show success and navigate
-    alert('Booking confirmed! You will receive a confirmation email shortly.');
-    router.push('/owner-dashboard');
+    if (!provider) return;
+
+    setIsSubmitting(true);
+    try {
+      // Find the selected availability slot to get the correct end time if available
+      const selectedSlot = availabilities.find(a => 
+        a.date.split('T')[0] === selectedDate && 
+        a.startTime.split('T')[1].substring(0, 5) === selectedTime
+      );
+
+      const startTime = selectedSlot ? selectedSlot.startTime : `${selectedDate}T${selectedTime}:00`;
+      const endTime = selectedSlot ? selectedSlot.endTime : `${selectedDate}T${(parseInt(selectedTime.split(':')[0]) + 1).toString().padStart(2, '0')}:00`;
+
+      const appointmentData = {
+        providerId: provider.id,
+        appointmentDate: selectedDate,
+        startTime: startTime,
+        endTime: endTime,
+        petName: 'Max', // Mock pet name for now
+        petType: 'Dog',
+        description: `Booking for ${provider.serviceType}`,
+        totalPrice: provider.hourlyRate,
+        status: 'pending'
+      };
+
+      await appointmentService.createAppointment(appointmentData);
+      
+      Alert.alert('Success', 'Appointment booked successfully!', [
+        { text: 'OK', onPress: () => router.push('/owner-dashboard') }
+      ]);
+    } catch (error) {
+      console.error('Error booking appointment:', error);
+      Alert.alert('Error', 'Failed to book appointment. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView className="flex-1 bg-background items-center justify-center">
+        <ActivityIndicator size="large" />
+        <Text className="text-muted-foreground mt-4">Loading provider details...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (!provider) {
+    return (
+      <SafeAreaView className="flex-1 bg-background items-center justify-center">
+        <Text className="text-foreground">Provider not found</Text>
+        <TouchableOpacity onPress={() => router.back()} className="mt-4">
+          <Text className="text-primary">Go Back</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-background">
@@ -178,7 +186,7 @@ export default function ProviderDetailScreen() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 0 }}
         >
-          {provider.photos.map((photo, index) => (
+          {photos.map((photo, index) => (
             <Image
               key={index}
               source={{ uri: photo }}
@@ -193,60 +201,56 @@ export default function ProviderDetailScreen() {
           <View className="flex-row items-start justify-between mb-3">
             <View className="flex-1">
               <Text className="text-2xl font-bold text-foreground mb-1">
-                {provider.businessName}
+                {provider.companyName}
               </Text>
               <View className="flex-row items-center gap-2">
                 <View className="flex-row items-center">
                   <Star className="text-yellow-500" size={18} fill="#EAB308" />
                   <Text className="text-foreground font-semibold ml-1">
-                    {provider.rating}
+                    4.8
                   </Text>
                   <Text className="text-muted-foreground ml-1">
-                    ({provider.reviewCount} reviews)
+                    (127 reviews)
                   </Text>
                 </View>
-                {provider.isLicensed && (
-                  <View className="bg-green-500/20 px-2 py-1 rounded">
-                    <Text className="text-green-600 dark:text-green-400 text-xs font-semibold">
-                      Licensed
-                    </Text>
-                  </View>
-                )}
+                <View className="bg-green-500/20 px-2 py-1 rounded">
+                  <Text className="text-green-600 dark:text-green-400 text-xs font-semibold">
+                    Licensed
+                  </Text>
+                </View>
               </View>
             </View>
           </View>
 
           {/* Service Tags */}
           <View className="flex-row gap-2 mb-4">
-            {provider.services.map((service, index) => (
-              <View key={index} className="bg-primary/10 px-3 py-1.5 rounded-full flex-row items-center gap-1">
-                {service === 'Grooming' ? (
-                  <Scissors className="text-primary" size={14} />
-                ) : (
-                  <HomeIcon className="text-primary" size={14} />
-                )}
-                <Text className="text-primary text-sm font-medium">{service}</Text>
-              </View>
-            ))}
+            <View className="bg-primary/10 px-3 py-1.5 rounded-full flex-row items-center gap-1">
+              {provider.serviceType.toLowerCase().includes('grooming') ? (
+                <Scissors className="text-primary" size={14} />
+              ) : (
+                <HomeIcon className="text-primary" size={14} />
+              )}
+              <Text className="text-primary text-sm font-medium">{provider.serviceType}</Text>
+            </View>
           </View>
 
           {/* Contact Info */}
           <View className="bg-card border border-border rounded-xl p-4 gap-3 mb-4">
             <View className="flex-row items-center gap-3">
               <MapPin className="text-muted-foreground" size={20} />
-              <Text className="text-foreground flex-1">{provider.address}</Text>
+              <Text className="text-foreground flex-1">{provider.address}, {provider.city}</Text>
             </View>
             <View className="flex-row items-center gap-3">
               <Phone className="text-muted-foreground" size={20} />
-              <Text className="text-foreground">{provider.phone}</Text>
+              <Text className="text-foreground">{provider.user?.email || 'N/A'}</Text>
             </View>
             <View className="flex-row items-center gap-3">
               <Globe className="text-muted-foreground" size={20} />
-              <Text className="text-primary">{provider.website}</Text>
+              <Text className="text-primary">www.{provider.companyName.toLowerCase().replace(/\s/g, '')}.com</Text>
             </View>
             <View className="flex-row items-center gap-3">
               <Clock className="text-muted-foreground" size={20} />
-              <Text className="text-foreground">{provider.businessHours}</Text>
+              <Text className="text-foreground">Mon-Sat: 8:00 AM - 6:00 PM</Text>
             </View>
           </View>
 
@@ -258,49 +262,41 @@ export default function ProviderDetailScreen() {
             </Text>
           </View>
 
-          {/* Services */}
+          {/* Pricing Info */}
           <View className="mb-6">
-            <Text className="text-lg font-bold text-foreground mb-3">Services & Pricing</Text>
-            <View className="gap-3">
-              {services.map((service) => (
-                <TouchableOpacity
-                  key={service.id}
-                  onPress={() => {
-                    setSelectedService(service.id);
-                    setShowBooking(true);
-                  }}
-                  className={`bg-card border-2 rounded-xl p-4 ${
-                    selectedService === service.id ? 'border-primary' : 'border-border'
-                  }`}
-                >
-                  <View className="flex-row items-start justify-between mb-2">
-                    <View className="flex-1">
-                      <Text className="text-foreground font-bold text-base mb-1">
-                        {service.name}
-                      </Text>
-                      <Text className="text-muted-foreground text-sm mb-2">
-                        {service.description}
-                      </Text>
-                      <View className="flex-row items-center gap-4">
-                        <View className="flex-row items-center gap-1">
-                          <Clock className="text-muted-foreground" size={14} />
-                          <Text className="text-muted-foreground text-sm">{service.duration}</Text>
-                        </View>
-                        <View className="flex-row items-center gap-1">
-                          <DollarSign className="text-primary" size={14} />
-                          <Text className="text-primary font-bold">{service.price}</Text>
-                        </View>
-                      </View>
+            <Text className="text-lg font-bold text-foreground mb-3">Service & Pricing</Text>
+            <TouchableOpacity
+              onPress={() => setShowBooking(true)}
+              className={`bg-card border-2 rounded-xl p-4 ${
+                selectedService ? 'border-primary' : 'border-border'
+              }`}
+            >
+              <View className="flex-row items-start justify-between mb-2">
+                <View className="flex-1">
+                  <Text className="text-foreground font-bold text-base mb-1">
+                    {provider.serviceType}
+                  </Text>
+                  <Text className="text-muted-foreground text-sm mb-2">
+                    Professional {provider.serviceType.toLowerCase()} service
+                  </Text>
+                  <View className="flex-row items-center gap-4">
+                    <View className="flex-row items-center gap-1">
+                      <Clock className="text-muted-foreground" size={14} />
+                      <Text className="text-muted-foreground text-sm">1 hour</Text>
                     </View>
-                    {selectedService === service.id && (
-                      <View className="bg-primary rounded-full p-1">
-                        <Check className="text-primary-foreground" size={16} />
-                      </View>
-                    )}
+                    <View className="flex-row items-center gap-1">
+                      <DollarSign className="text-primary" size={14} />
+                      <Text className="text-primary font-bold">${provider.hourlyRate}/hr</Text>
+                    </View>
                   </View>
-                </TouchableOpacity>
-              ))}
-            </View>
+                </View>
+                {selectedService && (
+                  <View className="bg-primary rounded-full p-1">
+                    <Check className="text-primary-foreground" size={16} />
+                  </View>
+                )}
+              </View>
+            </TouchableOpacity>
           </View>
 
           {/* Booking Section */}
@@ -365,7 +361,7 @@ export default function ProviderDetailScreen() {
                             ? 'text-primary-foreground'
                             : 'text-foreground'
                         }`}>
-                          {slot.time}
+                          {slot.label}
                         </Text>
                       </TouchableOpacity>
                     ))}
@@ -403,17 +399,23 @@ export default function ProviderDetailScreen() {
         </View>
       </ScrollView>
 
-      {/* Fixed Bottom Booking Button */}
-      {showBooking && (
-        <View className="absolute bottom-0 left-0 right-0 bg-background border-t border-border p-4">
+      {/* Book Button */}
+      {selectedService && (
+        <View className="absolute bottom-0 left-0 right-0 p-6 bg-background border-t border-border">
           <TouchableOpacity
             onPress={handleBooking}
-            className="bg-primary rounded-xl py-4 flex-row items-center justify-center gap-2"
+            disabled={isSubmitting || !selectedDate || !selectedTime}
+            className={`py-4 rounded-xl items-center justify-center ${
+              isSubmitting || !selectedDate || !selectedTime ? 'bg-muted' : 'bg-primary'
+            }`}
           >
-            <Calendar className="text-primary-foreground" size={20} />
-            <Text className="text-primary-foreground font-bold text-base">
-              Confirm Booking
-            </Text>
+            {isSubmitting ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text className="text-primary-foreground font-bold text-lg">
+                Confirm Booking
+              </Text>
+            )}
           </TouchableOpacity>
         </View>
       )}

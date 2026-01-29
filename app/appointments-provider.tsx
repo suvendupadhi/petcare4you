@@ -9,103 +9,16 @@ import {
   PawPrint,
   Phone,
   ChevronLeft,
-  Star,
-  X,
-  Edit,
   CheckCircle,
   AlertCircle,
-  XCircle
+  XCircle,
+  Mail,
+  Check
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { appointmentService, Appointment } from '@/services/petCareService';
 
-// Mock data - Replace with API calls
-/*
-const mockAppointments = [
-  {
-    id: '1',
-    providerName: 'Pawsome Grooming Spa',
-    serviceType: 'Full Grooming Package',
-    date: '2024-01-25',
-    time: '10:00 AM',
-    duration: '2 hours',
-    petName: 'Max',
-    address: '123 Pet Street, City, ST 12345',
-    phone: '(555) 123-4567',
-    status: 'confirmed',
-    providerRating: 4.8,
-    price: 75,
-    canCancel: true,
-    canReschedule: true
-  },
-  {
-    id: '2',
-    providerName: 'Happy Tails Daycare',
-    serviceType: 'Full Day Daycare',
-    date: '2024-01-28',
-    time: '8:00 AM',
-    duration: '8 hours',
-    petName: 'Bella',
-    address: '456 Dog Avenue, City, ST 12345',
-    phone: '(555) 234-5678',
-    status: 'pending',
-    providerRating: 4.9,
-    price: 50,
-    canCancel: true,
-    canReschedule: true
-  },
-  {
-    id: '3',
-    providerName: 'Pampered Paws',
-    serviceType: 'Bath & Brush',
-    date: '2024-01-20',
-    time: '2:00 PM',
-    duration: '1 hour',
-    petName: 'Max',
-    address: '789 Pet Lane, City, ST 12345',
-    phone: '(555) 345-6789',
-    status: 'completed',
-    providerRating: 4.7,
-    price: 45,
-    canCancel: false,
-    canReschedule: false
-  },
-  {
-    id: '4',
-    providerName: 'Furry Friends Care',
-    serviceType: 'Nail Trim',
-    date: '2024-01-18',
-    time: '11:00 AM',
-    duration: '30 min',
-    petName: 'Bella',
-    address: '321 Animal Road, City, ST 12345',
-    phone: '(555) 456-7890',
-    status: 'completed',
-    providerRating: 4.6,
-    price: 25,
-    canCancel: false,
-    canReschedule: false
-  },
-  {
-    id: '5',
-    providerName: 'Elite Pet Grooming',
-    serviceType: 'Premium Spa Day',
-    date: '2024-01-15',
-    time: '9:00 AM',
-    duration: '3 hours',
-    petName: 'Max',
-    address: '654 Pet Plaza, City, ST 12345',
-    phone: '(555) 567-8901',
-    status: 'cancelled',
-    providerRating: 4.9,
-    price: 120,
-    canCancel: false,
-    canReschedule: false
-  }
-];
-*/
-
-export default function AppointmentsOwnerScreen() {
+export default function AppointmentsProviderScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -118,7 +31,7 @@ export default function AppointmentsOwnerScreen() {
   const loadAppointments = async () => {
     try {
       setLoading(true);
-      const data = await appointmentService.getOwnerAppointments();
+      const data = await appointmentService.getProviderAppointments();
       setAppointments(data);
     } catch (error) {
       console.error('Error loading appointments:', error);
@@ -128,49 +41,29 @@ export default function AppointmentsOwnerScreen() {
     }
   };
 
-  const handleCancelAppointment = (appointmentId: number) => {
-    Alert.alert(
-      'Cancel Appointment',
-      'Are you sure you want to cancel this appointment? This action cannot be undone.',
-      [
-        { text: 'No', style: 'cancel' },
-        {
-          text: 'Yes, Cancel',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await appointmentService.updateStatus(appointmentId, 'cancelled');
-              
-              // Update local state
-              setAppointments(prev => 
-                prev.map(apt => 
-                  apt.id === appointmentId 
-                    ? { ...apt, status: 'cancelled' }
-                    : apt
-                )
-              );
-              Alert.alert('Success', 'Appointment cancelled successfully');
-            } catch (error) {
-              Alert.alert('Error', 'Failed to cancel appointment');
-            }
-          }
-        }
-      ]
-    );
-  };
-
-  const handleRescheduleAppointment = (appointmentId: number) => {
-    // Navigate to appointment detail where reschedule might be handled or directly to provider detail
-    const appointment = appointments.find(a => a.id === appointmentId);
-    if (appointment && appointment.providerId) {
-      router.push(`/provider-detail?id=${appointment.providerId}`);
-    } else {
-      Alert.alert('Info', 'Reschedule functionality will navigate to provider screen');
+  const handleUpdateStatus = async (appointmentId: number, newStatus: string) => {
+    try {
+      await appointmentService.updateStatus(appointmentId, newStatus);
+      
+      // Update local state
+      setAppointments(prev => 
+        prev.map(apt => 
+          apt.id === appointmentId 
+            ? { ...apt, status: newStatus as any }
+            : apt
+        )
+      );
+      Alert.alert('Success', `Appointment ${newStatus} successfully`);
+    } catch (error) {
+      Alert.alert('Error', `Failed to update appointment to ${newStatus}`);
     }
   };
 
   const handleViewDetails = (appointmentId: number) => {
-    router.push(`/appointment-detail?id=${appointmentId}`);
+    router.push({
+      pathname: '/appointment-detail',
+      params: { id: appointmentId }
+    });
   };
 
   const getStatusConfig = (status: string) => {
@@ -260,7 +153,7 @@ export default function AppointmentsOwnerScreen() {
             <TouchableOpacity onPress={() => router.back()}>
               <ChevronLeft className="text-foreground" size={24} />
             </TouchableOpacity>
-            <Text className="text-2xl font-bold text-foreground">My Appointments</Text>
+            <Text className="text-2xl font-bold text-foreground">Client Bookings</Text>
           </View>
           <ThemeToggle />
         </View>
@@ -301,29 +194,21 @@ export default function AppointmentsOwnerScreen() {
           <View className="items-center justify-center py-16">
             <Calendar className="text-muted-foreground mb-4" size={64} />
             <Text className="text-xl font-semibold text-foreground mb-2">
-              No {activeTab} appointments
+              No {activeTab} bookings
             </Text>
             <Text className="text-muted-foreground text-center">
               {activeTab === 'upcoming' 
-                ? 'Book a service to see your upcoming appointments here'
-                : 'Your completed and cancelled appointments will appear here'
+                ? 'When clients book your services, they will appear here'
+                : 'Your completed and cancelled bookings will appear here'
               }
             </Text>
-            {activeTab === 'upcoming' && (
-              <TouchableOpacity
-                onPress={() => router.push('/search-providers')}
-                className="bg-primary px-6 py-3 rounded-xl mt-6"
-              >
-                <Text className="text-primary-foreground font-semibold">Find Services</Text>
-              </TouchableOpacity>
-            )}
           </View>
         ) : (
           displayAppointments.map((appointment) => {
             const statusConfig = getStatusConfig(appointment.status);
             const StatusIcon = statusConfig.icon;
-            const canCancel = appointment.status.toLowerCase() === 'pending' || appointment.status.toLowerCase() === 'confirmed';
-            const canReschedule = canCancel;
+            const isPending = appointment.status.toLowerCase() === 'pending';
+            const isConfirmed = appointment.status.toLowerCase() === 'confirmed';
 
             return (
               <TouchableOpacity
@@ -332,25 +217,27 @@ export default function AppointmentsOwnerScreen() {
                 className="bg-card rounded-2xl border border-border overflow-hidden"
               >
                 {/* Status Banner */}
-                <View className={`${statusConfig.bg} px-4 py-2 flex-row items-center gap-2`}>
-                  <StatusIcon className={statusConfig.color} size={16} />
-                  <Text className={`${statusConfig.color} font-semibold text-sm`}>
-                    {statusConfig.label}
-                  </Text>
+                <View className={`${statusConfig.bg} px-4 py-2 flex-row items-center justify-between`}>
+                  <View className="flex-row items-center gap-2">
+                    <StatusIcon className={statusConfig.color} size={16} />
+                    <Text className={`${statusConfig.color} font-semibold text-sm`}>
+                      {statusConfig.label}
+                    </Text>
+                  </View>
+                  <Text className="text-muted-foreground text-xs font-medium">ID: #{appointment.id}</Text>
                 </View>
 
                 <View className="p-4">
-                  {/* Provider Info */}
+                  {/* Client Info */}
                   <View className="flex-row items-start justify-between mb-3">
                     <View className="flex-1">
                       <Text className="text-lg font-bold text-foreground mb-1">
-                        {appointment.provider?.companyName || 'Service Provider'}
+                        {appointment.owner?.firstName} {appointment.owner?.lastName}
                       </Text>
-                      <View className="flex-row items-center gap-1">
-                        <Star className="text-yellow-500" size={14} fill="#EAB308" />
-                        <Text className="text-muted-foreground text-sm">
-                          {/* Mock rating if not available */}
-                          4.8
+                      <View className="flex-row items-center gap-2">
+                        <PawPrint className="text-primary" size={14} />
+                        <Text className="text-muted-foreground text-sm font-medium">
+                          {appointment.petName} ({appointment.petType})
                         </Text>
                       </View>
                     </View>
@@ -359,13 +246,7 @@ export default function AppointmentsOwnerScreen() {
                     </View>
                   </View>
 
-                  {/* Service & Pet */}
-                  <View className="flex-row items-center gap-2 mb-3">
-                    <PawPrint className="text-primary" size={16} />
-                    <Text className="text-foreground font-medium">
-                      {appointment.provider?.serviceType || 'Service'} • {appointment.petName}
-                    </Text>
-                  </View>
+                  <View className="h-px bg-border my-2" />
 
                   {/* Date & Time */}
                   <View className="flex-row items-center gap-4 mb-3">
@@ -381,44 +262,64 @@ export default function AppointmentsOwnerScreen() {
                     </View>
                   </View>
 
-                  {/* Location */}
-                  <View className="flex-row items-start gap-2 mb-3">
-                    <MapPin className="text-muted-foreground mt-1" size={16} />
-                    <Text className="text-muted-foreground flex-1">
-                      {appointment.provider?.address}, {appointment.provider?.city}
-                    </Text>
-                  </View>
-
-                  {/* Contact */}
-                  <View className="flex-row items-center gap-2 mb-4">
-                    <Phone className="text-muted-foreground" size={16} />
-                    <Text className="text-muted-foreground">
-                      {appointment.provider?.user?.email || 'N/A'}
-                    </Text>
+                  {/* Contact Info */}
+                  <View className="flex-row items-center gap-4 mb-4">
+                    <View className="flex-row items-center gap-2">
+                      <Mail className="text-muted-foreground" size={16} />
+                      <Text className="text-muted-foreground text-sm">{appointment.owner?.email || 'N/A'}</Text>
+                    </View>
                   </View>
 
                   {/* Action Buttons */}
-                  {(canCancel || canReschedule) && (
+                  {activeTab === 'upcoming' && (
                     <View className="flex-row gap-3 pt-3 border-t border-border">
-                      {canReschedule && (
-                        <TouchableOpacity
-                          onPress={() => handleRescheduleAppointment(appointment.id)}
-                          className="flex-1 bg-primary py-3 rounded-xl flex-row items-center justify-center gap-2"
-                        >
-                          <Edit className="text-primary-foreground" size={18} />
-                          <Text className="text-primary-foreground font-semibold">
-                            Reschedule
-                          </Text>
-                        </TouchableOpacity>
+                      {isPending && (
+                        <>
+                          <TouchableOpacity
+                            onPress={(e) => {
+                              e.stopPropagation();
+                              handleUpdateStatus(appointment.id, 'confirmed');
+                            }}
+                            className="flex-1 bg-primary py-3 rounded-xl flex-row items-center justify-center gap-2"
+                          >
+                            <Check className="text-primary-foreground" size={18} />
+                            <Text className="text-primary-foreground font-semibold">Confirm</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            onPress={(e) => {
+                              e.stopPropagation();
+                              handleUpdateStatus(appointment.id, 'cancelled');
+                            }}
+                            className="flex-1 bg-muted py-3 rounded-xl flex-row items-center justify-center gap-2"
+                          >
+                            <XCircle className="text-muted-foreground" size={18} />
+                            <Text className="text-muted-foreground font-semibold">Decline</Text>
+                          </TouchableOpacity>
+                        </>
                       )}
-                      {canCancel && (
-                        <TouchableOpacity
-                          onPress={() => handleCancelAppointment(appointment.id)}
-                          className="flex-1 bg-red-50 py-3 rounded-xl flex-row items-center justify-center gap-2"
-                        >
-                          <X className="text-red-600" size={18} />
-                          <Text className="text-red-600 font-semibold">Cancel</Text>
-                        </TouchableOpacity>
+                      {isConfirmed && (
+                        <>
+                          <TouchableOpacity
+                            onPress={(e) => {
+                              e.stopPropagation();
+                              handleUpdateStatus(appointment.id, 'completed');
+                            }}
+                            className="flex-1 bg-green-600 py-3 rounded-xl flex-row items-center justify-center gap-2"
+                          >
+                            <CheckCircle className="text-white" size={18} />
+                            <Text className="text-white font-semibold">Complete</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            onPress={(e) => {
+                              e.stopPropagation();
+                              handleUpdateStatus(appointment.id, 'cancelled');
+                            }}
+                            className="flex-1 bg-muted py-3 rounded-xl flex-row items-center justify-center gap-2"
+                          >
+                            <XCircle className="text-muted-foreground" size={18} />
+                            <Text className="text-muted-foreground font-semibold">Cancel</Text>
+                          </TouchableOpacity>
+                        </>
                       )}
                     </View>
                   )}

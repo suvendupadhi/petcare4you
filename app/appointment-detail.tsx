@@ -23,8 +23,10 @@ import {
   CreditCard,
   FileText
 } from 'lucide-react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { appointmentService, Appointment, paymentService } from '@/services/petCareService';
 
+/*
 // Mock data - Replace with API calls
 const mockAppointmentDetail = {
   id: '1',
@@ -90,32 +92,28 @@ const mockAppointmentDetail = {
   canReschedule: true,
   canContact: true
 };
+*/
 
 export default function AppointmentDetailScreen() {
   const router = useRouter();
+  const { id } = useLocalSearchParams();
   const [loading, setLoading] = useState(true);
-  const [appointment, setAppointment] = useState<any>(null);
+  const [appointment, setAppointment] = useState<Appointment | null>(null);
 
   useEffect(() => {
-    loadAppointmentDetails();
-  }, []);
+    if (id) {
+      loadAppointmentDetails();
+    }
+  }, [id]);
 
   const loadAppointmentDetails = async () => {
     try {
-      // TODO: Replace with actual API call
-      // const appointmentId = route.params.id;
-      // const response = await fetch(`/api/appointments/${appointmentId}`, {
-      //   headers: { 'Authorization': `Bearer ${userToken}` }
-      // });
-      // const data = await response.json();
-      
-      // Simulate API delay
-      setTimeout(() => {
-        setAppointment(mockAppointmentDetail);
-        setLoading(false);
-      }, 600);
+      const data = await appointmentService.getAppointment(Number(id));
+      setAppointment(data);
     } catch (error) {
       console.error('Error loading appointment details:', error);
+      Alert.alert('Error', 'Failed to load appointment details');
+    } finally {
       setLoading(false);
     }
   };
@@ -160,7 +158,9 @@ export default function AppointmentDetailScreen() {
     }
   };
 
-  const handleCancelAppointment = () => {
+  const handleCancelAppointment = () => {// Add this to your fetch calls to see if they succeed
+
+
     Alert.alert(
       'Cancel Appointment',
       'Are you sure you want to cancel this appointment? This action cannot be undone.',
@@ -171,15 +171,13 @@ export default function AppointmentDetailScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              // TODO: Replace with actual API call
-              // await fetch(`/api/appointments/${appointment.id}/cancel`, {
-              //   method: 'POST',
-              //   headers: { 'Authorization': `Bearer ${userToken}` }
-              // });
-              
-              Alert.alert('Success', 'Appointment cancelled successfully', [
-                { text: 'OK', onPress: () => router.back() }
-              ]);
+              if (appointment) {
+                await appointmentService.updateStatus(appointment.id, 'cancelled');
+                
+                Alert.alert('Success', 'Appointment cancelled successfully', [
+                  { text: 'OK', onPress: () => router.back() }
+                ]);
+              }
             } catch (error) {
               Alert.alert('Error', 'Failed to cancel appointment');
             }
@@ -212,6 +210,30 @@ export default function AppointmentDetailScreen() {
     Alert.alert('Message', 'Open messaging interface');
   };
 
+  const handlePay = async () => {
+    if (!appointment) return;
+    
+    try {
+      setLoading(true);
+      await paymentService.createPayment({
+        appointmentId: appointment.id,
+        amount: appointment.totalPrice,
+        paymentMethod: 'Credit Card',
+        status: 'Paid',
+        transactionId: `TRX-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
+      });
+      
+      Alert.alert('Success', 'Payment processed successfully', [
+        { text: 'OK', onPress: () => loadAppointmentDetails() }
+      ]);
+    } catch (error) {
+      console.error('Payment failed:', error);
+      Alert.alert('Error', 'Failed to process payment');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <SafeAreaView className="flex-1 bg-background items-center justify-center">
@@ -236,6 +258,10 @@ export default function AppointmentDetailScreen() {
   const statusConfig = getStatusConfig(appointment.status);
   const StatusIcon = statusConfig.icon;
 
+  const canCancel = appointment.status === 'pending' || appointment.status === 'confirmed';
+  const canReschedule = appointment.status === 'pending';
+  const isPaid = appointment.payment && appointment.payment.status.toLowerCase() === 'paid';
+
   return (
     <SafeAreaView className="flex-1 bg-background">
       {/* Header */}
@@ -259,9 +285,6 @@ export default function AppointmentDetailScreen() {
             <Text className={`${statusConfig.color} font-bold text-lg`}>
               {statusConfig.label}
             </Text>
-            <Text className={`${statusConfig.color} text-sm mt-1`}>
-              Booked on {appointment.appointment.bookingDate}
-            </Text>
           </View>
         </View>
 
@@ -275,7 +298,7 @@ export default function AppointmentDetailScreen() {
             </View>
             <View className="flex-1">
               <Text className="text-foreground font-semibold">
-                {appointment.appointment.dayOfWeek}, {appointment.appointment.date}
+                {new Date(appointment.appointmentDate).toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
               </Text>
               <Text className="text-muted-foreground text-sm">Appointment Date</Text>
             </View>
@@ -287,10 +310,7 @@ export default function AppointmentDetailScreen() {
             </View>
             <View className="flex-1">
               <Text className="text-foreground font-semibold">
-                {appointment.appointment.time} - {appointment.appointment.endTime}
-              </Text>
-              <Text className="text-muted-foreground text-sm">
-                Duration: {appointment.service.duration}
+                {new Date(appointment.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(appointment.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </Text>
             </View>
           </View>
@@ -306,19 +326,19 @@ export default function AppointmentDetailScreen() {
             </View>
             <View className="flex-1">
               <Text className="text-foreground font-semibold">
-                {appointment.service.name}
+                {appointment.provider?.serviceType || 'Service'}
               </Text>
               <Text className="text-muted-foreground text-sm mt-1">
-                {appointment.service.description}
+                {appointment.description}
               </Text>
             </View>
           </View>
 
           <View className="bg-muted p-3 rounded-xl">
             <Text className="text-foreground font-bold text-2xl">
-              ${appointment.service.price}
+              ${appointment.totalPrice}
             </Text>
-            <Text className="text-muted-foreground text-sm">Service Price</Text>
+            <Text className="text-muted-foreground text-sm">Total Price</Text>
           </View>
         </View>
 
@@ -329,97 +349,59 @@ export default function AppointmentDetailScreen() {
           <View className="gap-3">
             <View className="flex-row items-center justify-between">
               <Text className="text-muted-foreground">Pet Name</Text>
-              <Text className="text-foreground font-semibold">{appointment.pet.name}</Text>
+              <Text className="text-foreground font-semibold">{appointment.petName}</Text>
             </View>
             <View className="flex-row items-center justify-between">
-              <Text className="text-muted-foreground">Breed</Text>
-              <Text className="text-foreground font-semibold">{appointment.pet.breed}</Text>
-            </View>
-            <View className="flex-row items-center justify-between">
-              <Text className="text-muted-foreground">Age</Text>
-              <Text className="text-foreground font-semibold">{appointment.pet.age}</Text>
-            </View>
-            <View className="flex-row items-center justify-between">
-              <Text className="text-muted-foreground">Weight</Text>
-              <Text className="text-foreground font-semibold">{appointment.pet.weight}</Text>
+              <Text className="text-muted-foreground">Pet Type</Text>
+              <Text className="text-foreground font-semibold">{appointment.petType}</Text>
             </View>
           </View>
-
-          {appointment.pet.specialNotes && (
-            <View className="mt-4 bg-yellow-50 p-3 rounded-xl">
-              <Text className="text-yellow-800 font-semibold mb-1">Special Notes</Text>
-              <Text className="text-yellow-700 text-sm">{appointment.pet.specialNotes}</Text>
-            </View>
-          )}
         </View>
 
         {/* Provider Information Card */}
-        <View className="mx-6 mt-4 bg-card rounded-2xl border border-border p-5">
-          <Text className="text-foreground font-bold text-lg mb-4">Provider Information</Text>
-          
-          <View className="flex-row items-center gap-3 mb-4">
-            <View className="bg-primary/10 w-14 h-14 rounded-full items-center justify-center">
-              <User className="text-primary" size={24} />
-            </View>
-            <View className="flex-1">
-              <Text className="text-foreground font-bold text-lg">
-                {appointment.provider.businessName}
-              </Text>
-              <View className="flex-row items-center gap-1 mt-1">
-                <Star className="text-yellow-500" size={14} fill="#EAB308" />
-                <Text className="text-muted-foreground text-sm">
-                  {appointment.provider.rating} ({appointment.provider.reviewCount} reviews)
+        {appointment.provider && (
+          <View className="mx-6 mt-4 bg-card rounded-2xl border border-border p-5">
+            <Text className="text-foreground font-bold text-lg mb-4">Provider Information</Text>
+            
+            <View className="flex-row items-center gap-3 mb-4">
+              <View className="bg-primary/10 w-14 h-14 rounded-full items-center justify-center">
+                <User className="text-primary" size={24} />
+              </View>
+              <View className="flex-1">
+                <Text className="text-foreground font-bold text-lg">
+                  {appointment.provider.companyName}
                 </Text>
+                <View className="flex-row items-center gap-1 mt-1">
+                  <Star className="text-yellow-500" size={14} fill="#EAB308" />
+                  <Text className="text-muted-foreground text-sm">
+                    4.8 (124 reviews)
+                  </Text>
+                </View>
               </View>
             </View>
-          </View>
 
-          {/* Contact Actions */}
-          <View className="gap-3">
-            <TouchableOpacity
-              onPress={() => handleCall(appointment.provider.phone)}
-              className="flex-row items-center gap-3 p-3 bg-muted rounded-xl"
-            >
-              <Phone className="text-primary" size={20} />
-              <Text className="text-foreground font-medium flex-1">
-                {appointment.provider.phone}
-              </Text>
-              <Text className="text-primary text-sm">Call</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => handleEmail(appointment.provider.email)}
-              className="flex-row items-center gap-3 p-3 bg-muted rounded-xl"
-            >
-              <Mail className="text-primary" size={20} />
-              <Text className="text-foreground font-medium flex-1">
-                {appointment.provider.email}
-              </Text>
-              <Text className="text-primary text-sm">Email</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => handleGetDirections(appointment.provider.address)}
-              className="flex-row items-center gap-3 p-3 bg-muted rounded-xl"
-            >
+            <View className="flex-row items-center gap-3 p-3 bg-muted rounded-xl mb-3">
               <MapPin className="text-primary" size={20} />
               <Text className="text-foreground font-medium flex-1">
-                {appointment.provider.address}
+                {appointment.provider.address}, {appointment.provider.city}
               </Text>
-              <Navigation className="text-primary" size={16} />
-            </TouchableOpacity>
+            </View>
 
-            <TouchableOpacity
-              onPress={handleMessage}
-              className="flex-row items-center justify-center gap-2 p-3 bg-primary rounded-xl"
-            >
-              <MessageCircle className="text-primary-foreground" size={20} />
-              <Text className="text-primary-foreground font-semibold">
-                Send Message
-              </Text>
-            </TouchableOpacity>
+            {/* Contact Actions */}
+            <View className="gap-3">
+              <TouchableOpacity
+                onPress={() => handleCall(appointment.provider?.user?.email || '')}
+                className="flex-row items-center gap-3 p-3 bg-muted rounded-xl"
+              >
+                <Phone className="text-primary" size={20} />
+                <Text className="text-foreground font-medium flex-1">
+                  {appointment.provider?.user?.email || 'N/A'}
+                </Text>
+                <Text className="text-primary text-sm">Call</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        )}
 
         {/* Payment Information Card */}
         <View className="mx-6 mt-4 bg-card rounded-2xl border border-border p-5">
@@ -429,20 +411,14 @@ export default function AppointmentDetailScreen() {
             <View className="flex-row items-center justify-between">
               <Text className="text-muted-foreground">Service Price</Text>
               <Text className="text-foreground font-semibold">
-                ${appointment.payment.amount.toFixed(2)}
-              </Text>
-            </View>
-            <View className="flex-row items-center justify-between">
-              <Text className="text-muted-foreground">Service Fee</Text>
-              <Text className="text-foreground font-semibold">
-                ${appointment.payment.serviceFee.toFixed(2)}
+                ${(appointment.totalPrice || 0).toFixed(2)}
               </Text>
             </View>
             <View className="h-px bg-border" />
             <View className="flex-row items-center justify-between">
               <Text className="text-foreground font-bold text-lg">Total</Text>
               <Text className="text-foreground font-bold text-xl">
-                ${appointment.payment.total.toFixed(2)}
+                ${(appointment.totalPrice || 0).toFixed(2)}
               </Text>
             </View>
           </View>
@@ -450,7 +426,7 @@ export default function AppointmentDetailScreen() {
           <View className="mt-4 flex-row items-center gap-2 p-3 bg-muted rounded-xl">
             <CreditCard className="text-muted-foreground" size={20} />
             <Text className="text-foreground">
-              {appointment.payment.method} • {appointment.payment.status === 'pending' ? 'Payment due at service' : 'Paid'}
+              {isPaid ? 'Paid' : 'Payment Pending'} • {appointment.payment?.paymentMethod || 'Credit Card'}
             </Text>
           </View>
         </View>
@@ -460,16 +436,25 @@ export default function AppointmentDetailScreen() {
           <FileText className="text-muted-foreground" size={20} />
           <View className="flex-1">
             <Text className="text-muted-foreground text-sm">Booking Reference</Text>
-            <Text className="text-foreground font-mono font-bold">#{appointment.id.toUpperCase()}</Text>
+            <Text className="text-foreground font-mono font-bold">#{appointment.id}</Text>
           </View>
         </View>
       </ScrollView>
 
       {/* Fixed Bottom Actions */}
-      {(appointment.canCancel || appointment.canReschedule) && (
+      {(canCancel || canReschedule || (!isPaid && appointment.status === 'confirmed')) && (
         <View className="absolute bottom-0 left-0 right-0 bg-background border-t border-border p-6">
           <View className="flex-row gap-3">
-            {appointment.canReschedule && (
+            {!isPaid && appointment.status === 'confirmed' && (
+              <TouchableOpacity
+                onPress={handlePay}
+                className="flex-1 bg-green-600 py-4 rounded-xl flex-row items-center justify-center gap-2"
+              >
+                <DollarSign className="text-white" size={20} />
+                <Text className="text-white font-bold">Pay Now</Text>
+              </TouchableOpacity>
+            )}
+            {canReschedule && (
               <TouchableOpacity
                 onPress={handleReschedule}
                 className="flex-1 bg-primary py-4 rounded-xl flex-row items-center justify-center gap-2"
@@ -478,7 +463,7 @@ export default function AppointmentDetailScreen() {
                 <Text className="text-primary-foreground font-bold">Reschedule</Text>
               </TouchableOpacity>
             )}
-            {appointment.canCancel && (
+            {canCancel && (
               <TouchableOpacity
                 onPress={handleCancelAppointment}
                 className="flex-1 bg-red-50 py-4 rounded-xl flex-row items-center justify-center gap-2"

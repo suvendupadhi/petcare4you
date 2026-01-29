@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { ArrowLeft, Building2, User, Phone, Mail, Lock, Globe, FileText, CheckCircle2, ArrowRight, Award } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+import { authService, providerService } from '@/services/petCareService';
 
 export default function RegisterProviderScreen() {
   const router = useRouter();
@@ -19,7 +20,6 @@ export default function RegisterProviderScreen() {
   const [providesDaycare, setProvidesDaycare] = useState(false);
   const [website, setWebsite] = useState('');
   const [businessDescription, setBusinessDescription] = useState('');
-  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -38,24 +38,12 @@ export default function RegisterProviderScreen() {
       Alert.alert('Validation Error', 'Please enter owner last name');
       return false;
     }
-    if (!businessPhone.trim() || businessPhone.length < 10) {
-      Alert.alert('Validation Error', 'Please enter a valid business phone number');
-      return false;
-    }
     if (!businessEmail.trim() || !businessEmail.includes('@')) {
       Alert.alert('Validation Error', 'Please enter a valid business email');
       return false;
     }
     if (!providesGrooming && !providesDaycare) {
       Alert.alert('Validation Error', 'Please select at least one service type');
-      return false;
-    }
-    if (!businessDescription.trim()) {
-      Alert.alert('Validation Error', 'Please provide a brief business description');
-      return false;
-    }
-    if (!username.trim() || username.length < 4) {
-      Alert.alert('Validation Error', 'Username must be at least 4 characters');
       return false;
     }
     if (!password || password.length < 6) {
@@ -74,50 +62,34 @@ export default function RegisterProviderScreen() {
 
     setLoading(true);
 
-    // TODO: Connect to your backend registration API
-    // Example API call:
-    /*
     try {
-      const response = await fetch('https://your-api.com/api/auth/register/provider', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          businessName,
-          ownerFirstName,
-          ownerLastName,
-          isLicensed,
-          businessPhone,
-          businessEmail,
-          serviceTypes: {
-            grooming: providesGrooming,
-            daycare: providesDaycare,
-          },
-          website,
-          businessDescription,
-          username,
-          password,
-        }),
+      // 1. Register User
+      await authService.register({
+        email: businessEmail,
+        password,
+        firstName: ownerFirstName,
+        lastName: ownerLastName,
+        userType: 'provider'
       });
-      
-      const data = await response.json();
-      
-      if (response.ok) {
-        Alert.alert('Success', 'Business account created successfully!', [
-          { text: 'OK', onPress: () => router.push('/') }
-        ]);
-      } else {
-        Alert.alert('Error', data.message || 'Registration failed');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Network error. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-    */
 
-    // Mock registration - Remove this and use actual API call
-    setTimeout(() => {
-      setLoading(false);
+      // 2. Login to get token
+      await authService.login({
+        email: businessEmail,
+        password
+      });
+
+      // 3. Create Provider Profile
+      await providerService.createProvider({
+        companyName: businessName,
+        description: businessDescription,
+        serviceType: providesGrooming ? 'Grooming' : 'Daycare',
+        hourlyRate: 50, // Default or add to form
+        address: 'Business Address', // Add to form if needed
+        city: 'City', // Add to form if needed
+        latitude: 0,
+        longitude: 0
+      });
+
       Alert.alert(
         'Success! 🎉',
         'Your business account has been created successfully. Please sign in to continue.',
@@ -128,7 +100,11 @@ export default function RegisterProviderScreen() {
           },
         ]
       );
-    }, 1500);
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Registration failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -385,27 +361,6 @@ export default function RegisterProviderScreen() {
           <View>
             <Text className="text-lg font-bold text-foreground mb-4">Account Credentials</Text>
             
-            {/* Username */}
-            <View className="mb-4">
-              <Text className="text-sm font-semibold text-foreground mb-2">
-                Username <Text className="text-destructive">*</Text>
-              </Text>
-              <View className="flex-row items-center bg-card border border-border rounded-xl px-4 py-3">
-                <User className="text-muted-foreground mr-3" size={20} />
-                <TextInput
-                  value={username}
-                  onChangeText={setUsername}
-                  placeholder="Choose a username"
-                  placeholderTextColor="#9CA3AF"
-                  autoCapitalize="none"
-                  className="flex-1 text-foreground text-base"
-                />
-              </View>
-              <Text className="text-xs text-muted-foreground mt-1">
-                Minimum 4 characters
-              </Text>
-            </View>
-
             {/* Password */}
             <View className="mb-4">
               <Text className="text-sm font-semibold text-foreground mb-2">

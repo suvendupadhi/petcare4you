@@ -15,79 +15,35 @@ import {
   Star
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
-
-// Mock data - Replace with API calls
-const mockUpcomingAppointments = [
-  {
-    id: '1',
-    providerName: 'Pawsome Grooming Spa',
-    serviceType: 'Pet Grooming',
-    date: '2024-01-25',
-    time: '10:00 AM',
-    petName: 'Max',
-    address: '123 Pet Street, City',
-    status: 'confirmed',
-    providerRating: 4.8
-  },
-  {
-    id: '2',
-    providerName: 'Happy Tails Daycare',
-    serviceType: 'Pet Daycare',
-    date: '2024-01-28',
-    time: '8:00 AM',
-    petName: 'Bella',
-    address: '456 Care Ave, City',
-    status: 'confirmed',
-    providerRating: 4.9
-  }
-];
-
-const mockRecentProviders = [
-  {
-    id: '1',
-    name: 'Pawsome Grooming Spa',
-    rating: 4.8,
-    reviews: 156,
-    distance: '2.3 miles',
-    services: ['Grooming', 'Bathing']
-  },
-  {
-    id: '2',
-    name: 'Happy Tails Daycare',
-    rating: 4.9,
-    reviews: 203,
-    distance: '1.8 miles',
-    services: ['Daycare', 'Boarding']
-  },
-  {
-    id: '3',
-    name: 'Pet Paradise Resort',
-    rating: 4.7,
-    reviews: 98,
-    distance: '3.5 miles',
-    services: ['Daycare', 'Grooming']
-  }
-];
+import { appointmentService, providerService, userService, Appointment, Provider, User as UserType } from '@/services/petCareService';
 
 export default function OwnerDashboardScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [appointments, setAppointments] = useState(mockUpcomingAppointments);
-  const [recentProviders, setRecentProviders] = useState(mockRecentProviders);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [recentProviders, setRecentProviders] = useState<Provider[]>([]);
+  const [user, setUser] = useState<UserType | null>(null);
 
   useEffect(() => {
     loadDashboardData();
   }, []);
 
   const loadDashboardData = async () => {
-    // TODO: Connect to your backend API
-    // Example: GET /api/owner/dashboard
-    // Fetch: upcoming appointments, recent bookings, favorite providers
-    
-    setTimeout(() => {
+    try {
+      const [appointmentsData, providersData, userData] = await Promise.all([
+        appointmentService.getOwnerAppointments(),
+        providerService.getProviders(),
+        userService.getCurrentUser()
+      ]);
+      setAppointments(appointmentsData);
+      setRecentProviders(providersData.slice(0, 3));
+      setUser(userData);
+    } catch (error) {
+      console.error('Failed to load dashboard data:', error);
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   const handleSearch = () => {
@@ -112,7 +68,7 @@ export default function OwnerDashboardScreen() {
           <View className="flex-row items-center justify-between mb-6">
             <View>
               <Text className="text-muted-foreground text-sm">Welcome back,</Text>
-              <Text className="text-foreground text-2xl font-bold">Pet Owner</Text>
+              <Text className="text-foreground text-2xl font-bold">{user?.firstName || 'Pet Owner'}</Text>
             </View>
             <View className="flex-row items-center gap-4">
               <TouchableOpacity>
@@ -207,18 +163,18 @@ export default function OwnerDashboardScreen() {
               {appointments.map((appointment) => (
                 <TouchableOpacity
                   key={appointment.id}
-                  onPress={() => router.push('/appointment-details')}
+                  onPress={() => router.push({ pathname: '/appointment-detail', params: { id: appointment.id } })}
                   className="bg-card border border-border rounded-2xl p-4 w-80"
                 >
                   <View className="flex-row items-start justify-between mb-3">
                     <View className="flex-1">
                       <Text className="text-foreground font-bold text-base mb-1">
-                        {appointment.providerName}
+                        {appointment.provider?.companyName || 'Unknown Provider'}
                       </Text>
                       <View className="flex-row items-center gap-1">
                         <Star className="text-primary" size={14} fill="#EA580C" />
                         <Text className="text-muted-foreground text-sm">
-                          {appointment.providerRating} · {appointment.serviceType}
+                          {appointment.provider?.serviceType || 'Service'}
                         </Text>
                       </View>
                     </View>
@@ -233,7 +189,7 @@ export default function OwnerDashboardScreen() {
                     <View className="flex-row items-center mb-2">
                       <Calendar className="text-primary mr-2" size={16} />
                       <Text className="text-foreground font-semibold">
-                        {new Date(appointment.date).toLocaleDateString('en-US', {
+                        {new Date(appointment.appointmentDate).toLocaleDateString('en-US', {
                           weekday: 'short',
                           month: 'short',
                           day: 'numeric'
@@ -243,7 +199,7 @@ export default function OwnerDashboardScreen() {
                     <View className="flex-row items-center">
                       <Clock className="text-primary mr-2" size={16} />
                       <Text className="text-foreground font-semibold">
-                        {appointment.time}
+                        {new Date(appointment.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </Text>
                     </View>
                   </View>
@@ -251,7 +207,7 @@ export default function OwnerDashboardScreen() {
                   <View className="flex-row items-center">
                     <MapPin className="text-muted-foreground mr-2" size={16} />
                     <Text className="text-muted-foreground text-sm flex-1" numberOfLines={1}>
-                      {appointment.address}
+                      {appointment.provider?.address || 'Address not available'}
                     </Text>
                   </View>
 
@@ -280,21 +236,21 @@ export default function OwnerDashboardScreen() {
             {recentProviders.map((provider) => (
               <TouchableOpacity
                 key={provider.id}
-                onPress={() => router.push('/provider-details')}
+                onPress={() => router.push({ pathname: '/provider-detail', params: { id: provider.id } })}
                 className="bg-card border border-border rounded-2xl p-4"
               >
                 <View className="flex-row items-center justify-between mb-3">
                   <View className="flex-1">
                     <Text className="text-foreground font-bold text-base mb-1">
-                      {provider.name}
+                      {provider.companyName}
                     </Text>
                     <View className="flex-row items-center gap-1">
                       <Star className="text-primary" size={14} fill="#EA580C" />
                       <Text className="text-foreground font-semibold text-sm">
-                        {provider.rating}
+                        4.8
                       </Text>
                       <Text className="text-muted-foreground text-sm">
-                        ({provider.reviews} reviews)
+                        (124 reviews)
                       </Text>
                     </View>
                   </View>
@@ -303,18 +259,16 @@ export default function OwnerDashboardScreen() {
 
                 <View className="flex-row items-center justify-between">
                   <View className="flex-row items-center gap-2">
-                    {provider.services.map((service, index) => (
-                      <View key={index} className="bg-primary/10 rounded-full px-3 py-1">
-                        <Text className="text-primary text-xs font-semibold">
-                          {service}
-                        </Text>
-                      </View>
-                    ))}
+                    <View className="bg-primary/10 rounded-full px-3 py-1">
+                      <Text className="text-primary text-xs font-semibold">
+                        {provider.serviceType}
+                      </Text>
+                    </View>
                   </View>
                   <View className="flex-row items-center">
                     <MapPin className="text-muted-foreground mr-1" size={14} />
                     <Text className="text-muted-foreground text-sm">
-                      {provider.distance}
+                      {provider.city}
                     </Text>
                   </View>
                 </View>

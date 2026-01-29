@@ -1,8 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using PetCareAPI.Data;
 using PetCareAPI.Models;
+using PetCareAPI.Services;
 using System.Security.Claims;
 
 namespace PetCareAPI.Controllers
@@ -12,64 +11,60 @@ namespace PetCareAPI.Controllers
     [Authorize]
     public class AppointmentsController : ControllerBase
     {
-        private readonly PetCareContext _context;
+        private readonly IAppointmentService _appointmentService;
 
-        public AppointmentsController(PetCareContext context)
+        public AppointmentsController(IAppointmentService appointmentService)
         {
-            _context = context;
+            _appointmentService = appointmentService;
         }
 
         [HttpGet("owner")]
         public async Task<ActionResult<IEnumerable<Appointment>>> GetOwnerAppointments()
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            return await _context.Appointments
-                .Include(a => a.Provider)
-                .Where(a => a.OwnerId == userId)
-                .OrderByDescending(a => a.AppointmentDate)
-                .ToListAsync();
+            var userId = GetUserId();
+            var appointments = await _appointmentService.GetOwnerAppointmentsAsync(userId);
+            return Ok(appointments);
         }
 
         [HttpGet("provider")]
         public async Task<ActionResult<IEnumerable<Appointment>>> GetProviderAppointments()
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            var provider = await _context.Providers.FirstOrDefaultAsync(p => p.UserId == userId);
-            if (provider == null) return NotFound("Provider profile not found");
-
-            return await _context.Appointments
-                .Include(a => a.Owner)
-                .Where(a => a.ProviderId == provider.Id)
-                .OrderByDescending(a => a.AppointmentDate)
-                .ToListAsync();
+            var userId = GetUserId();
+            var appointments = await _appointmentService.GetProviderAppointmentsAsync(userId);
+            return Ok(appointments);
         }
 
         [HttpPost]
         public async Task<ActionResult<Appointment>> CreateAppointment([FromBody] Appointment appointment)
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            appointment.OwnerId = userId;
-            appointment.Status = "pending";
-            appointment.CreatedAt = DateTime.UtcNow;
-            appointment.UpdatedAt = DateTime.UtcNow;
+            var userId = GetUserId();
+            var result = await _appointmentService.CreateAppointmentAsync(userId, appointment);
 
-            _context.Appointments.Add(appointment);
-            await _context.SaveChangesAsync();
+            if (result == null)
+            {
+                return BadRequest("The selected time slot is no longer available.");
+            }
 
-            return CreatedAtAction(nameof(GetOwnerAppointments), new { id = appointment.Id }, appointment);
+            return CreatedAtAction(nameof(GetOwnerAppointments), new { id = result.Id }, result);
         }
 
         [HttpPatch("{id}/status")]
-        public async Task<IActionResult> UpdateStatus(int id, [FromBody] string status)
+        public async Task<IActionResult> UpdateStatus(int id, [FromBody] StatusUpdateDto statusDto)
         {
-            var appointment = await _context.Appointments.FindAsync(id);
-            if (appointment == null) return NotFound();
-
-            appointment.Status = status;
-            appointment.UpdatedAt = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
+            var result = await _appointmentService.UpdateStatusAsync(id, statusDto.Status);
+            if (!result) return NotFound();
 
             return NoContent();
+        }
+
+        private int GetUserId()
+        {
+            return int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        }
+
+        public class StatusUpdateDto
+        {
+            public string Status { get; set; } = string.Empty;
         }
     }
 }
