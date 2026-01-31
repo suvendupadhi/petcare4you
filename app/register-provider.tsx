@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert, Switch } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert, Switch, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { ArrowLeft, Building2, User, Phone, Mail, Lock, Globe, FileText, CheckCircle2, ArrowRight, Award } from 'lucide-react-native';
@@ -27,31 +27,59 @@ export default function RegisterProviderScreen() {
   // Form validation
   const validateForm = () => {
     if (!businessName.trim()) {
-      Alert.alert('Validation Error', 'Please enter your business name');
+      if (Platform.OS === 'web') {
+        window.alert('Validation Error: Please enter your business name');
+      } else {
+        Alert.alert('Validation Error', 'Please enter your business name');
+      }
       return false;
     }
     if (!ownerFirstName.trim()) {
-      Alert.alert('Validation Error', 'Please enter owner first name');
+      if (Platform.OS === 'web') {
+        window.alert('Validation Error: Please enter owner first name');
+      } else {
+        Alert.alert('Validation Error', 'Please enter owner first name');
+      }
       return false;
     }
     if (!ownerLastName.trim()) {
-      Alert.alert('Validation Error', 'Please enter owner last name');
+      if (Platform.OS === 'web') {
+        window.alert('Validation Error: Please enter owner last name');
+      } else {
+        Alert.alert('Validation Error', 'Please enter owner last name');
+      }
       return false;
     }
     if (!businessEmail.trim() || !businessEmail.includes('@')) {
-      Alert.alert('Validation Error', 'Please enter a valid business email');
+      if (Platform.OS === 'web') {
+        window.alert('Validation Error: Please enter a valid business email');
+      } else {
+        Alert.alert('Validation Error', 'Please enter a valid business email');
+      }
       return false;
     }
     if (!providesGrooming && !providesDaycare) {
-      Alert.alert('Validation Error', 'Please select at least one service type');
+      if (Platform.OS === 'web') {
+        window.alert('Validation Error: Please select at least one service type');
+      } else {
+        Alert.alert('Validation Error', 'Please select at least one service type');
+      }
       return false;
     }
     if (!password || password.length < 6) {
-      Alert.alert('Validation Error', 'Password must be at least 6 characters');
+      if (Platform.OS === 'web') {
+        window.alert('Validation Error: Password must be at least 6 characters');
+      } else {
+        Alert.alert('Validation Error', 'Password must be at least 6 characters');
+      }
       return false;
     }
     if (password !== confirmPassword) {
-      Alert.alert('Validation Error', 'Passwords do not match');
+      if (Platform.OS === 'web') {
+        window.alert('Validation Error: Passwords do not match');
+      } else {
+        Alert.alert('Validation Error', 'Passwords do not match');
+      }
       return false;
     }
     return true;
@@ -90,18 +118,27 @@ export default function RegisterProviderScreen() {
         longitude: 0
       });
 
-      Alert.alert(
-        'Success! 🎉',
-        'Your business account has been created successfully. Please sign in to continue.',
-        [
-          {
-            text: 'Sign In',
-            onPress: () => router.push('/'),
-          },
-        ]
-      );
+      if (Platform.OS === 'web') {
+        window.alert('Success! 🎉: Your business account has been created successfully. Please sign in to continue.');
+        router.push('/');
+      } else {
+        Alert.alert(
+          'Success! 🎉',
+          'Your business account has been created successfully. Please sign in to continue.',
+          [
+            {
+              text: 'Sign In',
+              onPress: () => router.push('/'),
+            },
+          ]
+        );
+      }
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Registration failed');
+      if (Platform.OS === 'web') {
+        window.alert(`Error: ${error.message || 'Registration failed'}`);
+      } else {
+        Alert.alert('Error', error.message || 'Registration failed');
+      }
     } finally {
       setLoading(false);
     }

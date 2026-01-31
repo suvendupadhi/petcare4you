@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image, Dimensions, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Image, Dimensions, ActivityIndicator, Alert, TextInput, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { 
@@ -10,26 +10,31 @@ import {
   Globe,
   Clock,
   DollarSign,
-  Calendar,
+  Calendar as CalendarIcon,
   Scissors,
   Home as HomeIcon,
   Check,
   ChevronRight
 } from 'lucide-react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { providerService, appointmentService, availabilityService, Provider, Availability } from '@/services/petCareService';
+import { providerService, appointmentService, availabilityService, Provider, Availability, Appointment } from '@/services/petCareService';
+import { Calendar } from 'react-native-calendars';
+import { format } from 'date-fns';
 
 const { width } = Dimensions.get('window');
 
 export default function ProviderDetailScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams();
+  const { id, rescheduleId } = useLocalSearchParams();
   const [provider, setProvider] = useState<Provider | null>(null);
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [selectedService, setSelectedService] = useState<string>('');
+  const [petName, setPetName] = useState<string>('');
+  const [petType, setPetType] = useState<string>('Dog');
+  const [description, setDescription] = useState<string>('');
   const [showBooking, setShowBooking] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -38,6 +43,12 @@ export default function ProviderDetailScreen() {
       loadProviderData();
     }
   }, [id]);
+
+  useEffect(() => {
+    if (rescheduleId) {
+      loadAppointmentForReschedule();
+    }
+  }, [rescheduleId]);
 
   const loadProviderData = async () => {
     try {
@@ -48,13 +59,44 @@ export default function ProviderDetailScreen() {
       ]);
       setProvider(providerData);
       setAvailabilities(availabilityData);
-      // Automatically select the provider's service type
       setSelectedService(providerData.serviceType);
+      setShowBooking(true);
+      
+      // Select first available date by default if exists
+      const firstAvailableDate = availabilityData.find(a => !a.isBooked)?.date.split('T')[0];
+      if (firstAvailableDate) {
+        setSelectedDate(firstAvailableDate);
+      }
     } catch (error) {
       console.error('Error loading provider data:', error);
-      Alert.alert('Error', 'Failed to load provider details');
+      if (Platform.OS === 'web') {
+        window.alert('Failed to load provider details');
+      } else {
+        Alert.alert('Error', 'Failed to load provider details');
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadAppointmentForReschedule = async () => {
+    try {
+      const apt = await appointmentService.getAppointment(Number(rescheduleId));
+      if (apt) {
+        setPetName(apt.petName);
+        setPetType(apt.petType);
+        setDescription(apt.description);
+        setShowBooking(true);
+        
+        // Pre-select the original appointment date if it's available
+        const originalDate = apt.appointmentDate.split('T')[0];
+        const isDateAvailable = availabilities.some(a => a.date.split('T')[0] === originalDate && !a.isBooked);
+        if (isDateAvailable) {
+          setSelectedDate(originalDate);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading appointment for reschedule:', error);
     }
   };
 
@@ -82,16 +124,13 @@ export default function ProviderDetailScreen() {
     }
   ];
 
-  const availableDates = Array.from(new Set(availabilities.map(a => a.date.split('T')[0])))
-    .sort()
-    .map(dateStr => {
-      const date = new Date(dateStr);
-      return {
-        date: dateStr,
-        dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
-        dayNum: date.getDate().toString()
-      };
-    });
+  const availableDates = availabilities.reduce((acc: any, curr) => {
+    const dateStr = curr.date.split('T')[0];
+    if (!acc[dateStr]) {
+      acc[dateStr] = { marked: true, dotColor: '#2563eb' };
+    }
+    return acc;
+  }, {});
 
   const timeSlots = availabilities
     .filter(a => a.date.split('T')[0] === selectedDate)
@@ -105,7 +144,20 @@ export default function ProviderDetailScreen() {
 
   const handleBooking = async () => {
     if (!selectedDate || !selectedTime) {
-      Alert.alert('Error', 'Please select a date and time');
+      if (Platform.OS === 'web') {
+        window.alert('Error: Please select a date and time');
+      } else {
+        Alert.alert('Error', 'Please select a date and time');
+      }
+      return;
+    }
+
+    if (!petName.trim()) {
+      if (Platform.OS === 'web') {
+        window.alert('Error: Please enter your pet\'s name');
+      } else {
+        Alert.alert('Error', 'Please enter your pet\'s name');
+      }
       return;
     }
 
@@ -127,21 +179,41 @@ export default function ProviderDetailScreen() {
         appointmentDate: selectedDate,
         startTime: startTime,
         endTime: endTime,
-        petName: 'Max', // Mock pet name for now
-        petType: 'Dog',
-        description: `Booking for ${provider.serviceType}`,
+        petName: petName,
+        petType: petType,
+        description: description || `Booking for ${provider.serviceType}`,
         totalPrice: provider.hourlyRate,
         status: 'pending'
       };
 
-      await appointmentService.createAppointment(appointmentData);
-      
-      Alert.alert('Success', 'Appointment booked successfully!', [
-        { text: 'OK', onPress: () => router.push('/owner-dashboard') }
-      ]);
+      if (rescheduleId) {
+        await appointmentService.updateAppointment(Number(rescheduleId), appointmentData);
+        if (Platform.OS === 'web') {
+          window.alert('Success: Appointment rescheduled successfully!');
+          router.push('/appointments-owner');
+        } else {
+          Alert.alert('Success', 'Appointment rescheduled successfully!', [
+            { text: 'OK', onPress: () => router.push('/appointments-owner') }
+          ]);
+        }
+      } else {
+        await appointmentService.createAppointment(appointmentData);
+        if (Platform.OS === 'web') {
+          window.alert('Success: Appointment booked successfully!');
+          router.push('/appointments-owner');
+        } else {
+          Alert.alert('Success', 'Appointment booked successfully!', [
+            { text: 'OK', onPress: () => router.push('/appointments-owner') }
+          ]);
+        }
+      }
     } catch (error) {
-      console.error('Error booking appointment:', error);
-      Alert.alert('Error', 'Failed to book appointment. Please try again.');
+      console.error('Error handling booking:', error);
+      if (Platform.OS === 'web') {
+        window.alert('Error: Failed to process appointment. Please try again.');
+      } else {
+        Alert.alert('Error', 'Failed to process appointment. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -302,70 +374,137 @@ export default function ProviderDetailScreen() {
           {/* Booking Section */}
           {showBooking && (
             <View className="mb-6">
-              <Text className="text-lg font-bold text-foreground mb-3">Select Date & Time</Text>
+              <Text className="text-lg font-bold text-foreground mb-3">
+                {rescheduleId ? 'Reschedule Appointment' : 'Book Appointment'}
+              </Text>
+
+              {/* Pet Details */}
+              <View className="bg-card border border-border rounded-xl p-4 mb-4">
+                <Text className="text-sm font-semibold text-foreground mb-3">Pet Information</Text>
+                
+                <View className="mb-3">
+                  <Text className="text-xs text-muted-foreground mb-1">Pet Name</Text>
+                  <TextInput
+                    value={petName}
+                    onChangeText={setPetName}
+                    placeholder="Enter pet name"
+                    placeholderTextColor="#9CA3AF"
+                    className="bg-muted px-4 py-2 rounded-lg text-foreground"
+                  />
+                </View>
+
+                <View className="flex-row gap-3">
+                  <View className="flex-1">
+                    <Text className="text-xs text-muted-foreground mb-1">Pet Type</Text>
+                    <View className="flex-row gap-2">
+                      {['Dog', 'Cat', 'Other'].map((type) => (
+                        <TouchableOpacity
+                          key={type}
+                          onPress={() => setPetType(type)}
+                          className={`px-3 py-1.5 rounded-lg border ${
+                            petType === type ? 'bg-primary border-primary' : 'bg-muted border-border'
+                          }`}
+                        >
+                          <Text className={`text-xs ${petType === type ? 'text-primary-foreground font-bold' : 'text-muted-foreground'}`}>
+                            {type}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                </View>
+
+                <View className="mt-3">
+                  <Text className="text-xs text-muted-foreground mb-1">Special Notes (Optional)</Text>
+                  <TextInput
+                    value={description}
+                    onChangeText={setDescription}
+                    placeholder="Any special instructions?"
+                    placeholderTextColor="#9CA3AF"
+                    multiline
+                    numberOfLines={3}
+                    className="bg-muted px-4 py-2 rounded-lg text-foreground text-sm h-20"
+                    textAlignVertical="top"
+                  />
+                </View>
+              </View>
+              
+              <Text className="text-sm font-semibold text-foreground mb-3">Select Date & Time</Text>
               
               {/* Date Selection */}
-              <Text className="text-sm font-semibold text-foreground mb-2">Available Dates</Text>
-              <ScrollView 
-                horizontal 
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 8, gap: 8 }}
-                className="mb-4"
-              >
-                {availableDates.map((dateItem) => (
-                  <TouchableOpacity
-                    key={dateItem.date}
-                    onPress={() => setSelectedDate(dateItem.date)}
-                    className={`border-2 rounded-xl px-4 py-3 items-center min-w-[70px] ${
-                      selectedDate === dateItem.date 
-                        ? 'bg-primary border-primary' 
-                        : 'bg-card border-border'
-                    }`}
-                  >
-                    <Text className={`text-xs font-medium mb-1 ${
-                      selectedDate === dateItem.date ? 'text-primary-foreground' : 'text-muted-foreground'
-                    }`}>
-                      {dateItem.dayName}
-                    </Text>
-                    <Text className={`text-xl font-bold ${
-                      selectedDate === dateItem.date ? 'text-primary-foreground' : 'text-foreground'
-                    }`}>
-                      {dateItem.dayNum}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
+              <View className="mb-4">
+                <Text className="text-sm font-semibold text-foreground mb-2">Select Date</Text>
+                <View className="bg-card border border-border rounded-xl overflow-hidden">
+                  <Calendar
+                    onDayPress={(day: any) => setSelectedDate(day.dateString)}
+                    markedDates={{
+                      ...availableDates,
+                      [selectedDate]: {
+                        ...(availableDates[selectedDate] || {}),
+                        selected: true,
+                        selectedColor: '#2563eb',
+                      },
+                    }}
+                    theme={{
+                      backgroundColor: 'transparent',
+                      calendarBackground: 'transparent',
+                      textSectionTitleColor: '#6b7280',
+                      selectedDayBackgroundColor: '#2563eb',
+                      selectedDayTextColor: '#ffffff',
+                      todayTextColor: '#2563eb',
+                      dayTextColor: '#374151',
+                      textDisabledColor: '#d1d5db',
+                      dotColor: '#2563eb',
+                      selectedDotColor: '#ffffff',
+                      arrowColor: '#2563eb',
+                      monthTextColor: '#111827',
+                      indicatorColor: '#2563eb',
+                    }}
+                  />
+                </View>
+              </View>
 
               {/* Time Selection */}
               {selectedDate && (
                 <>
-                  <Text className="text-sm font-semibold text-foreground mb-2">Available Times</Text>
-                  <View className="flex-row flex-wrap gap-2 mb-4">
-                    {timeSlots.map((slot) => (
-                      <TouchableOpacity
-                        key={slot.id}
-                        disabled={!slot.available}
-                        onPress={() => setSelectedTime(slot.time)}
-                        className={`border-2 rounded-lg px-4 py-2.5 ${
-                          !slot.available
-                            ? 'bg-muted border-border opacity-40'
-                            : selectedTime === slot.time
-                            ? 'bg-primary border-primary'
-                            : 'bg-card border-border'
-                        }`}
-                      >
-                        <Text className={`font-medium ${
-                          !slot.available
-                            ? 'text-muted-foreground line-through'
-                            : selectedTime === slot.time
-                            ? 'text-primary-foreground'
-                            : 'text-foreground'
-                        }`}>
-                          {slot.label}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
+                  <Text className="text-sm font-semibold text-foreground mb-2">
+                    Available Times for {selectedDate ? format(new Date(selectedDate), 'MMM dd, yyyy') : ''}
+                  </Text>
+                  {timeSlots.length > 0 ? (
+                    <View className="flex-row flex-wrap gap-2 mb-4">
+                      {timeSlots.map((slot) => (
+                        <TouchableOpacity
+                          key={slot.id}
+                          disabled={!slot.available}
+                          onPress={() => setSelectedTime(slot.time)}
+                          className={`border-2 rounded-lg px-4 py-2.5 ${
+                            !slot.available
+                              ? 'bg-muted border-border opacity-40'
+                              : selectedTime === slot.time
+                              ? 'bg-primary border-primary'
+                              : 'bg-card border-border'
+                          }`}
+                        >
+                          <Text className={`font-medium ${
+                            !slot.available
+                              ? 'text-muted-foreground line-through'
+                              : selectedTime === slot.time
+                              ? 'text-primary-foreground'
+                              : 'text-foreground'
+                          }`}>
+                            {slot.label}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  ) : (
+                    <View className="bg-muted p-4 rounded-xl items-center justify-center mb-4">
+                      <Clock className="text-muted-foreground mb-2" size={24} />
+                      <Text className="text-muted-foreground text-center">
+                        No time slots available for this date.
+                      </Text>
+                    </View>
+                  )}
                 </>
               )}
             </View>
@@ -413,7 +552,7 @@ export default function ProviderDetailScreen() {
               <ActivityIndicator color="#fff" />
             ) : (
               <Text className="text-primary-foreground font-bold text-lg">
-                Confirm Booking
+                {rescheduleId ? 'Confirm Reschedule' : 'Confirm Booking'}
               </Text>
             )}
           </TouchableOpacity>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { 
@@ -100,71 +100,101 @@ export default function ProfileOwnerScreen() {
 
   const handleEditProfile = () => {
     // TODO: Navigate to edit profile screen
-    Alert.alert('Edit Profile', 'Navigate to edit profile screen');
+    if (Platform.OS === 'web') {
+      window.alert('Navigate to edit profile screen');
+    } else {
+      Alert.alert('Edit Profile', 'Navigate to edit profile screen');
+    }
   };
 
   const handleEditPet = (petId: string) => {
     // TODO: Navigate to edit pet screen
-    Alert.alert('Edit Pet', `Navigate to edit pet ${petId} screen`);
+    if (Platform.OS === 'web') {
+      window.alert(`Navigate to edit pet ${petId} screen`);
+    } else {
+      Alert.alert('Edit Pet', `Navigate to edit pet ${petId} screen`);
+    }
   };
 
   const handleAddPet = () => {
     // TODO: Navigate to add pet screen
-    Alert.alert('Add Pet', 'Navigate to add pet screen');
+    if (Platform.OS === 'web') {
+      window.alert('Navigate to add pet screen');
+    } else {
+      Alert.alert('Add Pet', 'Navigate to add pet screen');
+    }
   };
 
   const handleDeletePet = (petId: string, petName: string) => {
-    Alert.alert(
-      'Delete Pet',
-      `Are you sure you want to remove ${petName} from your profile?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            // TODO: API call to delete pet
-            setPets(pets.filter(p => p.id !== petId));
+    if (Platform.OS === 'web') {
+      if (window.confirm(`Are you sure you want to remove ${petName} from your profile?`)) {
+        setPets(pets.filter(p => p.id !== petId));
+      }
+    } else {
+      Alert.alert(
+        'Delete Pet',
+        `Are you sure you want to remove ${petName} from your profile?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: () => {
+              // TODO: API call to delete pet
+              setPets(pets.filter(p => p.id !== petId));
+            },
           },
-        },
-      ]
-    );
+        ]
+      );
+    }
   };
 
   const handleRemoveSavedProvider = (providerId: string, providerName: string) => {
-    Alert.alert(
-      'Remove Provider',
-      `Remove ${providerName} from saved providers?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Remove',
-          style: 'destructive',
-          onPress: () => {
-            // TODO: API call to remove saved provider
-            setSavedProviders(savedProviders.filter(p => p.id !== providerId));
+    if (Platform.OS === 'web') {
+      if (window.confirm(`Remove ${providerName} from saved providers?`)) {
+        setSavedProviders(savedProviders.filter(p => p.id !== providerId));
+      }
+    } else {
+      Alert.alert(
+        'Remove Provider',
+        `Remove ${providerName} from saved providers?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Remove',
+            style: 'destructive',
+            onPress: () => {
+              // TODO: API call to remove saved provider
+              setSavedProviders(savedProviders.filter(p => p.id !== providerId));
+            },
           },
-        },
-      ]
-    );
+        ]
+      );
+    }
   };
 
   const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-            await authService.logout();
-            router.replace('/');
+    if (Platform.OS === 'web') {
+      if (window.confirm('Are you sure you want to logout?')) {
+        authService.logout().then(() => router.replace('/'));
+      }
+    } else {
+      Alert.alert(
+        'Logout',
+        'Are you sure you want to logout?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Logout',
+            style: 'destructive',
+            onPress: async () => {
+              await authService.logout();
+              router.replace('/');
+            },
           },
-        },
-      ]
-    );
+        ]
+      );
+    }
   };
 
   if (loading) {

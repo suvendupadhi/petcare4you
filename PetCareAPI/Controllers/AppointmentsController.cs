@@ -18,6 +18,14 @@ namespace PetCareAPI.Controllers
             _appointmentService = appointmentService;
         }
 
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Appointment>> GetAppointment(int id)
+        {
+            var appointment = await _appointmentService.GetAppointmentAsync(id);
+            if (appointment == null) return NotFound();
+            return Ok(appointment);
+        }
+
         [HttpGet("owner")]
         public async Task<ActionResult<IEnumerable<Appointment>>> GetOwnerAppointments()
         {
@@ -46,6 +54,18 @@ namespace PetCareAPI.Controllers
             }
 
             return CreatedAtAction(nameof(GetOwnerAppointments), new { id = result.Id }, result);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<ActionResult<Appointment>> UpdateAppointment(int id, [FromBody] Appointment appointment)
+        {
+            var result = await _appointmentService.UpdateAppointmentAsync(id, appointment);
+            if (result == null)
+            {
+                return BadRequest("The selected time slot is no longer available or appointment not found.");
+            }
+
+            return Ok(result);
         }
 
         [HttpPatch("{id}/status")]

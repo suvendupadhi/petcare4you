@@ -3,6 +3,7 @@ import { api, setToken, clearToken } from './api';
 export interface User {
   id: number;
   email: string;
+  phoneNumber?: string;
   firstName: string;
   lastName: string;
   userType: 'owner' | 'provider';
@@ -75,6 +76,7 @@ export const providerService = {
     return await api.post('/providers', providerData);
   },
   updateProvider: async (id: number, providerData: any): Promise<void> => {
+    console.log(`petCareService: updateProvider called for id ${id}`, providerData);
     return await api.put(`/providers/${id}`, providerData);
   }
 };
@@ -91,6 +93,9 @@ export const appointmentService = {
   },
   createAppointment: async (appointmentData: any): Promise<Appointment> => {
     return await api.post('/appointments', appointmentData);
+  },
+  updateAppointment: async (id: number, appointmentData: any): Promise<Appointment> => {
+    return await api.put(`/appointments/${id}`, appointmentData);
   },
   updateStatus: async (id: number, status: string): Promise<void> => {
     return await api.patch(`/appointments/${id}/status`, { status });

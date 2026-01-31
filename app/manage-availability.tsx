@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, TextInput } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Platform, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Clock, Calendar, Plus, Trash2, Save } from 'lucide-react-native';
+import { ArrowLeft, Clock, Calendar as CalendarIcon, Plus, Trash2 } from 'lucide-react-native';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { availabilityService, Availability } from '@/services/petCareService';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { Calendar } from 'react-native-calendars';
+import { format } from 'date-fns';
 
 export default function ManageAvailabilityScreen() {
   const router = useRouter();
@@ -13,9 +16,12 @@ export default function ManageAvailabilityScreen() {
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
   
   // Form state for new slot
-  const [newDate, setNewDate] = useState(new Date().toISOString().split('T')[0]);
-  const [newStartTime, setNewStartTime] = useState('09:00');
-  const [newEndTime, setNewEndTime] = useState('10:00');
+  const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [startTime, setStartTime] = useState(new Date(new Date().setHours(9, 0, 0, 0)));
+  const [endTime, setEndTime] = useState(new Date(new Date().setHours(10, 0, 0, 0)));
+  
+  const [showStartTimePicker, setShowStartTimePicker] = useState(false);
+  const [showEndTimePicker, setShowEndTimePicker] = useState(false);
 
   useEffect(() => {
     loadAvailability();
@@ -28,62 +34,96 @@ export default function ManageAvailabilityScreen() {
       setAvailabilities(data);
     } catch (error) {
       console.error('Error loading availability:', error);
-      Alert.alert('Error', 'Failed to load availability');
+      if (Platform.OS === 'web') {
+        window.alert('Error: Failed to load availability');
+      } else {
+        Alert.alert('Error', 'Failed to load availability');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const handleAddSlot = async () => {
-    if (!newDate || !newStartTime || !newEndTime) {
-      Alert.alert('Error', 'Please fill all fields');
-      return;
-    }
-
     setSaving(true);
     try {
-      // Backend expects DateTime for Date, StartTime, EndTime
-      // We combine date and time
-      const startDateTime = `${newDate}T${newStartTime}:00`;
-      const endDateTime = `${newDate}T${newEndTime}:00`;
+      const [year, month, day] = selectedDate.split('-').map(Number);
+      
+      const startDateTime = new Date(year, month - 1, day, startTime.getHours(), startTime.getMinutes()).toISOString();
+      const endDateTime = new Date(year, month - 1, day, endTime.getHours(), endTime.getMinutes()).toISOString();
+      const dateOnly = new Date(year, month - 1, day).toISOString();
 
       await availabilityService.createAvailability({
-        date: newDate,
+        date: dateOnly,
         startTime: startDateTime,
         endTime: endDateTime,
         isBooked: false
       });
       
-      Alert.alert('Success', 'Availability slot added');
+      if (Platform.OS === 'web') {
+        window.alert('Success: Availability slot added');
+      } else {
+        Alert.alert('Success', 'Availability slot added');
+      }
       loadAvailability();
     } catch (error) {
       console.error('Error adding availability:', error);
-      Alert.alert('Error', 'Failed to add availability');
+      if (Platform.OS === 'web') {
+        window.alert('Error: Failed to add availability');
+      } else {
+        Alert.alert('Error', 'Failed to add availability');
+      }
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDeleteSlot = (id: number) => {
-    Alert.alert(
-      'Delete Slot',
-      'Are you sure you want to delete this availability slot?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await availabilityService.deleteAvailability(id);
-              setAvailabilities(prev => prev.filter(a => a.id !== id));
-            } catch (error) {
-              Alert.alert('Error', 'Failed to delete availability');
-            }
-          }
+  const onStartTimeChange = (event: any, selectedValue?: Date) => {
+    setShowStartTimePicker(Platform.OS === 'ios');
+    if (selectedValue) {
+      setStartTime(selectedValue);
+    }
+  };
+
+  const onEndTimeChange = (event: any, selectedValue?: Date) => {
+    setShowEndTimePicker(Platform.OS === 'ios');
+    if (selectedValue) {
+      setEndTime(selectedValue);
+    }
+  };
+
+  const handleDeleteSlot = async (id: number) => {
+    const deleteAction = async () => {
+      try {
+        await availabilityService.deleteAvailability(id);
+        setAvailabilities(prev => prev.filter(a => a.id !== id));
+      } catch (error) {
+        if (Platform.OS === 'web') {
+          window.alert('Error: Failed to delete availability');
+        } else {
+          Alert.alert('Error', 'Failed to delete availability');
         }
-      ]
-    );
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      if (window.confirm('Are you sure you want to delete this availability slot?')) {
+        await deleteAction();
+      }
+    } else {
+      Alert.alert(
+        'Delete Slot',
+        'Are you sure you want to delete this availability slot?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: deleteAction
+          }
+        ]
+      );
+    }
   };
 
   if (loading) {
@@ -121,36 +161,123 @@ export default function ManageAvailabilityScreen() {
             <Text className="text-lg font-semibold text-foreground mb-4">Add New Slot</Text>
             
             <View className="gap-4">
-              <View>
-                <Text className="text-muted-foreground text-sm mb-1">Date (YYYY-MM-DD)</Text>
-                <TextInput
-                  value={newDate}
-                  onChangeText={setNewDate}
-                  className="bg-muted text-foreground px-4 py-3 rounded-xl"
-                  placeholder="2024-03-25"
+              <View className="border border-border rounded-xl overflow-hidden mb-2">
+                <Calendar
+                  onDayPress={(day: any) => setSelectedDate(day.dateString)}
+                  markedDates={{
+                    [selectedDate]: { selected: true, disableTouchEvent: true, selectedColor: '#2563eb' }
+                  }}
+                  theme={{
+                    calendarBackground: 'transparent',
+                    textSectionTitleColor: '#6b7280',
+                    selectedDayBackgroundColor: '#2563eb',
+                    selectedDayTextColor: '#ffffff',
+                    todayTextColor: '#2563eb',
+                    dayTextColor: '#374151',
+                    textDisabledColor: '#d1d5db',
+                    monthTextColor: '#111827',
+                    arrowColor: '#2563eb',
+                  }}
                 />
               </View>
 
               <View className="flex-row gap-4">
                 <View className="flex-1">
-                  <Text className="text-muted-foreground text-sm mb-1">Start Time (HH:mm)</Text>
-                  <TextInput
-                    value={newStartTime}
-                    onChangeText={setNewStartTime}
-                    className="bg-muted text-foreground px-4 py-3 rounded-xl"
-                    placeholder="09:00"
-                  />
+                  <Text className="text-muted-foreground text-sm mb-1">Start Time</Text>
+                  {Platform.OS === 'web' ? (
+                    <input
+                      type="time"
+                      value={format(startTime, 'HH:mm')}
+                      onChange={(e) => {
+                        const [hours, minutes] = e.target.value.split(':').map(Number);
+                        const newTime = new Date(startTime);
+                        newTime.setHours(hours, minutes);
+                        setStartTime(newTime);
+                      }}
+                      style={{
+                        backgroundColor: '#f3f4f6',
+                        padding: 12,
+                        borderRadius: 12,
+                        border: 'none',
+                        color: '#111827',
+                        fontSize: 16,
+                        fontWeight: '500',
+                        width: '100%',
+                        outline: 'none'
+                      }}
+                    />
+                  ) : (
+                    <TouchableOpacity 
+                      onPress={() => setShowStartTimePicker(true)}
+                    >
+                      <View className="bg-muted px-4 py-3 rounded-xl flex-row items-center justify-between">
+                        <Text className="text-foreground font-medium">
+                          {format(startTime, 'hh:mm a')}
+                        </Text>
+                        <Clock size={16} className="text-muted-foreground" />
+                      </View>
+                    </TouchableOpacity>
+                  )}
                 </View>
+
                 <View className="flex-1">
-                  <Text className="text-muted-foreground text-sm mb-1">End Time (HH:mm)</Text>
-                  <TextInput
-                    value={newEndTime}
-                    onChangeText={setNewEndTime}
-                    className="bg-muted text-foreground px-4 py-3 rounded-xl"
-                    placeholder="10:00"
-                  />
+                  <Text className="text-muted-foreground text-sm mb-1">End Time</Text>
+                  {Platform.OS === 'web' ? (
+                    <input
+                      type="time"
+                      value={format(endTime, 'HH:mm')}
+                      onChange={(e) => {
+                        const [hours, minutes] = e.target.value.split(':').map(Number);
+                        const newTime = new Date(endTime);
+                        newTime.setHours(hours, minutes);
+                        setEndTime(newTime);
+                      }}
+                      style={{
+                        backgroundColor: '#f3f4f6',
+                        padding: 12,
+                        borderRadius: 12,
+                        border: 'none',
+                        color: '#111827',
+                        fontSize: 16,
+                        fontWeight: '500',
+                        width: '100%',
+                        outline: 'none'
+                      }}
+                    />
+                  ) : (
+                    <TouchableOpacity 
+                      onPress={() => setShowEndTimePicker(true)}
+                    >
+                      <View className="bg-muted px-4 py-3 rounded-xl flex-row items-center justify-between">
+                        <Text className="text-foreground font-medium">
+                          {format(endTime, 'hh:mm a')}
+                        </Text>
+                        <Clock size={16} className="text-muted-foreground" />
+                      </View>
+                    </TouchableOpacity>
+                  )}
                 </View>
               </View>
+
+              {Platform.OS !== 'web' && showStartTimePicker && (
+                <DateTimePicker
+                  value={startTime}
+                  mode="time"
+                  is24Hour={false}
+                  display="default"
+                  onChange={onStartTimeChange}
+                />
+              )}
+
+              {Platform.OS !== 'web' && showEndTimePicker && (
+                <DateTimePicker
+                  value={endTime}
+                  mode="time"
+                  is24Hour={false}
+                  display="default"
+                  onChange={onEndTimeChange}
+                />
+              )}
 
               <TouchableOpacity
                 onPress={handleAddSlot}
@@ -176,7 +303,7 @@ export default function ManageAvailabilityScreen() {
           
           {availabilities.length === 0 ? (
             <View className="bg-card border border-border rounded-2xl p-8 items-center">
-              <Calendar className="text-muted-foreground mb-2" size={48} />
+              <CalendarIcon className="text-muted-foreground mb-2" size={48} />
               <Text className="text-foreground font-semibold">No slots created yet</Text>
               <Text className="text-muted-foreground text-sm text-center mt-1">
                 Add your first availability slot above to start receiving bookings.
@@ -188,15 +315,15 @@ export default function ManageAvailabilityScreen() {
                 <View key={slot.id} className="bg-card border border-border rounded-2xl p-4 flex-row items-center justify-between">
                   <View>
                     <View className="flex-row items-center gap-2 mb-1">
-                      <Calendar className="text-primary" size={16} />
+                      <CalendarIcon className="text-primary" size={16} />
                       <Text className="text-foreground font-semibold">
-                        {new Date(slot.date).toLocaleDateString()}
+                        {format(new Date(slot.date), 'PPP')}
                       </Text>
                     </View>
                     <View className="flex-row items-center gap-2">
                       <Clock className="text-muted-foreground" size={16} />
                       <Text className="text-muted-foreground">
-                        {new Date(slot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(slot.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {format(new Date(slot.startTime), 'hh:mm a')} - {format(new Date(slot.endTime), 'hh:mm a')}
                       </Text>
                     </View>
                   </View>

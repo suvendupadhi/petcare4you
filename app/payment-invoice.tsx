@@ -6,6 +6,7 @@ import {
   Alert,
   ActivityIndicator,
   Text,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -138,7 +139,11 @@ export default function PaymentInvoiceScreen() {
       });
     } catch (error) {
       console.error('Error loading payment data:', error);
-      Alert.alert("Error", "Failed to load payment data");
+      if (Platform.OS === 'web') {
+        window.alert("Failed to load payment data");
+      } else {
+        Alert.alert("Error", "Failed to load payment data");
+      }
     } finally {
       setLoading(false);
     }
@@ -146,35 +151,53 @@ export default function PaymentInvoiceScreen() {
 
   const handleDownloadInvoice = (invoiceId: string) => {
     // TODO: Implement PDF generation and download
-    Alert.alert("Download Invoice", `Downloading invoice ${invoiceId}...`);
+    if (Platform.OS === 'web') {
+      window.alert(`Downloading invoice ${invoiceId}...`);
+    } else {
+      Alert.alert("Download Invoice", `Downloading invoice ${invoiceId}...`);
+    }
   };
 
   const handleEmailInvoice = (invoiceId: string, customerEmail: string) => {
     // TODO: Implement email invoice functionality
-    Alert.alert("Email Invoice", `Sending invoice ${invoiceId} to customer...`);
+    if (Platform.OS === 'web') {
+      window.alert(`Sending invoice ${invoiceId} to customer...`);
+    } else {
+      Alert.alert("Email Invoice", `Sending invoice ${invoiceId} to customer...`);
+    }
   };
 
   const handlePrintInvoice = (invoiceId: string) => {
     // TODO: Implement print functionality
-    Alert.alert(
-      "Print Invoice",
-      `Preparing invoice ${invoiceId} for printing...`
-    );
+    if (Platform.OS === 'web') {
+      window.alert(`Preparing invoice ${invoiceId} for printing...`);
+    } else {
+      Alert.alert(
+        "Print Invoice",
+        `Preparing invoice ${invoiceId} for printing...`
+      );
+    }
   };
 
   const handleProcessPayment = (invoiceId: string) => {
     // TODO: Integrate payment gateway (Stripe, PayPal, etc.)
-    Alert.alert(
-      "Process Payment",
-      "Payment gateway integration required. This will connect to your payment processor.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Continue",
-          onPress: () => console.log("Payment processing..."),
-        },
-      ]
-    );
+    if (Platform.OS === 'web') {
+      if (window.confirm("Payment gateway integration required. This will connect to your payment processor. Continue?")) {
+        console.log("Payment processing...");
+      }
+    } else {
+      Alert.alert(
+        "Process Payment",
+        "Payment gateway integration required. This will connect to your payment processor.",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Continue",
+            onPress: () => console.log("Payment processing..."),
+          },
+        ]
+      );
+    }
   };
 
   const getStatusColor = (status: string) => {

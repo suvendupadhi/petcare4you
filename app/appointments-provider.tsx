@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { 
@@ -35,7 +35,11 @@ export default function AppointmentsProviderScreen() {
       setAppointments(data);
     } catch (error) {
       console.error('Error loading appointments:', error);
-      Alert.alert('Error', 'Failed to load appointments');
+      if (Platform.OS === 'web') {
+        window.alert('Error: Failed to load appointments');
+      } else {
+        Alert.alert('Error', 'Failed to load appointments');
+      }
     } finally {
       setLoading(false);
     }
@@ -53,9 +57,17 @@ export default function AppointmentsProviderScreen() {
             : apt
         )
       );
-      Alert.alert('Success', `Appointment ${newStatus} successfully`);
+      if (Platform.OS === 'web') {
+        window.alert(`Success: Appointment ${newStatus} successfully`);
+      } else {
+        Alert.alert('Success', `Appointment ${newStatus} successfully`);
+      }
     } catch (error) {
-      Alert.alert('Error', `Failed to update appointment to ${newStatus}`);
+      if (Platform.OS === 'web') {
+        window.alert(`Error: Failed to update appointment to ${newStatus}`);
+      } else {
+        Alert.alert('Error', `Failed to update appointment to ${newStatus}`);
+      }
     }
   };
 
@@ -252,11 +264,11 @@ export default function AppointmentsProviderScreen() {
                   <View className="flex-row items-center gap-4 mb-3">
                     <View className="flex-row items-center gap-2">
                       <Calendar className="text-muted-foreground" size={16} />
-                      <Text className="text-muted-foreground">{formatDate(appointment.appointmentDate)}</Text>
+                      <Text className="text-muted-foreground font-medium">{formatDate(appointment.appointmentDate)}</Text>
                     </View>
-                    <View className="flex-row items-center gap-2">
-                      <Clock className="text-muted-foreground" size={16} />
-                      <Text className="text-muted-foreground">
+                    <View className="bg-primary/5 border border-primary/20 px-3 py-1 rounded-lg flex-row items-center gap-2">
+                      <Clock className="text-primary" size={14} />
+                      <Text className="text-primary font-bold text-xs">
                         {formatTime(appointment.startTime)} - {formatTime(appointment.endTime)}
                       </Text>
                     </View>

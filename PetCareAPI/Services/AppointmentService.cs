@@ -13,10 +13,21 @@ namespace PetCareAPI.Services
             _context = context;
         }
 
+        public async Task<Appointment?> GetAppointmentAsync(int id)
+        {
+            return await _context.Appointments
+                .Include(a => a.Provider)
+                    .ThenInclude(p => p!.User)
+                .Include(a => a.Owner)
+                .Include(a => a.Payment)
+                .FirstOrDefaultAsync(a => a.Id == id);
+        }
+
         public async Task<IEnumerable<Appointment>> GetOwnerAppointmentsAsync(int userId)
         {
             return await _context.Appointments
                 .Include(a => a.Provider)
+                    .ThenInclude(p => p!.User)
                 .Where(a => a.OwnerId == userId)
                 .OrderByDescending(a => a.AppointmentDate)
                 .ToListAsync();
@@ -36,10 +47,14 @@ namespace PetCareAPI.Services
 
         public async Task<Appointment?> CreateAppointmentAsync(int userId, Appointment appointment)
         {
-            // Validate availability
+            // Ensure UTC for PostgreSQL
+            appointment.AppointmentDate = DateTime.SpecifyKind(appointment.AppointmentDate.Date, DateTimeKind.Utc);
+            appointment.StartTime = DateTime.SpecifyKind(appointment.StartTime, DateTimeKind.Utc);
+            appointment.EndTime = DateTime.SpecifyKind(appointment.EndTime, DateTimeKind.Utc);
+
+            // Validate availability - using StartTime which includes the date
             var availability = await _context.Availabilities
-                .FirstOrDefaultAsync(a => a.ProviderId == appointment.ProviderId && 
-                                         a.Date.Date == appointment.AppointmentDate.Date &&
+                .FirstOrDefaultAsync(a => a.ProviderId == appointment.ProviderId &&
                                          a.StartTime == appointment.StartTime &&
                                          !a.IsBooked);
 
@@ -72,6 +87,57 @@ namespace PetCareAPI.Services
             await _context.SaveChangesAsync();
 
             return true;
+        }
+
+        public async Task<Appointment?> UpdateAppointmentAsync(int appointmentId, Appointment updatedAppointment)
+        {
+            // Ensure UTC for PostgreSQL
+            updatedAppointment.AppointmentDate = DateTime.SpecifyKind(updatedAppointment.AppointmentDate.Date, DateTimeKind.Utc);
+            updatedAppointment.StartTime = DateTime.SpecifyKind(updatedAppointment.StartTime, DateTimeKind.Utc);
+            updatedAppointment.EndTime = DateTime.SpecifyKind(updatedAppointment.EndTime, DateTimeKind.Utc);
+
+            var appointment = await _context.Appointments.FindAsync(appointmentId);
+            if (appointment == null) return null;
+
+            // If time changed, handle availability
+            if (appointment.AppointmentDate != updatedAppointment.AppointmentDate || 
+                appointment.StartTime != updatedAppointment.StartTime)
+            {
+                // 1. Unbook old slot
+                var oldAvailability = await _context.Availabilities
+                    .FirstOrDefaultAsync(a => a.ProviderId == appointment.ProviderId && 
+                                             a.StartTime == appointment.StartTime);
+                if (oldAvailability != null)
+                {
+                    oldAvailability.IsBooked = false;
+                }
+
+                // 2. Book new slot
+                var newAvailability = await _context.Availabilities
+                    .FirstOrDefaultAsync(a => a.ProviderId == updatedAppointment.ProviderId && 
+                                             a.StartTime == updatedAppointment.StartTime &&
+                                             !a.IsBooked);
+                
+                if (newAvailability == null)
+                {
+                    // New slot not available, abort
+                    return null;
+                }
+                newAvailability.IsBooked = true;
+
+                appointment.AppointmentDate = updatedAppointment.AppointmentDate;
+                appointment.StartTime = updatedAppointment.StartTime;
+                appointment.EndTime = updatedAppointment.EndTime;
+            }
+
+            appointment.PetName = updatedAppointment.PetName;
+            appointment.PetType = updatedAppointment.PetType;
+            appointment.Description = updatedAppointment.Description;
+            appointment.TotalPrice = updatedAppointment.TotalPrice;
+            appointment.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return appointment;
         }
     }
 }

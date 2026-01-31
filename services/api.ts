@@ -47,7 +47,12 @@ async function request(endpoint: string, options: RequestInit = {}) {
     return null;
   }
 
-  return await response.json();
+  const contentType = response.headers.get('content-type');
+  if (contentType && contentType.includes('application/json')) {
+    return await response.json();
+  }
+
+  return await response.text();
 }
 
 export const api = {

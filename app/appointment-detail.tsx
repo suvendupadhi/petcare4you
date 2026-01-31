@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Linking } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Linking, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { 
@@ -112,7 +112,11 @@ export default function AppointmentDetailScreen() {
       setAppointment(data);
     } catch (error) {
       console.error('Error loading appointment details:', error);
-      Alert.alert('Error', 'Failed to load appointment details');
+      if (Platform.OS === 'web') {
+        window.alert('Error: Failed to load appointment details');
+      } else {
+        Alert.alert('Error', 'Failed to load appointment details');
+      }
     } finally {
       setLoading(false);
     }
@@ -158,38 +162,60 @@ export default function AppointmentDetailScreen() {
     }
   };
 
-  const handleCancelAppointment = () => {// Add this to your fetch calls to see if they succeed
-
-
-    Alert.alert(
-      'Cancel Appointment',
-      'Are you sure you want to cancel this appointment? This action cannot be undone.',
-      [
-        { text: 'No', style: 'cancel' },
-        {
-          text: 'Yes, Cancel',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              if (appointment) {
-                await appointmentService.updateStatus(appointment.id, 'cancelled');
-                
-                Alert.alert('Success', 'Appointment cancelled successfully', [
-                  { text: 'OK', onPress: () => router.back() }
-                ]);
-              }
-            } catch (error) {
-              Alert.alert('Error', 'Failed to cancel appointment');
-            }
+  const handleCancelAppointment = () => {
+    const cancelAction = async () => {
+      try {
+        if (appointment) {
+          await appointmentService.updateStatus(appointment.id, 'cancelled');
+          
+          if (Platform.OS === 'web') {
+            window.alert('Success: Appointment cancelled successfully');
+            router.back();
+          } else {
+            Alert.alert('Success', 'Appointment cancelled successfully', [
+              { text: 'OK', onPress: () => router.back() }
+            ]);
           }
         }
-      ]
-    );
+      } catch (error) {
+        if (Platform.OS === 'web') {
+          window.alert('Error: Failed to cancel appointment');
+        } else {
+          Alert.alert('Error', 'Failed to cancel appointment');
+        }
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      if (window.confirm('Are you sure you want to cancel this appointment? This action cannot be undone.')) {
+        cancelAction();
+      }
+    } else {
+      Alert.alert(
+        'Cancel Appointment',
+        'Are you sure you want to cancel this appointment? This action cannot be undone.',
+        [
+          { text: 'No', style: 'cancel' },
+          {
+            text: 'Yes, Cancel',
+            style: 'destructive',
+            onPress: cancelAction
+          }
+        ]
+      );
+    }
   };
 
   const handleReschedule = () => {
-    // TODO: Navigate to reschedule screen
-    Alert.alert('Reschedule', 'Navigate to booking screen with pre-filled data');
+    if (appointment && appointment.providerId) {
+      router.push(`/provider-detail?id=${appointment.providerId}&rescheduleId=${appointment.id}`);
+    } else {
+      if (Platform.OS === 'web') {
+        window.alert('Error: Could not find provider information for this appointment');
+      } else {
+        Alert.alert('Error', 'Could not find provider information for this appointment');
+      }
+    }
   };
 
   const handleCall = (phone: string) => {
@@ -207,7 +233,11 @@ export default function AppointmentDetailScreen() {
 
   const handleMessage = () => {
     // TODO: Open messaging interface
-    Alert.alert('Message', 'Open messaging interface');
+    if (Platform.OS === 'web') {
+      window.alert('Message: Open messaging interface');
+    } else {
+      Alert.alert('Message', 'Open messaging interface');
+    }
   };
 
   const handlePay = async () => {
@@ -223,12 +253,21 @@ export default function AppointmentDetailScreen() {
         transactionId: `TRX-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
       });
       
-      Alert.alert('Success', 'Payment processed successfully', [
-        { text: 'OK', onPress: () => loadAppointmentDetails() }
-      ]);
+      if (Platform.OS === 'web') {
+        window.alert('Success: Payment processed successfully');
+        loadAppointmentDetails();
+      } else {
+        Alert.alert('Success', 'Payment processed successfully', [
+          { text: 'OK', onPress: () => loadAppointmentDetails() }
+        ]);
+      }
     } catch (error) {
       console.error('Payment failed:', error);
-      Alert.alert('Error', 'Failed to process payment');
+      if (Platform.OS === 'web') {
+        window.alert('Error: Failed to process payment');
+      } else {
+        Alert.alert('Error', 'Failed to process payment');
+      }
     } finally {
       setLoading(false);
     }
@@ -355,6 +394,12 @@ export default function AppointmentDetailScreen() {
               <Text className="text-muted-foreground">Pet Type</Text>
               <Text className="text-foreground font-semibold">{appointment.petType}</Text>
             </View>
+            {appointment.description && (
+              <View className="mt-2 p-3 bg-muted rounded-xl">
+                <Text className="text-muted-foreground text-xs mb-1">Special Notes</Text>
+                <Text className="text-foreground text-sm">{appointment.description}</Text>
+              </View>
+            )}
           </View>
         </View>
 
@@ -390,14 +435,25 @@ export default function AppointmentDetailScreen() {
             {/* Contact Actions */}
             <View className="gap-3">
               <TouchableOpacity
-                onPress={() => handleCall(appointment.provider?.user?.email || '')}
+                onPress={() => handleCall(appointment.provider?.user?.phoneNumber || '')}
                 className="flex-row items-center gap-3 p-3 bg-muted rounded-xl"
               >
                 <Phone className="text-primary" size={20} />
                 <Text className="text-foreground font-medium flex-1">
-                  {appointment.provider?.user?.email || 'N/A'}
+                  {appointment.provider?.user?.phoneNumber || 'N/A'}
                 </Text>
                 <Text className="text-primary text-sm">Call</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => handleEmail(appointment.provider?.user?.email || '')}
+                className="flex-row items-center gap-3 p-3 bg-muted rounded-xl"
+              >
+                <Mail className="text-primary" size={20} />
+                <Text className="text-foreground font-medium flex-1">
+                  {appointment.provider?.user?.email || 'N/A'}
+                </Text>
+                <Text className="text-primary text-sm">Email</Text>
               </TouchableOpacity>
             </View>
           </View>

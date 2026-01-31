@@ -30,9 +30,9 @@ namespace PetCareAPI.Controllers
         {
             var result = await _authService.RegisterAsync(registerDto);
             if (!result)
-                return BadRequest("User already exists");
+                return BadRequest(new { message = "User already exists" });
 
-            return Ok();
+            return StatusCode(201);
         }
     }
 }

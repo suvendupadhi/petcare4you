@@ -6,6 +6,7 @@ import {
   ScrollView,
   TextInput,
   Alert,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -29,7 +30,11 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert("Error", "Please enter email and password");
+      if (Platform.OS === 'web') {
+        window.alert('Error: Please enter email and password');
+      } else {
+        Alert.alert("Error", "Please enter email and password");
+      }
       return;
     }
 
@@ -38,7 +43,11 @@ export default function LoginScreen() {
       const result = await authService.login({ email, password });
       
       if (result.userType !== userType) {
-        Alert.alert("Warning", `Logging in as ${result.userType} instead of ${userType}`);
+        if (Platform.OS === 'web') {
+          window.alert(`Warning: Logging in as ${result.userType} instead of ${userType}`);
+        } else {
+          Alert.alert("Warning", `Logging in as ${result.userType} instead of ${userType}`);
+        }
       }
 
       if (result.userType === "owner") {
@@ -47,7 +56,11 @@ export default function LoginScreen() {
         router.push("/provider-dashboard");
       }
     } catch (error: any) {
-      Alert.alert("Login Failed", error.message || "Invalid credentials");
+      if (Platform.OS === 'web') {
+        window.alert(`Login Failed: ${error.message || "Invalid credentials"}`);
+      } else {
+        Alert.alert("Login Failed", error.message || "Invalid credentials");
+      }
     } finally {
       setLoading(false);
     }

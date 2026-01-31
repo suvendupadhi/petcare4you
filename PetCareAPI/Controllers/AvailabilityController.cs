@@ -46,6 +46,11 @@ namespace PetCareAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<Availability>> CreateAvailability([FromBody] Availability availability)
         {
+            // Ensure UTC for PostgreSQL
+            availability.Date = DateTime.SpecifyKind(availability.Date, DateTimeKind.Utc);
+            availability.StartTime = DateTime.SpecifyKind(availability.StartTime, DateTimeKind.Utc);
+            availability.EndTime = DateTime.SpecifyKind(availability.EndTime, DateTimeKind.Utc);
+
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             var provider = await _context.Providers.FirstOrDefaultAsync(p => p.UserId == userId);
             if (provider == null) return NotFound("Provider profile not found");
@@ -53,7 +58,6 @@ namespace PetCareAPI.Controllers
             // Check for overlapping slots
             var overlap = await _context.Availabilities
                 .AnyAsync(a => a.ProviderId == provider.Id && 
-                               a.Date.Date == availability.Date.Date &&
                                ((availability.StartTime >= a.StartTime && availability.StartTime < a.EndTime) ||
                                 (availability.EndTime > a.StartTime && availability.EndTime <= a.EndTime)));
 
@@ -72,12 +76,14 @@ namespace PetCareAPI.Controllers
         public async Task<IActionResult> DeleteAvailability(int id)
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var provider = await _context.Providers.FirstOrDefaultAsync(p => p.UserId == userId);
+            if (provider == null) return NotFound("Provider profile not found");
+
             var availability = await _context.Availabilities
-                .Include(a => a.Provider)
-                .FirstOrDefaultAsync(a => a.Id == id);
+                .FirstOrDefaultAsync(a => a.Id == id && a.ProviderId == provider.Id);
 
             if (availability == null) return NotFound();
-            if (availability.Provider?.UserId != userId) return Forbid();
+            if (availability.IsBooked) return BadRequest("Cannot delete a booked slot");
 
             _context.Availabilities.Remove(availability);
             await _context.SaveChangesAsync();

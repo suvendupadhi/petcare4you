@@ -10,7 +10,8 @@ import {
   Navigation,
   Scissors,
   Home as HomeIcon,
-  ChevronLeft
+  ChevronLeft,
+  Clock
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { providerService, Provider } from '@/services/petCareService';
@@ -172,10 +173,12 @@ export default function SearchProvidersScreen() {
       </View>
 
       {/* Next Available */}
-      <View className="mt-2 bg-accent/50 px-3 py-2 rounded-lg">
-        <Text className="text-accent-foreground text-xs">
-          Next available: <Text className="font-semibold">Today at 2:00 PM</Text>
-        </Text>
+      <View className="mt-3 flex-row items-center gap-2">
+        <Text className="text-muted-foreground text-xs">Next available:</Text>
+        <View className="bg-primary/10 px-2 py-1 rounded-md flex-row items-center gap-1">
+          <Clock className="text-primary" size={12} />
+          <Text className="text-primary font-bold text-xs">Today at 2:00 PM</Text>
+        </View>
       </View>
     </TouchableOpacity>
   );

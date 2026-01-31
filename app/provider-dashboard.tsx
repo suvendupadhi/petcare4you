@@ -14,7 +14,8 @@ import {
   Users,
   PawPrint,
   MapPin,
-  Phone
+  Phone,
+  User as UserIcon
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { appointmentService, Appointment, userService, User, Provider } from '@/services/petCareService';
@@ -103,6 +104,9 @@ export default function ProviderDashboard() {
           </View>
           <View className="flex-row items-center gap-4">
             <ThemeToggle />
+            <TouchableOpacity onPress={() => router.push('/profile-provider')}>
+              <UserIcon className="text-foreground" size={24} />
+            </TouchableOpacity>
             <TouchableOpacity className="relative">
               <Bell className="text-foreground" size={24} />
               <View className="absolute -top-1 -right-1 bg-red-500 w-4 h-4 rounded-full items-center justify-center">
@@ -207,27 +211,29 @@ export default function ProviderDashboard() {
                         </Text>
                       </View>
                     </View>
-                    <View className={`${getStatusBgColor(appointment.status)} px-3 py-1 rounded-full`}>
-                      <Text className={`${getStatusColor(appointment.status)} text-xs font-medium capitalize`}>
-                        {appointment.status}
-                      </Text>
+                    <View className="items-end gap-1">
+                      <View className={`${getStatusBgColor(appointment.status)} px-2 py-0.5 rounded-full`}>
+                        <Text className={`${getStatusColor(appointment.status)} text-[10px] font-bold capitalize`}>
+                          {appointment.status}
+                        </Text>
+                      </View>
+                      <View className="bg-primary/10 px-2 py-1 rounded-md flex-row items-center gap-1">
+                        <Clock className="text-primary" size={10} />
+                        <Text className="text-primary font-bold text-[10px]">
+                          {new Date(appointment.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </Text>
+                      </View>
                     </View>
                   </View>
 
                   <View className="flex-row items-center gap-4">
                     <View className="flex-row items-center gap-1">
-                      <Clock className="text-muted-foreground" size={14} />
-                      <Text className="text-muted-foreground text-sm">
-                        {new Date(appointment.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </Text>
-                    </View>
-                    <View className="flex-row items-center gap-1">
                       <DollarSign className="text-muted-foreground" size={14} />
-                      <Text className="text-muted-foreground text-sm">${appointment.totalPrice}</Text>
+                      <Text className="text-muted-foreground text-sm font-medium">${appointment.totalPrice}</Text>
                     </View>
                     <View className="flex-row items-center gap-1">
                       <Users className="text-muted-foreground" size={14} />
-                      <Text className="text-muted-foreground text-sm">{appointment.petType}</Text>
+                      <Text className="text-muted-foreground text-sm font-medium">{appointment.petType}</Text>
                     </View>
                   </View>
                 </TouchableOpacity>

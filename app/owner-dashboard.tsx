@@ -12,7 +12,8 @@ import {
   User,
   Home,
   ChevronRight,
-  Star
+  Star,
+  Plus
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { appointmentService, providerService, userService, Appointment, Provider, User as UserType } from '@/services/petCareService';
@@ -71,11 +72,14 @@ export default function OwnerDashboardScreen() {
               <Text className="text-foreground text-2xl font-bold">{user?.firstName || 'Pet Owner'}</Text>
             </View>
             <View className="flex-row items-center gap-4">
+              <TouchableOpacity onPress={() => router.push('/search-providers')}>
+                <Plus className="text-primary" size={24} />
+              </TouchableOpacity>
               <TouchableOpacity>
                 <Bell className="text-foreground" size={24} />
               </TouchableOpacity>
               <ThemeToggle />
-              <TouchableOpacity onPress={() => router.push('/owner-profile')}>
+              <TouchableOpacity onPress={() => router.push('/profile-owner')}>
                 <User className="text-foreground" size={24} />
               </TouchableOpacity>
             </View>
@@ -88,7 +92,7 @@ export default function OwnerDashboardScreen() {
           >
             <Search className="text-primary mr-3" size={22} />
             <Text className="flex-1 text-muted-foreground text-base">
-              Search for pet services...
+              Book a new service...
             </Text>
             <ChevronRight className="text-muted-foreground" size={20} />
           </TouchableOpacity>
@@ -103,12 +107,12 @@ export default function OwnerDashboardScreen() {
             >
               <Search className="text-primary-foreground mb-2" size={24} />
               <Text className="text-primary-foreground font-semibold text-sm">
-                Find Services
+                Book Now
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
-              onPress={() => router.push('/owner-appointments')}
+              onPress={() => router.push('/appointments-owner')}
               className="flex-1 bg-card border border-border rounded-xl p-4 items-center"
             >
               <Calendar className="text-primary mb-2" size={24} />
@@ -118,7 +122,7 @@ export default function OwnerDashboardScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity 
-              onPress={() => router.push('/owner-profile')}
+              onPress={() => router.push('/profile-owner')}
               className="flex-1 bg-card border border-border rounded-xl p-4 items-center"
             >
               <User className="text-primary mb-2" size={24} />
@@ -133,7 +137,7 @@ export default function OwnerDashboardScreen() {
         <View className="mb-6">
           <View className="px-6 mb-4 flex-row items-center justify-between">
             <Text className="text-foreground text-xl font-bold">Upcoming Appointments</Text>
-            <TouchableOpacity onPress={() => router.push('/owner-appointments')}>
+            <TouchableOpacity onPress={() => router.push('/appointments-owner')}>
               <Text className="text-primary font-semibold">See All</Text>
             </TouchableOpacity>
           </View>

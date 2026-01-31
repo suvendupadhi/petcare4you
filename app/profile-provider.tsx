@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator, TextInput } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator, TextInput, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { 
@@ -94,7 +94,9 @@ export default function ProfileProviderScreen() {
     hourlyRate: 0,
     address: '',
     city: '',
-    serviceType: ''
+    serviceType: '',
+    latitude: 0,
+    longitude: 0
   });
 
   useEffect(() => {
@@ -114,7 +116,9 @@ export default function ProfileProviderScreen() {
           hourlyRate: user.provider.hourlyRate,
           address: user.provider.address,
           city: user.provider.city,
-          serviceType: user.provider.serviceType
+          serviceType: user.provider.serviceType,
+          latitude: user.provider.latitude,
+          longitude: user.provider.longitude
         });
       }
     } catch (error) {
@@ -127,94 +131,139 @@ export default function ProfileProviderScreen() {
   const handleSaveProfile = async () => {
     if (!provider) return;
     try {
+      console.log('Saving profile with data:', editForm);
       await providerService.updateProvider(provider.id, editForm);
+      console.log('Profile update successful');
       setProvider({ ...provider, ...editForm });
       setEditMode(false);
-      Alert.alert('Success', 'Profile updated successfully');
+      if (Platform.OS === 'web') {
+        window.alert('Success: Profile updated successfully');
+      } else {
+        Alert.alert('Success', 'Profile updated successfully');
+      }
     } catch (error) {
-      Alert.alert('Error', 'Failed to update profile');
+      console.error('Error updating profile:', error);
+      if (Platform.OS === 'web') {
+        window.alert('Error: Failed to update profile');
+      } else {
+        Alert.alert('Error', 'Failed to update profile');
+      }
     }
   };
 
   const handleCancelEdit = () => {
-    setEditForm({
-      businessName: businessData.businessName,
-      ownerName: businessData.ownerName,
-      email: businessData.email,
-      phone: businessData.phone,
-      address: businessData.address,
-      description: businessData.description,
-    });
+    if (provider) {
+      setEditForm({
+        companyName: provider.companyName,
+        description: provider.description,
+        hourlyRate: provider.hourlyRate,
+        address: provider.address,
+        city: provider.city,
+        serviceType: provider.serviceType,
+        latitude: provider.latitude,
+        longitude: provider.longitude
+      });
+    }
     setEditMode(false);
   };
 
   const handleEditService = (serviceId: string) => {
     // TODO: Navigate to edit service screen
-    Alert.alert('Edit Service', `Navigate to edit service ${serviceId} screen`);
+    if (Platform.OS === 'web') {
+      window.alert(`Navigate to edit service ${serviceId} screen`);
+    } else {
+      Alert.alert('Edit Service', `Navigate to edit service ${serviceId} screen`);
+    }
   };
 
   const handleAddService = () => {
     // TODO: Navigate to add service screen
-    Alert.alert('Add Service', 'Navigate to add service screen');
+    if (Platform.OS === 'web') {
+      window.alert('Navigate to add service screen');
+    } else {
+      Alert.alert('Add Service', 'Navigate to add service screen');
+    }
   };
 
   const handleDeleteService = (serviceId: string, serviceName: string) => {
-    Alert.alert(
-      'Delete Service',
-      `Are you sure you want to remove ${serviceName}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            // TODO: API call to delete service
-            setServices(services.filter(s => s.id !== serviceId));
+    if (Platform.OS === 'web') {
+      if (window.confirm(`Are you sure you want to remove ${serviceName}?`)) {
+        setServices(services.filter(s => s.id !== serviceId));
+      }
+    } else {
+      Alert.alert(
+        'Delete Service',
+        `Are you sure you want to remove ${serviceName}?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: () => {
+              // TODO: API call to delete service
+              setServices(services.filter(s => s.id !== serviceId));
+            },
           },
-        },
-      ]
-    );
+        ]
+      );
+    }
   };
 
   const handleAddPhoto = () => {
     // TODO: Open image picker
-    Alert.alert('Add Photo', 'Open image picker to add business photos');
+    if (Platform.OS === 'web') {
+      window.alert('Open image picker to add business photos');
+    } else {
+      Alert.alert('Add Photo', 'Open image picker to add business photos');
+    }
   };
 
   const handleDeletePhoto = (photoUrl: string) => {
-    Alert.alert(
-      'Delete Photo',
-      'Remove this photo from your gallery?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            // TODO: API call to delete photo
-            setPhotos(photos.filter(p => p !== photoUrl));
+    if (Platform.OS === 'web') {
+      if (window.confirm('Remove this photo from your gallery?')) {
+        setPhotos(photos.filter(p => p !== photoUrl));
+      }
+    } else {
+      Alert.alert(
+        'Delete Photo',
+        'Remove this photo from your gallery?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: () => {
+              // TODO: API call to delete photo
+              setPhotos(photos.filter(p => p !== photoUrl));
+            },
           },
-        },
-      ]
-    );
+        ]
+      );
+    }
   };
 
   const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-            await authService.logout();
-            router.replace('/');
+    if (Platform.OS === 'web') {
+      if (window.confirm('Are you sure you want to logout?')) {
+        authService.logout().then(() => router.replace('/'));
+      }
+    } else {
+      Alert.alert(
+        'Logout',
+        'Are you sure you want to logout?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Logout',
+            style: 'destructive',
+            onPress: async () => {
+              await authService.logout();
+              router.replace('/');
+            },
           },
-        },
-      ]
-    );
+        ]
+      );
+    }
   };
 
   if (loading) {
@@ -421,7 +470,7 @@ export default function ProfileProviderScreen() {
           </View>
 
           <View className="bg-card rounded-xl p-4 border border-border gap-3">
-            {businessHours.map((item, index) => (
+            {mockBusinessHours.map((item, index) => (
               <View key={index} className="flex-row items-center justify-between">
                 <Text className="text-foreground font-semibold">{item.day}</Text>
                 <Text className="text-muted-foreground">{item.hours}</Text>

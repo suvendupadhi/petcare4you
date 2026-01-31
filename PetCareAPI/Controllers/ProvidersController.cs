@@ -69,16 +69,26 @@ namespace PetCareAPI.Controllers
         [Authorize]
         public async Task<IActionResult> UpdateProvider(int id, [FromBody] Provider provider)
         {
+            Console.WriteLine($"Updating provider {id}");
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null)
+            {
+                Console.WriteLine("Unauthorized: No userId claim");
                 return Unauthorized();
+            }
 
             var existing = await _context.Providers.FindAsync(id);
             if (existing == null)
+            {
+                Console.WriteLine($"NotFound: Provider {id}");
                 return NotFound();
+            }
 
             if (existing.UserId != int.Parse(userIdClaim.Value))
+            {
+                Console.WriteLine($"Forbid: Provider {id} doesn't belong to user {userIdClaim.Value}");
                 return Forbid();
+            }
 
             existing.CompanyName = provider.CompanyName;
             existing.Description = provider.Description;
@@ -91,6 +101,7 @@ namespace PetCareAPI.Controllers
             existing.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
+            Console.WriteLine($"Successfully updated provider {id}");
 
             return NoContent();
         }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { ArrowLeft, User, Phone, Mail, Lock, CheckCircle2, ArrowRight } from 'lucide-react-native';
@@ -21,27 +21,51 @@ export default function RegisterOwnerScreen() {
   // Form validation
   const validateForm = () => {
     if (!firstName.trim()) {
-      Alert.alert('Validation Error', 'Please enter your first name');
+      if (Platform.OS === 'web') {
+        window.alert('Validation Error: Please enter your first name');
+      } else {
+        Alert.alert('Validation Error', 'Please enter your first name');
+      }
       return false;
     }
     if (!lastName.trim()) {
-      Alert.alert('Validation Error', 'Please enter your last name');
+      if (Platform.OS === 'web') {
+        window.alert('Validation Error: Please enter your last name');
+      } else {
+        Alert.alert('Validation Error', 'Please enter your last name');
+      }
       return false;
     }
     if (!contactNumber.trim()) {
-      Alert.alert('Validation Error', 'Please enter your contact number');
+      if (Platform.OS === 'web') {
+        window.alert('Validation Error: Please enter your contact number');
+      } else {
+        Alert.alert('Validation Error', 'Please enter your contact number');
+      }
       return false;
     }
     if (!email.trim() || !email.includes('@')) {
-      Alert.alert('Validation Error', 'Please enter a valid email address');
+      if (Platform.OS === 'web') {
+        window.alert('Validation Error: Please enter a valid email address');
+      } else {
+        Alert.alert('Validation Error', 'Please enter a valid email address');
+      }
       return false;
     }
     if (!password || password.length < 6) {
-      Alert.alert('Validation Error', 'Password must be at least 6 characters');
+      if (Platform.OS === 'web') {
+        window.alert('Validation Error: Password must be at least 6 characters');
+      } else {
+        Alert.alert('Validation Error', 'Password must be at least 6 characters');
+      }
       return false;
     }
     if (password !== confirmPassword) {
-      Alert.alert('Validation Error', 'Passwords do not match');
+      if (Platform.OS === 'web') {
+        window.alert('Validation Error: Passwords do not match');
+      } else {
+        Alert.alert('Validation Error', 'Passwords do not match');
+      }
       return false;
     }
     return true;
@@ -62,18 +86,27 @@ export default function RegisterOwnerScreen() {
         userType: 'owner'
       });
       
-      Alert.alert(
-        'Success! 🎉',
-        'Your account has been created successfully. Please sign in to continue.',
-        [
-          {
-            text: 'Sign In',
-            onPress: () => router.push('/'),
-          },
-        ]
-      );
+      if (Platform.OS === 'web') {
+        window.alert('Success! 🎉: Your account has been created successfully. Please sign in to continue.');
+        router.push('/');
+      } else {
+        Alert.alert(
+          'Success! 🎉',
+          'Your account has been created successfully. Please sign in to continue.',
+          [
+            {
+              text: 'Sign In',
+              onPress: () => router.push('/'),
+            },
+          ]
+        );
+      }
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Registration failed');
+      if (Platform.OS === 'web') {
+        window.alert(`Error: ${error.message || 'Registration failed'}`);
+      } else {
+        Alert.alert('Error', error.message || 'Registration failed');
+      }
     } finally {
       setLoading(false);
     }

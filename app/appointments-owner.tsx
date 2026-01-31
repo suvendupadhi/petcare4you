@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { 
@@ -14,7 +14,8 @@ import {
   Edit,
   CheckCircle,
   AlertCircle,
-  XCircle
+  XCircle,
+  Plus
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { appointmentService, Appointment } from '@/services/petCareService';
@@ -122,50 +123,73 @@ export default function AppointmentsOwnerScreen() {
       setAppointments(data);
     } catch (error) {
       console.error('Error loading appointments:', error);
-      Alert.alert('Error', 'Failed to load appointments');
+      if (Platform.OS === 'web') {
+        window.alert('Error: Failed to load appointments');
+      } else {
+        Alert.alert('Error', 'Failed to load appointments');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const handleCancelAppointment = (appointmentId: number) => {
-    Alert.alert(
-      'Cancel Appointment',
-      'Are you sure you want to cancel this appointment? This action cannot be undone.',
-      [
-        { text: 'No', style: 'cancel' },
-        {
-          text: 'Yes, Cancel',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await appointmentService.updateStatus(appointmentId, 'cancelled');
-              
-              // Update local state
-              setAppointments(prev => 
-                prev.map(apt => 
-                  apt.id === appointmentId 
-                    ? { ...apt, status: 'cancelled' }
-                    : apt
-                )
-              );
-              Alert.alert('Success', 'Appointment cancelled successfully');
-            } catch (error) {
-              Alert.alert('Error', 'Failed to cancel appointment');
-            }
-          }
+    const cancelAction = async () => {
+      try {
+        await appointmentService.updateStatus(appointmentId, 'cancelled');
+        
+        // Update local state
+        setAppointments(prev => 
+          prev.map(apt => 
+            apt.id === appointmentId 
+              ? { ...apt, status: 'cancelled' }
+              : apt
+          )
+        );
+        if (Platform.OS === 'web') {
+          window.alert('Success: Appointment cancelled successfully');
+        } else {
+          Alert.alert('Success', 'Appointment cancelled successfully');
         }
-      ]
-    );
+      } catch (error) {
+        if (Platform.OS === 'web') {
+          window.alert('Error: Failed to cancel appointment');
+        } else {
+          Alert.alert('Error', 'Failed to cancel appointment');
+        }
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      if (window.confirm('Are you sure you want to cancel this appointment? This action cannot be undone.')) {
+        cancelAction();
+      }
+    } else {
+      Alert.alert(
+        'Cancel Appointment',
+        'Are you sure you want to cancel this appointment? This action cannot be undone.',
+        [
+          { text: 'No', style: 'cancel' },
+          {
+            text: 'Yes, Cancel',
+            style: 'destructive',
+            onPress: cancelAction
+          }
+        ]
+      );
+    }
   };
 
   const handleRescheduleAppointment = (appointmentId: number) => {
-    // Navigate to appointment detail where reschedule might be handled or directly to provider detail
     const appointment = appointments.find(a => a.id === appointmentId);
     if (appointment && appointment.providerId) {
-      router.push(`/provider-detail?id=${appointment.providerId}`);
+      router.push(`/provider-detail?id=${appointment.providerId}&rescheduleId=${appointmentId}`);
     } else {
-      Alert.alert('Info', 'Reschedule functionality will navigate to provider screen');
+      if (Platform.OS === 'web') {
+        window.alert('Error: Could not find provider information for this appointment');
+      } else {
+        Alert.alert('Error', 'Could not find provider information for this appointment');
+      }
     }
   };
 
@@ -262,7 +286,15 @@ export default function AppointmentsOwnerScreen() {
             </TouchableOpacity>
             <Text className="text-2xl font-bold text-foreground">My Appointments</Text>
           </View>
-          <ThemeToggle />
+          <View className="flex-row items-center gap-2">
+            <TouchableOpacity 
+              onPress={() => router.push('/search-providers')}
+              className="bg-primary/10 p-2 rounded-full"
+            >
+              <Plus className="text-primary" size={24} />
+            </TouchableOpacity>
+            <ThemeToggle />
+          </View>
         </View>
       </View>
 
@@ -393,7 +425,7 @@ export default function AppointmentsOwnerScreen() {
                   <View className="flex-row items-center gap-2 mb-4">
                     <Phone className="text-muted-foreground" size={16} />
                     <Text className="text-muted-foreground">
-                      {appointment.provider?.user?.email || 'N/A'}
+                      {appointment.provider?.user?.phoneNumber || 'N/A'}
                     </Text>
                   </View>
 
