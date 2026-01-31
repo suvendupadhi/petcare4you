@@ -55,6 +55,7 @@ builder.Services.AddDbContext<PetCareContext>(options =>
 // Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
+builder.Services.AddScoped<IStripeService, StripeService>();
 
 // Authentication
 var jwtSettings = builder.Configuration.GetSection("Jwt");

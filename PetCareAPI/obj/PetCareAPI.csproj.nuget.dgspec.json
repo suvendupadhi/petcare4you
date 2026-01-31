@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "D:\\W\\Asnet123\\petcare\\PetCareAPI\\PetCareAPI.csproj": {}
+    "c:\\code\\code\\boldflow-expo (2)\\petcare\\PetCareAPI\\PetCareAPI.csproj": {}
   },
   "projects": {
-    "D:\\W\\Asnet123\\petcare\\PetCareAPI\\PetCareAPI.csproj": {
+    "c:\\code\\code\\boldflow-expo (2)\\petcare\\PetCareAPI\\PetCareAPI.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\W\\Asnet123\\petcare\\PetCareAPI\\PetCareAPI.csproj",
+        "projectUniqueName": "c:\\code\\code\\boldflow-expo (2)\\petcare\\PetCareAPI\\PetCareAPI.csproj",
         "projectName": "PetCareAPI",
-        "projectPath": "D:\\W\\Asnet123\\petcare\\PetCareAPI\\PetCareAPI.csproj",
-        "packagesPath": "C:\\Users\\suven\\.nuget\\packages\\",
-        "outputPath": "D:\\W\\Asnet123\\petcare\\PetCareAPI\\obj\\",
+        "projectPath": "c:\\code\\code\\boldflow-expo (2)\\petcare\\PetCareAPI\\PetCareAPI.csproj",
+        "packagesPath": "C:\\Users\\swami\\.nuget\\packages\\",
+        "outputPath": "c:\\code\\code\\boldflow-expo (2)\\petcare\\PetCareAPI\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\suven\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\swami\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -26,6 +26,7 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -64,6 +65,10 @@
               "target": "Package",
               "version": "[9.0.0, )"
             },
+            "Stripe.net": {
+              "target": "Package",
+              "version": "[50.3.0, )"
+            },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
               "version": "[7.2.0, )"
@@ -88,7 +93,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.310/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.302/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

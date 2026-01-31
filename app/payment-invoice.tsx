@@ -21,79 +21,16 @@ import {
   XCircle,
   Search,
   Filter,
+  ExternalLink,
 } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { ThemeToggle } from "@/components/ThemeToggle";
-
-// Mock data - Replace with API call
-const mockInvoices = [
-  {
-    id: "INV-001",
-    appointmentId: "APT-123",
-    customerName: "Sarah Johnson",
-    petName: "Max",
-    service: "Full Grooming Package",
-    date: "2024-01-15",
-    amount: 75.0,
-    serviceFee: 7.5,
-    total: 82.5,
-    status: "paid",
-    paidAt: "2024-01-15T14:30:00",
-    paymentMethod: "Credit Card",
-  },
-  {
-    id: "INV-002",
-    appointmentId: "APT-124",
-    customerName: "Mike Chen",
-    petName: "Luna",
-    service: "Basic Bath & Brush",
-    date: "2024-01-16",
-    amount: 45.0,
-    serviceFee: 4.5,
-    total: 49.5,
-    status: "pending",
-    paymentMethod: null,
-  },
-  {
-    id: "INV-003",
-    appointmentId: "APT-125",
-    customerName: "Emily Davis",
-    petName: "Charlie",
-    service: "Nail Trim & Ear Cleaning",
-    date: "2024-01-14",
-    amount: 30.0,
-    serviceFee: 3.0,
-    total: 33.0,
-    status: "paid",
-    paidAt: "2024-01-14T11:20:00",
-    paymentMethod: "Cash",
-  },
-  {
-    id: "INV-004",
-    appointmentId: "APT-126",
-    customerName: "John Smith",
-    petName: "Bella",
-    service: "Full Grooming Package",
-    date: "2024-01-13",
-    amount: 75.0,
-    serviceFee: 7.5,
-    total: 82.5,
-    status: "failed",
-    paymentMethod: "Credit Card",
-  },
-];
-
-const mockStats = {
-  totalRevenue: 247.5,
-  pendingPayments: 49.5,
-  paidThisMonth: 198.0,
-  transactionCount: 3,
-};
-
-import { paymentService, Payment, userService, User } from "@/services/petCareService";
+import { usePaymentGateway } from "@/hooks/usePaymentGateway";
+import { paymentService, Payment, userService, User, stripeService } from "@/services/petCareService";
 
 export default function PaymentInvoiceScreen() {
   const router = useRouter();
+  const { processPayment } = usePaymentGateway();
   const [loading, setLoading] = useState(true);
   const [invoices, setInvoices] = useState<Payment[]>([]);
   const [user, setUser] = useState<User | null>(null);
@@ -179,24 +116,29 @@ export default function PaymentInvoiceScreen() {
     }
   };
 
-  const handleProcessPayment = (invoiceId: string) => {
-    // TODO: Integrate payment gateway (Stripe, PayPal, etc.)
-    if (Platform.OS === 'web') {
-      if (window.confirm("Payment gateway integration required. This will connect to your payment processor. Continue?")) {
-        console.log("Payment processing...");
+  const handleProcessPayment = async (invoiceId: string) => {
+    setLoading(true);
+    await processPayment(parseInt(invoiceId), loadPaymentData);
+    setLoading(false);
+  };
+
+  const handleOnboard = async () => {
+    try {
+      setLoading(true);
+      const { url } = await stripeService.onboard();
+      // In a real app, you would use Linking.openURL(url) or a WebView
+      if (Platform.OS === 'web') {
+        window.open(url, '_blank');
+      } else {
+        Alert.alert('Onboarding', 'Please complete onboarding in the browser.', [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Open Browser', onPress: () => console.log('Open URL:', url) }
+        ]);
       }
-    } else {
-      Alert.alert(
-        "Process Payment",
-        "Payment gateway integration required. This will connect to your payment processor.",
-        [
-          { text: "Cancel", style: "cancel" },
-          {
-            text: "Continue",
-            onPress: () => console.log("Payment processing..."),
-          },
-        ]
-      );
+    } catch (error: any) {
+      Alert.alert('Error', 'Failed to start onboarding');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -320,6 +262,17 @@ export default function PaymentInvoiceScreen() {
               </Text>
             </View>
           </View>
+          {user?.userType === 'provider' && (
+            <TouchableOpacity 
+              onPress={handleOnboard}
+              className="mt-4 bg-primary p-4 rounded-2xl flex-row items-center justify-center gap-2"
+            >
+              <ExternalLink size={20} className="text-primary-foreground" />
+              <Text className="text-primary-foreground font-bold text-lg">
+                Stripe Onboarding
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Filters */}

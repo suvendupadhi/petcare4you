@@ -11,6 +11,8 @@ namespace PetCareAPI.Models
         public string Status { get; set; } = string.Empty;
         public string PaymentMethod { get; set; } = string.Empty;
         public string TransactionId { get; set; } = string.Empty;
+        public string? StripePaymentIntentId { get; set; }
+        public string? StripeClientSecret { get; set; }
         public DateTime PaymentDate { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
