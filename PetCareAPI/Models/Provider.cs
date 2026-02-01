@@ -18,6 +18,8 @@ namespace PetCareAPI.Models
         public decimal Longitude { get; set; }
         public string? ProfileImageUrl { get; set; }
         public bool IsVerified { get; set; } = false;
+        public string? StripeAccountId { get; set; }
+        public bool IsStripeConnected { get; set; } = false;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 

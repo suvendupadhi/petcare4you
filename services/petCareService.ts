@@ -169,6 +169,18 @@ export const paymentService = {
   }
 };
 
+export const stripeService = {
+  onboard: async () => {
+    return await api.post('/stripe/onboard');
+  },
+  getAccountStatus: async () => {
+    return await api.get('/stripe/account-status');
+  },
+  createPaymentIntent: async (paymentId: number) => {
+    return await api.post(`/stripe/create-payment-intent/${paymentId}`);
+  }
+};
+
 export const userService = {
   getCurrentUser: async (): Promise<User> => {
     return await api.get('/users/me');
