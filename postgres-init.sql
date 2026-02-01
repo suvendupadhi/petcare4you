@@ -2,7 +2,17 @@
 CREATE SCHEMA IF NOT EXISTS petcare;
 SET search_path TO petcare;
 
--- 1. Users Table
+-- 1. ServiceType Table
+CREATE TABLE IF NOT EXISTS service_types (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    description TEXT,
+    icon_name VARCHAR(50),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2. Users Table
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
@@ -16,13 +26,12 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 2. Providers Table
+-- 3. Providers Table
 CREATE TABLE IF NOT EXISTS providers (
     id SERIAL PRIMARY KEY,
     user_id INTEGER UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     company_name VARCHAR(200) NOT NULL,
     description TEXT,
-    service_type VARCHAR(100), -- grooming, daycare, boarding
     hourly_rate DECIMAL(10, 2) DEFAULT 0.00,
     rating DECIMAL(3, 2) DEFAULT 5.00,
     review_count INTEGER DEFAULT 0,
@@ -36,7 +45,14 @@ CREATE TABLE IF NOT EXISTS providers (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 3. Appointments Table
+-- 4. ProviderServiceTypes (Join Table)
+CREATE TABLE IF NOT EXISTS provider_service_types (
+    provider_id INTEGER REFERENCES providers(id) ON DELETE CASCADE,
+    service_type_id INTEGER REFERENCES service_types(id) ON DELETE CASCADE,
+    PRIMARY KEY (provider_id, service_type_id)
+);
+
+-- 5. Appointments Table
 CREATE TABLE IF NOT EXISTS appointments (
     id SERIAL PRIMARY KEY,
     owner_id INTEGER NOT NULL REFERENCES users(id),
@@ -53,7 +69,7 @@ CREATE TABLE IF NOT EXISTS appointments (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 4. Availability Table
+-- 6. Availability Table
 CREATE TABLE IF NOT EXISTS availability (
     id SERIAL PRIMARY KEY,
     provider_id INTEGER NOT NULL REFERENCES providers(id) ON DELETE CASCADE,
@@ -64,7 +80,7 @@ CREATE TABLE IF NOT EXISTS availability (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 5. Payments Table
+-- 7. Payments Table
 CREATE TABLE IF NOT EXISTS payments (
     id SERIAL PRIMARY KEY,
     appointment_id INTEGER UNIQUE NOT NULL REFERENCES appointments(id) ON DELETE CASCADE,
@@ -84,15 +100,36 @@ CREATE INDEX idx_appointments_owner ON appointments(owner_id);
 CREATE INDEX idx_availability_provider ON availability(provider_id);
 
 -- SAMPLE DATA
+-- Insert Service Types
+INSERT INTO service_types (name, description, icon_name)
+VALUES 
+    ('Pet Grooming', 'Professional grooming services for your pets', 'scissors'),
+    ('Veterinary Care', 'Expert medical care and checkups', 'stethoscop'),
+    ('Dog Walking', 'Daily walks and exercise for dogs', 'dog'),
+    ('Pet Boarding', 'Safe and comfortable stay for your pets', 'home'),
+    ('Pet Training', 'Behavioral training and obedience classes', 'award'),
+    ('Pet Daycare', 'Supervised daytime care and socialization', 'clock'),
+    ('Pet Spa', 'Luxury treatments, massage, and relaxation', 'sparkles'),
+    ('Nail Trimming', 'Professional paw care and nail clipping', 'paw-print'),
+    ('Teeth Cleaning', 'Oral hygiene and dental care for pets', 'smile'),
+    ('Pet Sitting', 'In-home care while owners are away', 'user'),
+    ('Emergency Care', 'Urgent medical assistance and 24/7 support', 'heart-pulse'),
+    ('Pet Photography', 'Professional photo sessions for your furry friends', 'camera')
+ON CONFLICT (name) DO NOTHING;
+
 -- Passwords are stored in plain text (password for all is 'password123')
 INSERT INTO users (email, password_hash, first_name, last_name, phone_number, user_type)
 VALUES 
 ('owner@example.com', 'password123', 'John', 'Owner', '555-1234', 'owner'),
 ('groomer@example.com', 'password123', 'Jane', 'Groomer', '555-5678', 'provider');
 
-INSERT INTO providers (user_id, company_name, description, service_type, hourly_rate, rating, review_count, address, city, is_verified)
+INSERT INTO providers (user_id, company_name, description, hourly_rate, rating, review_count, address, city, is_verified)
 VALUES 
-(2, 'Paws & Claws Grooming', 'Top notch grooming services', 'grooming', 50.00, 4.8, 120, '123 Pet Lane', 'San Francisco', TRUE);
+(2, 'Paws & Claws Grooming', 'Top notch grooming services', 50.00, 4.8, 120, '123 Pet Lane', 'San Francisco', TRUE);
+
+-- Link provider to service types
+INSERT INTO provider_service_types (provider_id, service_type_id)
+VALUES (1, 1), (1, 7), (1, 8); -- Grooming, Spa, Nail Trimming
 
 INSERT INTO availability (provider_id, date, start_time, end_time, is_booked)
 VALUES 

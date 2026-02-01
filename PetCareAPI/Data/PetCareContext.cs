@@ -12,6 +12,7 @@ namespace PetCareAPI.Data
 
         public DbSet<User> Users { get; set; } = null!;
         public DbSet<Provider> Providers { get; set; } = null!;
+        public DbSet<ServiceType> ServiceTypes { get; set; } = null!;
         public DbSet<Appointment> Appointments { get; set; } = null!;
         public DbSet<Availability> Availabilities { get; set; } = null!;
         public DbSet<Payment> Payments { get; set; } = null!;
@@ -19,7 +20,6 @@ namespace PetCareAPI.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            modelBuilder.HasDefaultSchema("petcare");
 
             // User Configuration
             modelBuilder.Entity<User>()
@@ -32,6 +32,21 @@ namespace PetCareAPI.Data
                 .WithOne(u => u.Provider)
                 .HasForeignKey<Provider>(p => p.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // ServiceType Configuration
+            modelBuilder.Entity<Provider>()
+                .HasMany(p => p.ServiceTypes)
+                .WithMany(s => s.Providers)
+                .UsingEntity<Dictionary<string, object>>(
+                    "ProviderServiceType",
+                    j => j.HasOne<ServiceType>().WithMany().HasForeignKey("ServiceTypeId"),
+                    j => j.HasOne<Provider>().WithMany().HasForeignKey("ProviderId"),
+                    j => j.ToTable("provider_service_types", "petcare")
+                );
+
+            // Column naming for join table
+            modelBuilder.Entity("ProviderServiceType").Property<int>("ProviderId").HasColumnName("provider_id");
+            modelBuilder.Entity("ProviderServiceType").Property<int>("ServiceTypeId").HasColumnName("service_type_id");
 
             // Appointment Configuration
             modelBuilder.Entity<Appointment>()
@@ -69,6 +84,7 @@ namespace PetCareAPI.Data
             // Force all table and column names to snake_case for PostgreSQL compatibility
             foreach (var entity in modelBuilder.Model.GetEntityTypes())
             {
+                entity.SetSchema("petcare");
                 entity.SetTableName(ToSnakeCase(entity.GetTableName()));
 
                 foreach (var property in entity.GetProperties())

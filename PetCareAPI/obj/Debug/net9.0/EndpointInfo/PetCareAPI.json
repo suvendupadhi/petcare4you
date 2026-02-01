@@ -619,7 +619,7 @@
         ],
         "parameters": [
           {
-            "name": "serviceType",
+            "name": "serviceTypeIds",
             "in": "query",
             "schema": {
               "type": "string"
@@ -673,17 +673,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Provider"
+                "$ref": "#/components/schemas/ProviderUpdateDto"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/Provider"
+                "$ref": "#/components/schemas/ProviderUpdateDto"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/Provider"
+                "$ref": "#/components/schemas/ProviderUpdateDto"
               }
             }
           }
@@ -770,17 +770,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Provider"
+                "$ref": "#/components/schemas/ProviderUpdateDto"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/Provider"
+                "$ref": "#/components/schemas/ProviderUpdateDto"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/Provider"
+                "$ref": "#/components/schemas/ProviderUpdateDto"
               }
             }
           }
@@ -788,6 +788,84 @@
         "responses": {
           "200": {
             "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/ServiceTypes": {
+      "get": {
+        "tags": [
+          "ServiceTypes"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ServiceType"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ServiceType"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ServiceType"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ServiceTypes/{id}": {
+      "get": {
+        "tags": [
+          "ServiceTypes"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceType"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceType"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceType"
+                }
+              }
+            }
           }
         }
       }
@@ -1037,10 +1115,6 @@
             "type": "string",
             "nullable": true
           },
-          "serviceType": {
-            "type": "string",
-            "nullable": true
-          },
           "hourlyRate": {
             "type": "number",
             "format": "double"
@@ -1087,6 +1161,13 @@
           "user": {
             "$ref": "#/components/schemas/User"
           },
+          "serviceTypes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ServiceType"
+            },
+            "nullable": true
+          },
           "appointments": {
             "type": "array",
             "items": {
@@ -1100,6 +1181,48 @@
               "$ref": "#/components/schemas/Availability"
             },
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProviderUpdateDto": {
+        "type": "object",
+        "properties": {
+          "companyName": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "serviceTypeIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "hourlyRate": {
+            "type": "number",
+            "format": "double"
+          },
+          "address": {
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "type": "string",
+            "nullable": true
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double"
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double"
           }
         },
         "additionalProperties": false
@@ -1129,6 +1252,35 @@
           },
           "userType": {
             "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ServiceType": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "iconName": {
+            "type": "string",
+            "nullable": true
+          },
+          "providers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Provider"
+            },
             "nullable": true
           }
         },

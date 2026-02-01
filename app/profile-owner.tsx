@@ -214,7 +214,12 @@ export default function ProfileOwnerScreen() {
             <ArrowLeft className="text-foreground" size={24} />
           </TouchableOpacity>
           <Text className="text-xl font-bold text-foreground">My Profile</Text>
-          <ThemeToggle />
+          <View className="flex-row items-center gap-4">
+            <ThemeToggle />
+            <TouchableOpacity onPress={handleLogout}>
+              <LogOut className="text-destructive" size={24} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Profile Card */}

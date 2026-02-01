@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, TextInput, FlatList } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, TextInput, FlatList, Alert, Platform, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { 
@@ -11,90 +11,78 @@ import {
   Scissors,
   Home as HomeIcon,
   ChevronLeft,
-  Clock
+  Clock,
+  LogOut,
+  Stethoscope,
+  Award,
+  Dog
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
-import { providerService, Provider } from '@/services/petCareService';
-
-type ServiceCategory = 'all' | 'grooming' | 'daycare';
-
-/*
-interface Provider {
-  id: string;
-  businessName: string;
-  rating: number;
-  reviewCount: number;
-  distance: number;
-  services: string[];
-  priceRange: string;
-  address: string;
-  isLicensed: boolean;
-  nextAvailable: string;
-}
-*/
+import { authService, providerService, serviceTypeService, Provider, ServiceType } from '@/services/petCareService';
+import { MultiSelect } from '@/components/MultiSelect';
 
 export default function SearchProvidersScreen() {
   const router = useRouter();
   const [city, setCity] = useState('');
   const [radius, setRadius] = useState(10);
-  const [serviceType, setServiceType] = useState<ServiceCategory>('all');
+  const [selectedServiceTypeIds, setSelectedServiceTypeIds] = useState<number[]>([]);
+  const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
+  const [loadingServiceTypes, setLoadingServiceTypes] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [results, setResults] = useState<Provider[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  // Mock search results - Replace with actual API call
-  /*
-  const mockResults: Provider[] = [
-    {
-      id: '1',
-      businessName: 'Paws & Claws Grooming',
-      rating: 4.8,
-      reviewCount: 124,
-      distance: 2.3,
-      services: ['Grooming', 'Nail Trim', 'Bath'],
-      priceRange: '$$',
-      address: '123 Main St, City',
-      isLicensed: true,
-      nextAvailable: 'Today at 2:00 PM'
-    },
-    {
-      id: '2',
-      businessName: 'Happy Tails Daycare',
-      rating: 4.9,
-      reviewCount: 89,
-      distance: 3.1,
-      services: ['Daycare', 'Boarding', 'Training'],
-      priceRange: '$$$',
-      address: '456 Oak Ave, City',
-      isLicensed: true,
-      nextAvailable: 'Tomorrow at 9:00 AM'
-    },
-    {
-      id: '3',
-      businessName: 'Furry Friends Spa',
-      rating: 4.7,
-      reviewCount: 156,
-      distance: 4.5,
-      services: ['Grooming', 'Daycare', 'Spa'],
-      priceRange: '$$',
-      address: '789 Pine Rd, City',
-      isLicensed: true,
-      nextAvailable: 'Today at 4:30 PM'
-    },
-    {
-      id: '4',
-      businessName: 'Pet Paradise Grooming',
-      rating: 4.6,
-      reviewCount: 67,
-      distance: 5.2,
-      services: ['Grooming', 'Bath', 'Teeth Cleaning'],
-      priceRange: '$',
-      address: '321 Elm St, City',
-      isLicensed: true,
-      nextAvailable: 'Wed at 10:00 AM'
+  useEffect(() => {
+    const fetchServiceTypes = async () => {
+      try {
+        const types = await serviceTypeService.getServiceTypes();
+        setServiceTypes(types);
+      } catch (error) {
+        console.error('Failed to fetch service types:', error);
+      } finally {
+        setLoadingServiceTypes(false);
+      }
+    };
+
+    fetchServiceTypes();
+  }, []);
+
+  const toggleServiceType = (id: number | null) => {
+    if (id === null) {
+      setSelectedServiceTypeIds([]);
+      return;
     }
-  ];
-  */
+
+    setSelectedServiceTypeIds(prev => 
+      prev.includes(id) 
+        ? prev.filter(item => item !== id) 
+        : [...prev, id]
+    );
+  };
+
+  const handleLogout = () => {
+    if (Platform.OS === 'web') {
+      if (window.confirm('Are you sure you want to logout?')) {
+        authService.logout().then(() => router.replace('/'));
+      }
+    } else {
+      Alert.alert(
+        'Logout',
+        'Are you sure you want to logout?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Logout',
+            style: 'destructive',
+            onPress: async () => {
+              await authService.logout();
+              router.replace('/');
+            },
+          },
+        ]
+      );
+    }
+  };
 
   const handleSearch = async () => {
     if (!city) {
@@ -104,7 +92,7 @@ export default function SearchProvidersScreen() {
     setIsSearching(true);
     try {
       const data = await providerService.getProviders(
-        serviceType === 'all' ? undefined : serviceType,
+        selectedServiceTypeIds.length > 0 ? selectedServiceTypeIds : undefined,
         city
       );
       setResults(data);
@@ -116,6 +104,17 @@ export default function SearchProvidersScreen() {
   };
 
   const radiusOptions = [5, 10, 15, 25, 50];
+
+  const getServiceIcon = (iconName: string) => {
+    switch (iconName?.toLowerCase()) {
+      case 'scissors': return <Scissors className="text-muted-foreground" size={12} />;
+      case 'stethoscope': return <Stethoscope className="text-muted-foreground" size={12} />;
+      case 'dog': return <Dog className="text-muted-foreground" size={12} />;
+      case 'home': return <HomeIcon className="text-muted-foreground" size={12} />;
+      case 'award': return <Award className="text-muted-foreground" size={12} />;
+      default: return <HomeIcon className="text-muted-foreground" size={12} />;
+    }
+  };
 
   const renderProviderCard = ({ item }: { item: Provider }) => (
     <TouchableOpacity
@@ -148,14 +147,17 @@ export default function SearchProvidersScreen() {
 
       {/* Services */}
       <View className="flex-row flex-wrap gap-2 mb-3">
-        <View className="bg-muted px-3 py-1 rounded-full flex-row items-center gap-1">
-          {item.serviceType.toLowerCase().includes('grooming') ? (
-            <Scissors className="text-muted-foreground" size={12} />
-          ) : (
+        {item.serviceTypes?.map((st) => (
+          <View key={st.id} className="bg-muted px-3 py-1 rounded-full flex-row items-center gap-1">
+            {getServiceIcon(st.iconName || '')}
+            <Text className="text-muted-foreground text-xs font-medium">{st.name}</Text>
+          </View>
+        )) || (
+          <View className="bg-muted px-3 py-1 rounded-full flex-row items-center gap-1">
             <HomeIcon className="text-muted-foreground" size={12} />
-          )}
-          <Text className="text-muted-foreground text-xs font-medium">{item.serviceType}</Text>
-        </View>
+            <Text className="text-muted-foreground text-xs font-medium">General Service</Text>
+          </View>
+        )}
       </View>
 
       {/* Location & Distance */}
@@ -193,7 +195,12 @@ export default function SearchProvidersScreen() {
           </TouchableOpacity>
           <Text className="text-foreground font-bold text-xl">Find Pet Services</Text>
         </View>
-        <ThemeToggle />
+        <View className="flex-row items-center gap-4">
+          <ThemeToggle />
+          <TouchableOpacity onPress={handleLogout}>
+            <LogOut className="text-destructive" size={24} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
@@ -245,64 +252,13 @@ export default function SearchProvidersScreen() {
           {/* Service Type Filter */}
           <View>
             <Text className="text-foreground font-semibold mb-2">Service Type</Text>
-            <View className="flex-row gap-2">
-              <TouchableOpacity
-                onPress={() => setServiceType('all')}
-                className={`flex-1 py-3 rounded-xl border ${
-                  serviceType === 'all'
-                    ? 'bg-primary border-primary'
-                    : 'bg-card border-border'
-                }`}
-              >
-                <Text
-                  className={`text-center font-semibold ${
-                    serviceType === 'all' ? 'text-primary-foreground' : 'text-foreground'
-                  }`}
-                >
-                  All
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => setServiceType('grooming')}
-                className={`flex-1 py-3 rounded-xl border flex-row items-center justify-center gap-2 ${
-                  serviceType === 'grooming'
-                    ? 'bg-primary border-primary'
-                    : 'bg-card border-border'
-                }`}
-              >
-                <Scissors
-                  className={serviceType === 'grooming' ? 'text-primary-foreground' : 'text-foreground'}
-                  size={16}
-                />
-                <Text
-                  className={`font-semibold ${
-                    serviceType === 'grooming' ? 'text-primary-foreground' : 'text-foreground'
-                  }`}
-                >
-                  Grooming
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => setServiceType('daycare')}
-                className={`flex-1 py-3 rounded-xl border flex-row items-center justify-center gap-2 ${
-                  serviceType === 'daycare'
-                    ? 'bg-primary border-primary'
-                    : 'bg-card border-border'
-                }`}
-              >
-                <HomeIcon
-                  className={serviceType === 'daycare' ? 'text-primary-foreground' : 'text-foreground'}
-                  size={16}
-                />
-                <Text
-                  className={`font-semibold ${
-                    serviceType === 'daycare' ? 'text-primary-foreground' : 'text-foreground'
-                  }`}
-                >
-                  Daycare
-                </Text>
-              </TouchableOpacity>
-            </View>
+            <MultiSelect
+              options={serviceTypes}
+              selectedValues={selectedServiceTypeIds}
+              onValueChange={setSelectedServiceTypeIds}
+              placeholder="All Services"
+              label="Select Services"
+            />
           </View>
 
           {/* Search Button */}

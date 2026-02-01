@@ -21,10 +21,11 @@ import {
   MessageCircle,
   Navigation,
   CreditCard,
-  FileText
+  FileText,
+  LogOut
 } from 'lucide-react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { appointmentService, Appointment, paymentService } from '@/services/petCareService';
+import { authService, appointmentService, Appointment, paymentService } from '@/services/petCareService';
 
 /*
 // Mock data - Replace with API calls
@@ -105,6 +106,30 @@ export default function AppointmentDetailScreen() {
       loadAppointmentDetails();
     }
   }, [id]);
+
+  const handleLogout = () => {
+    if (Platform.OS === 'web') {
+      if (window.confirm('Are you sure you want to logout?')) {
+        authService.logout().then(() => router.replace('/'));
+      }
+    } else {
+      Alert.alert(
+        'Logout',
+        'Are you sure you want to logout?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Logout',
+            style: 'destructive',
+            onPress: async () => {
+              await authService.logout();
+              router.replace('/');
+            },
+          },
+        ]
+      );
+    }
+  };
 
   const loadAppointmentDetails = async () => {
     try {
@@ -312,7 +337,12 @@ export default function AppointmentDetailScreen() {
             </TouchableOpacity>
             <Text className="text-xl font-bold text-foreground">Appointment Details</Text>
           </View>
-          <ThemeToggle />
+          <View className="flex-row items-center gap-4">
+            <ThemeToggle />
+            <TouchableOpacity onPress={handleLogout}>
+              <LogOut className="text-destructive" size={24} />
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
 

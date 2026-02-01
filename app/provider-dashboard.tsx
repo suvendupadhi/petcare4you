@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { 
@@ -15,10 +15,11 @@ import {
   PawPrint,
   MapPin,
   Phone,
-  User as UserIcon
+  User as UserIcon,
+  LogOut
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
-import { appointmentService, Appointment, userService, User, Provider } from '@/services/petCareService';
+import { authService, appointmentService, Appointment, userService, User, Provider } from '@/services/petCareService';
 
 export default function ProviderDashboard() {
   const router = useRouter();
@@ -32,6 +33,30 @@ export default function ProviderDashboard() {
   useEffect(() => {
     loadDashboardData();
   }, []);
+
+  const handleLogout = () => {
+    if (Platform.OS === 'web') {
+      if (window.confirm('Are you sure you want to logout?')) {
+        authService.logout().then(() => router.replace('/'));
+      }
+    } else {
+      Alert.alert(
+        'Logout',
+        'Are you sure you want to logout?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Logout',
+            style: 'destructive',
+            onPress: async () => {
+              await authService.logout();
+              router.replace('/');
+            },
+          },
+        ]
+      );
+    }
+  };
 
   const loadDashboardData = async () => {
     try {
@@ -106,6 +131,9 @@ export default function ProviderDashboard() {
             <ThemeToggle />
             <TouchableOpacity onPress={() => router.push('/profile-provider')}>
               <UserIcon className="text-foreground" size={24} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleLogout}>
+              <LogOut className="text-destructive" size={24} />
             </TouchableOpacity>
             <TouchableOpacity className="relative">
               <Bell className="text-foreground" size={24} />

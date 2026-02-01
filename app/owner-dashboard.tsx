@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, TextInput, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, TextInput, ActivityIndicator, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { 
@@ -13,10 +13,11 @@ import {
   Home,
   ChevronRight,
   Star,
-  Plus
+  Plus,
+  LogOut
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
-import { appointmentService, providerService, userService, Appointment, Provider, User as UserType } from '@/services/petCareService';
+import { authService, appointmentService, providerService, userService, Appointment, Provider, User as UserType } from '@/services/petCareService';
 
 export default function OwnerDashboardScreen() {
   const router = useRouter();
@@ -52,6 +53,30 @@ export default function OwnerDashboardScreen() {
     router.push('/search-providers');
   };
 
+  const handleLogout = () => {
+    if (Platform.OS === 'web') {
+      if (window.confirm('Are you sure you want to logout?')) {
+        authService.logout().then(() => router.replace('/'));
+      }
+    } else {
+      Alert.alert(
+        'Logout',
+        'Are you sure you want to logout?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Logout',
+            style: 'destructive',
+            onPress: async () => {
+              await authService.logout();
+              router.replace('/');
+            },
+          },
+        ]
+      );
+    }
+  };
+
   if (loading) {
     return (
       <SafeAreaView className="flex-1 bg-background items-center justify-center">
@@ -81,6 +106,9 @@ export default function OwnerDashboardScreen() {
               <ThemeToggle />
               <TouchableOpacity onPress={() => router.push('/profile-owner')}>
                 <User className="text-foreground" size={24} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleLogout}>
+                <LogOut className="text-destructive" size={24} />
               </TouchableOpacity>
             </View>
           </View>
@@ -178,7 +206,7 @@ export default function OwnerDashboardScreen() {
                       <View className="flex-row items-center gap-1">
                         <Star className="text-primary" size={14} fill="#EA580C" />
                         <Text className="text-muted-foreground text-sm">
-                          {appointment.provider?.serviceType || 'Service'}
+                          {appointment.provider?.serviceType?.name || 'Service'}
                         </Text>
                       </View>
                     </View>
@@ -265,7 +293,7 @@ export default function OwnerDashboardScreen() {
                   <View className="flex-row items-center gap-2">
                     <View className="bg-primary/10 rounded-full px-3 py-1">
                       <Text className="text-primary text-xs font-semibold">
-                        {provider.serviceType}
+                        {provider.serviceType?.name || 'Service'}
                       </Text>
                     </View>
                   </View>

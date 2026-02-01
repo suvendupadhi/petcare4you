@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert, Switch, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert, Switch, Platform, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { ArrowLeft, Building2, User, Phone, Mail, Lock, Globe, FileText, CheckCircle2, ArrowRight, Award } from 'lucide-react-native';
+import { ArrowLeft, Building2, User, Phone, Mail, Lock, Globe, FileText, CheckCircle2, ArrowRight, Award, Scissors, Dog, Home as HomeIcon, Award as TrainingIcon, Stethoscope } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
-import { authService, providerService } from '@/services/petCareService';
+import { authService, providerService, serviceTypeService, ServiceType } from '@/services/petCareService';
+import { MultiSelect } from '@/components/MultiSelect';
 
 export default function RegisterProviderScreen() {
   const router = useRouter();
@@ -16,13 +17,37 @@ export default function RegisterProviderScreen() {
   const [isLicensed, setIsLicensed] = useState(false);
   const [businessPhone, setBusinessPhone] = useState('');
   const [businessEmail, setBusinessEmail] = useState('');
-  const [providesGrooming, setProvidesGrooming] = useState(false);
-  const [providesDaycare, setProvidesDaycare] = useState(false);
+  const [selectedServiceTypeIds, setSelectedServiceTypeIds] = useState<number[]>([]);
+  const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
+  const [loadingServiceTypes, setLoadingServiceTypes] = useState(true);
   const [website, setWebsite] = useState('');
   const [businessDescription, setBusinessDescription] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchServiceTypes = async () => {
+      try {
+        const types = await serviceTypeService.getServiceTypes();
+        setServiceTypes(types);
+      } catch (error) {
+        console.error('Failed to fetch service types:', error);
+      } finally {
+        setLoadingServiceTypes(false);
+      }
+    };
+
+    fetchServiceTypes();
+  }, []);
+
+  const toggleServiceType = (id: number) => {
+    setSelectedServiceTypeIds(prev => 
+      prev.includes(id) 
+        ? prev.filter(item => item !== id) 
+        : [...prev, id]
+    );
+  };
 
   // Form validation
   const validateForm = () => {
@@ -58,7 +83,7 @@ export default function RegisterProviderScreen() {
       }
       return false;
     }
-    if (!providesGrooming && !providesDaycare) {
+    if (selectedServiceTypeIds.length === 0) {
       if (Platform.OS === 'web') {
         window.alert('Validation Error: Please select at least one service type');
       } else {
@@ -110,7 +135,7 @@ export default function RegisterProviderScreen() {
       await providerService.createProvider({
         companyName: businessName,
         description: businessDescription,
-        serviceType: providesGrooming ? 'Grooming' : 'Daycare',
+        serviceTypeIds: selectedServiceTypeIds,
         hourlyRate: 50, // Default or add to form
         address: 'Business Address', // Add to form if needed
         city: 'City', // Add to form if needed
@@ -310,61 +335,20 @@ export default function RegisterProviderScreen() {
 
           {/* Service Types Section */}
           <View>
-            <Text className="text-lg font-bold text-foreground mb-4">
-              Services Offered <Text className="text-destructive">*</Text>
+            {loadingServiceTypes ? (
+              <ActivityIndicator size="small" color="#EA580C" />
+            ) : (
+              <MultiSelect
+                label="Services Offered"
+                options={serviceTypes}
+                selectedValues={selectedServiceTypeIds}
+                onValueChange={setSelectedServiceTypeIds}
+                placeholder="Choose services your business provides"
+              />
+            )}
+            <Text className="text-xs text-muted-foreground mt-2 px-1">
+              Select all services your business provides. You can select multiple.
             </Text>
-            
-            {/* Pet Grooming */}
-            <TouchableOpacity
-              onPress={() => setProvidesGrooming(!providesGrooming)}
-              className="mb-3 bg-card border border-border rounded-xl p-4"
-            >
-              <View className="flex-row items-center justify-between">
-                <View className="flex-row items-center gap-3 flex-1">
-                  <View className={`w-5 h-5 rounded border-2 items-center justify-center ${
-                    providesGrooming ? 'bg-primary border-primary' : 'border-border'
-                  }`}>
-                    {providesGrooming && (
-                      <CheckCircle2 className="text-primary-foreground" size={16} />
-                    )}
-                  </View>
-                  <View className="flex-1">
-                    <Text className="text-base font-semibold text-foreground">
-                      Pet Grooming
-                    </Text>
-                    <Text className="text-xs text-muted-foreground mt-0.5">
-                      Bathing, haircuts, nail trimming, etc.
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            </TouchableOpacity>
-
-            {/* Pet Daycare */}
-            <TouchableOpacity
-              onPress={() => setProvidesDaycare(!providesDaycare)}
-              className="bg-card border border-border rounded-xl p-4"
-            >
-              <View className="flex-row items-center justify-between">
-                <View className="flex-row items-center gap-3 flex-1">
-                  <View className={`w-5 h-5 rounded border-2 items-center justify-center ${
-                    providesDaycare ? 'bg-primary border-primary' : 'border-border'
-                  }`}>
-                    {providesDaycare && (
-                      <CheckCircle2 className="text-primary-foreground" size={16} />
-                    )}
-                  </View>
-                  <View className="flex-1">
-                    <Text className="text-base font-semibold text-foreground">
-                      Pet Daycare
-                    </Text>
-                    <Text className="text-xs text-muted-foreground mt-0.5">
-                      Daily pet care and supervision
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            </TouchableOpacity>
           </View>
 
           {/* Business Description */}

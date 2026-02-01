@@ -395,7 +395,7 @@ export default function AppointmentsOwnerScreen() {
                   <View className="flex-row items-center gap-2 mb-3">
                     <PawPrint className="text-primary" size={16} />
                     <Text className="text-foreground font-medium">
-                      {appointment.provider?.serviceType || 'Service'} • {appointment.petName}
+                      {appointment.provider?.serviceType?.name || 'Service'} • {appointment.petName}
                     </Text>
                   </View>
 

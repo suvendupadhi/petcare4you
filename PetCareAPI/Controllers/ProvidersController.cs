@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PetCareAPI.Data;
 using PetCareAPI.Models;
+using PetCareAPI.Models.DTOs;
 using System.Security.Claims;
 
 namespace PetCareAPI.Controllers
@@ -20,13 +21,18 @@ namespace PetCareAPI.Controllers
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Provider>>> GetProviders(
-            [FromQuery] string? serviceType = null,
+            [FromQuery] string? serviceTypeIds = null,
             [FromQuery] string? city = null)
         {
-            var query = _context.Providers.AsQueryable();
+            var query = _context.Providers
+                .Include(p => p.ServiceTypes)
+                .AsQueryable();
 
-            if (!string.IsNullOrEmpty(serviceType))
-                query = query.Where(p => p.ServiceType == serviceType);
+            if (!string.IsNullOrEmpty(serviceTypeIds))
+            {
+                var ids = serviceTypeIds.Split(',').Select(int.Parse).ToList();
+                query = query.Where(p => p.ServiceTypes.Any(st => ids.Contains(st.Id)));
+            }
 
             if (!string.IsNullOrEmpty(city))
                 query = query.Where(p => p.City == city);
@@ -39,6 +45,7 @@ namespace PetCareAPI.Controllers
         {
             var provider = await _context.Providers
                 .Include(p => p.User)
+                .Include(p => p.ServiceTypes)
                 .FirstOrDefaultAsync(p => p.Id == id);
 
             if (provider == null)
@@ -49,15 +56,33 @@ namespace PetCareAPI.Controllers
 
         [HttpPost]
         [Authorize]
-        public async Task<ActionResult<Provider>> CreateProvider([FromBody] Provider provider)
+        public async Task<ActionResult<Provider>> CreateProvider([FromBody] ProviderUpdateDto providerDto)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null)
                 return Unauthorized();
 
-            provider.UserId = int.Parse(userIdClaim.Value);
-            provider.CreatedAt = DateTime.UtcNow;
-            provider.UpdatedAt = DateTime.UtcNow;
+            var provider = new Provider
+            {
+                UserId = int.Parse(userIdClaim.Value),
+                CompanyName = providerDto.CompanyName,
+                Description = providerDto.Description,
+                HourlyRate = providerDto.HourlyRate,
+                Address = providerDto.Address,
+                City = providerDto.City,
+                Latitude = providerDto.Latitude,
+                Longitude = providerDto.Longitude,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            if (providerDto.ServiceTypeIds.Any())
+            {
+                var serviceTypes = await _context.ServiceTypes
+                    .Where(st => providerDto.ServiceTypeIds.Contains(st.Id))
+                    .ToListAsync();
+                provider.ServiceTypes = serviceTypes;
+            }
 
             _context.Providers.Add(provider);
             await _context.SaveChangesAsync();
@@ -67,42 +92,46 @@ namespace PetCareAPI.Controllers
 
         [HttpPut("{id}")]
         [Authorize]
-        public async Task<IActionResult> UpdateProvider(int id, [FromBody] Provider provider)
+        public async Task<IActionResult> UpdateProvider(int id, [FromBody] ProviderUpdateDto providerDto)
         {
             Console.WriteLine($"Updating provider {id}");
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null)
-            {
-                Console.WriteLine("Unauthorized: No userId claim");
                 return Unauthorized();
-            }
 
-            var existing = await _context.Providers.FindAsync(id);
+            var existing = await _context.Providers
+                .Include(p => p.ServiceTypes)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
             if (existing == null)
-            {
-                Console.WriteLine($"NotFound: Provider {id}");
                 return NotFound();
-            }
 
             if (existing.UserId != int.Parse(userIdClaim.Value))
-            {
-                Console.WriteLine($"Forbid: Provider {id} doesn't belong to user {userIdClaim.Value}");
                 return Forbid();
-            }
 
-            existing.CompanyName = provider.CompanyName;
-            existing.Description = provider.Description;
-            existing.ServiceType = provider.ServiceType;
-            existing.HourlyRate = provider.HourlyRate;
-            existing.Address = provider.Address;
-            existing.City = provider.City;
-            existing.Latitude = provider.Latitude;
-            existing.Longitude = provider.Longitude;
+            existing.CompanyName = providerDto.CompanyName;
+            existing.Description = providerDto.Description;
+            existing.HourlyRate = providerDto.HourlyRate;
+            existing.Address = providerDto.Address;
+            existing.City = providerDto.City;
+            existing.Latitude = providerDto.Latitude;
+            existing.Longitude = providerDto.Longitude;
             existing.UpdatedAt = DateTime.UtcNow;
 
-            await _context.SaveChangesAsync();
-            Console.WriteLine($"Successfully updated provider {id}");
+            // Update ServiceTypes
+            existing.ServiceTypes.Clear();
+            if (providerDto.ServiceTypeIds.Any())
+            {
+                var serviceTypes = await _context.ServiceTypes
+                    .Where(st => providerDto.ServiceTypeIds.Contains(st.Id))
+                    .ToListAsync();
+                foreach (var st in serviceTypes)
+                {
+                    existing.ServiceTypes.Add(st);
+                }
+            }
 
+            await _context.SaveChangesAsync();
             return NoContent();
         }
     }

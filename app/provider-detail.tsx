@@ -59,7 +59,13 @@ export default function ProviderDetailScreen() {
       ]);
       setProvider(providerData);
       setAvailabilities(availabilityData);
-      setSelectedService(providerData.serviceType);
+      
+      if (providerData.serviceTypes && providerData.serviceTypes.length > 0) {
+        setSelectedService(providerData.serviceTypes[0].name);
+      } else {
+        setSelectedService('General Service');
+      }
+      
       setShowBooking(true);
       
       // Select first available date by default if exists
@@ -181,7 +187,7 @@ export default function ProviderDetailScreen() {
         endTime: endTime,
         petName: petName,
         petType: petType,
-        description: description || `Booking for ${provider.serviceType}`,
+        description: description || `Booking for ${selectedService}`,
         totalPrice: provider.hourlyRate,
         status: 'pending'
       };
@@ -295,15 +301,24 @@ export default function ProviderDetailScreen() {
           </View>
 
           {/* Service Tags */}
-          <View className="flex-row gap-2 mb-4">
-            <View className="bg-primary/10 px-3 py-1.5 rounded-full flex-row items-center gap-1">
-              {provider.serviceType.toLowerCase().includes('grooming') ? (
-                <Scissors className="text-primary" size={14} />
-              ) : (
+          <View className="flex-row flex-wrap gap-2 mb-4">
+            {provider.serviceTypes && provider.serviceTypes.length > 0 ? (
+              provider.serviceTypes.map(st => (
+                <View key={st.id} className="bg-primary/10 px-3 py-1.5 rounded-full flex-row items-center gap-1">
+                  {st.name.toLowerCase().includes('grooming') ? (
+                    <Scissors className="text-primary" size={14} />
+                  ) : (
+                    <HomeIcon className="text-primary" size={14} />
+                  )}
+                  <Text className="text-primary text-sm font-medium">{st.name}</Text>
+                </View>
+              ))
+            ) : (
+              <View className="bg-primary/10 px-3 py-1.5 rounded-full flex-row items-center gap-1">
                 <HomeIcon className="text-primary" size={14} />
-              )}
-              <Text className="text-primary text-sm font-medium">{provider.serviceType}</Text>
-            </View>
+                <Text className="text-primary text-sm font-medium">General Service</Text>
+              </View>
+            )}
           </View>
 
           {/* Contact Info */}
@@ -336,39 +351,72 @@ export default function ProviderDetailScreen() {
 
           {/* Pricing Info */}
           <View className="mb-6">
-            <Text className="text-lg font-bold text-foreground mb-3">Service & Pricing</Text>
-            <TouchableOpacity
-              onPress={() => setShowBooking(true)}
-              className={`bg-card border-2 rounded-xl p-4 ${
-                selectedService ? 'border-primary' : 'border-border'
-              }`}
-            >
-              <View className="flex-row items-start justify-between mb-2">
-                <View className="flex-1">
-                  <Text className="text-foreground font-bold text-base mb-1">
-                    {provider.serviceType}
-                  </Text>
-                  <Text className="text-muted-foreground text-sm mb-2">
-                    Professional {provider.serviceType.toLowerCase()} service
-                  </Text>
-                  <View className="flex-row items-center gap-4">
-                    <View className="flex-row items-center gap-1">
-                      <Clock className="text-muted-foreground" size={14} />
-                      <Text className="text-muted-foreground text-sm">1 hour</Text>
+            <Text className="text-lg font-bold text-foreground mb-3">Select Service</Text>
+            {provider.serviceTypes && provider.serviceTypes.length > 0 ? (
+              provider.serviceTypes.map(st => (
+                <TouchableOpacity
+                  key={st.id}
+                  onPress={() => setSelectedService(st.name)}
+                  className={`bg-card border-2 rounded-xl p-4 mb-3 ${
+                    selectedService === st.name ? 'border-primary' : 'border-border'
+                  }`}
+                >
+                  <View className="flex-row items-start justify-between">
+                    <View className="flex-1">
+                      <Text className="text-foreground font-bold text-base mb-1">
+                        {st.name}
+                      </Text>
+                      <Text className="text-muted-foreground text-sm mb-2">
+                        {st.description}
+                      </Text>
+                      <View className="flex-row items-center gap-4">
+                        <View className="flex-row items-center gap-1">
+                          <Clock className="text-muted-foreground" size={14} />
+                          <Text className="text-muted-foreground text-sm">1 hour</Text>
+                        </View>
+                        <View className="flex-row items-center gap-1">
+                          <DollarSign className="text-primary" size={14} />
+                          <Text className="text-primary font-bold">${provider.hourlyRate}/hr</Text>
+                        </View>
+                      </View>
                     </View>
-                    <View className="flex-row items-center gap-1">
-                      <DollarSign className="text-primary" size={14} />
-                      <Text className="text-primary font-bold">${provider.hourlyRate}/hr</Text>
+                    {selectedService === st.name && (
+                      <View className="bg-primary rounded-full p-1">
+                        <Check className="text-primary-foreground" size={16} />
+                      </View>
+                    )}
+                  </View>
+                </TouchableOpacity>
+              ))
+            ) : (
+              <TouchableOpacity
+                onPress={() => setSelectedService('General Service')}
+                className={`bg-card border-2 rounded-xl p-4 ${
+                  selectedService === 'General Service' ? 'border-primary' : 'border-border'
+                }`}
+              >
+                <View className="flex-row items-start justify-between">
+                  <View className="flex-1">
+                    <Text className="text-foreground font-bold text-base mb-1">
+                      General Service
+                    </Text>
+                    <Text className="text-muted-foreground text-sm mb-2">
+                      Professional pet care service
+                    </Text>
+                    <View className="flex-row items-center gap-4">
+                      <View className="flex-row items-center gap-1">
+                        <Clock className="text-muted-foreground" size={14} />
+                        <Text className="text-muted-foreground text-sm">1 hour</Text>
+                      </View>
+                      <View className="flex-row items-center gap-1">
+                        <DollarSign className="text-primary" size={14} />
+                        <Text className="text-primary font-bold">${provider.hourlyRate}/hr</Text>
+                      </View>
                     </View>
                   </View>
                 </View>
-                {selectedService && (
-                  <View className="bg-primary rounded-full p-1">
-                    <Check className="text-primary-foreground" size={16} />
-                  </View>
-                )}
-              </View>
-            </TouchableOpacity>
+              </TouchableOpacity>
+            )}
           </View>
 
           {/* Booking Section */}

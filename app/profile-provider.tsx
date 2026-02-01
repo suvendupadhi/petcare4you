@@ -24,6 +24,7 @@ import {
   X
 } from 'lucide-react-native';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { MultiSelect } from '@/components/MultiSelect';
 
 // Mock data - replace with API calls
 const mockBusinessData = {
@@ -77,13 +78,15 @@ const mockPhotos = [
   'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=400',
 ];
 
-import { authService, userService, User, Provider, providerService } from '@/services/petCareService';
+import { authService, userService, User, Provider, providerService, serviceTypeService, ServiceType } from '@/services/petCareService';
 
 export default function ProfileProviderScreen() {
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
   const [userData, setUserData] = useState<User | null>(null);
   const [provider, setProvider] = useState<Provider | null>(null);
+  const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
+  const [loadingServiceTypes, setLoadingServiceTypes] = useState(false);
   const [services, setServices] = useState(mockServices);
   const [photos, setPhotos] = useState(mockPhotos);
 
@@ -94,14 +97,27 @@ export default function ProfileProviderScreen() {
     hourlyRate: 0,
     address: '',
     city: '',
-    serviceType: '',
+    serviceTypeIds: [] as number[],
     latitude: 0,
     longitude: 0
   });
 
   useEffect(() => {
     loadProfileData();
+    loadServiceTypes();
   }, []);
+
+  const loadServiceTypes = async () => {
+    try {
+      setLoadingServiceTypes(true);
+      const types = await serviceTypeService.getServiceTypes();
+      setServiceTypes(types);
+    } catch (error) {
+      console.error('Error loading service types:', error);
+    } finally {
+      setLoadingServiceTypes(false);
+    }
+  };
 
   const loadProfileData = async () => {
     try {
@@ -116,7 +132,7 @@ export default function ProfileProviderScreen() {
           hourlyRate: user.provider.hourlyRate,
           address: user.provider.address,
           city: user.provider.city,
-          serviceType: user.provider.serviceType,
+          serviceTypeIds: user.provider.serviceTypeIds || [],
           latitude: user.provider.latitude,
           longitude: user.provider.longitude
         });
@@ -128,13 +144,28 @@ export default function ProfileProviderScreen() {
     }
   };
 
+  const toggleServiceType = (id: number) => {
+    setEditForm(prev => ({
+      ...prev,
+      serviceTypeIds: prev.serviceTypeIds.includes(id)
+        ? prev.serviceTypeIds.filter(item => item !== id)
+        : [...prev.serviceTypeIds, id]
+    }));
+  };
+
   const handleSaveProfile = async () => {
     if (!provider) return;
     try {
       console.log('Saving profile with data:', editForm);
       await providerService.updateProvider(provider.id, editForm);
       console.log('Profile update successful');
-      setProvider({ ...provider, ...editForm });
+      
+      // Fetch updated provider to get navigation properties
+      const updatedUser = await userService.getCurrentUser();
+      if (updatedUser.provider) {
+        setProvider(updatedUser.provider);
+      }
+      
       setEditMode(false);
       if (Platform.OS === 'web') {
         window.alert('Success: Profile updated successfully');
@@ -159,7 +190,7 @@ export default function ProfileProviderScreen() {
         hourlyRate: provider.hourlyRate,
         address: provider.address,
         city: provider.city,
-        serviceType: provider.serviceType,
+        serviceTypeIds: provider.serviceTypeIds || [],
         latitude: provider.latitude,
         longitude: provider.longitude
       });
@@ -283,7 +314,12 @@ export default function ProfileProviderScreen() {
             <ArrowLeft className="text-foreground" size={24} />
           </TouchableOpacity>
           <Text className="text-xl font-bold text-foreground">Business Profile</Text>
-          <ThemeToggle />
+          <View className="flex-row items-center gap-4">
+            <ThemeToggle />
+            <TouchableOpacity onPress={handleLogout}>
+              <LogOut className="text-destructive" size={24} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Business Info Card */}
@@ -324,12 +360,13 @@ export default function ProfileProviderScreen() {
             {editMode ? (
               <View className="gap-3">
                 <View>
-                  <Text className="text-sm text-muted-foreground mb-1">Service Type</Text>
-                  <TextInput
-                    value={editForm.serviceType}
-                    onChangeText={(text) => setEditForm({ ...editForm, serviceType: text })}
-                    className="text-foreground bg-muted rounded-lg px-3 py-2"
-                    placeholder="e.g. Grooming"
+                  <Text className="text-sm text-muted-foreground mb-2">Service Types</Text>
+                  <MultiSelect
+                    options={serviceTypes}
+                    selectedValues={editForm.serviceTypeIds}
+                    onValueChange={(ids) => setEditForm(prev => ({ ...prev, serviceTypeIds: ids }))}
+                    placeholder="Select services"
+                    label="Business Services"
                   />
                 </View>
                 <View>
@@ -391,6 +428,22 @@ export default function ProfileProviderScreen() {
               </View>
             ) : (
               <View className="gap-3">
+                <View className="flex-row items-center flex-wrap gap-2">
+                  <Star className="text-primary mr-1" size={18} />
+                  {provider?.serviceTypes && provider.serviceTypes.length > 0 ? (
+                    provider.serviceTypes.map(st => (
+                      <View key={st.id} className="bg-primary/10 px-2 py-0.5 rounded">
+                        <Text className="text-primary text-xs font-medium">{st.name}</Text>
+                      </View>
+                    ))
+                  ) : (
+                    <Text className="text-foreground">No Service Types</Text>
+                  )}
+                </View>
+                <View className="flex-row items-center">
+                  <DollarSign className="text-primary mr-3" size={18} />
+                  <Text className="text-foreground">${provider?.hourlyRate}/hr</Text>
+                </View>
                 <View className="flex-row items-center">
                   <Building2 className="text-muted-foreground mr-3" size={18} />
                   <Text className="text-foreground flex-1">{userData?.firstName} {userData?.lastName}</Text>
@@ -398,10 +451,6 @@ export default function ProfileProviderScreen() {
                 <View className="flex-row items-center">
                   <Mail className="text-muted-foreground mr-3" size={18} />
                   <Text className="text-foreground flex-1">{userData?.email}</Text>
-                </View>
-                <View className="flex-row items-center">
-                  <DollarSign className="text-muted-foreground mr-3" size={18} />
-                  <Text className="text-foreground flex-1">${provider?.hourlyRate}/hr</Text>
                 </View>
                 <View className="flex-row items-center">
                   <MapPin className="text-muted-foreground mr-3" size={18} />

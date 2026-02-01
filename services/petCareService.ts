@@ -15,13 +15,21 @@ export interface Provider {
   userId: number;
   companyName: string;
   description: string;
-  serviceType: string;
+  serviceTypes?: ServiceType[];
+  serviceTypeIds?: number[];
   hourlyRate: number;
   address: string;
   city: string;
   latitude: number;
   longitude: number;
   user?: User;
+}
+
+export interface ServiceType {
+  id: number;
+  name: string;
+  description: string;
+  iconName: string;
 }
 
 export interface Appointment {
@@ -58,10 +66,12 @@ export const authService = {
 };
 
 export const providerService = {
-  getProviders: async (serviceType?: string, city?: string): Promise<Provider[]> => {
+  getProviders: async (serviceTypeIds?: number[], city?: string): Promise<Provider[]> => {
     let endpoint = '/providers';
     const params = new URLSearchParams();
-    if (serviceType) params.append('serviceType', serviceType);
+    if (serviceTypeIds && serviceTypeIds.length > 0) {
+      params.append('serviceTypeIds', serviceTypeIds.join(','));
+    }
     if (city) params.append('city', city);
     
     const queryString = params.toString();
@@ -78,6 +88,15 @@ export const providerService = {
   updateProvider: async (id: number, providerData: any): Promise<void> => {
     console.log(`petCareService: updateProvider called for id ${id}`, providerData);
     return await api.put(`/providers/${id}`, providerData);
+  }
+};
+
+export const serviceTypeService = {
+  getServiceTypes: async (): Promise<ServiceType[]> => {
+    return await api.get('/serviceTypes');
+  },
+  getServiceType: async (id: number): Promise<ServiceType> => {
+    return await api.get(`/serviceTypes/${id}`);
   }
 };
 
