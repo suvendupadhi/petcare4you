@@ -30,12 +30,12 @@ namespace PetCareAPI.Controllers
                     _configuration["Stripe:WebhookSecret"]
                 );
 
-                if (stripeEvent.Type == Events.PaymentIntentSucceeded)
+                if (stripeEvent.Type == EventTypes.PaymentIntentSucceeded)
                 {
                     var paymentIntent = stripeEvent.Data.Object as PaymentIntent;
                     await HandlePaymentSucceeded(paymentIntent!);
                 }
-                else if (stripeEvent.Type == Events.AccountUpdated)
+                else if (stripeEvent.Type == EventTypes.AccountUpdated)
                 {
                     var account = stripeEvent.Data.Object as Account;
                     await HandleAccountUpdated(account!);
