@@ -17,6 +17,7 @@ import {
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { appointmentService, Appointment } from '@/services/petCareService';
+import { APPOINTMENT_STATUS } from '@/constants/status';
 
 export default function AppointmentsProviderScreen() {
   const router = useRouter();
@@ -45,7 +46,7 @@ export default function AppointmentsProviderScreen() {
     }
   };
 
-  const handleUpdateStatus = async (appointmentId: number, newStatus: string) => {
+  const handleUpdateStatus = async (appointmentId: number, newStatus: number) => {
     try {
       await appointmentService.updateStatus(appointmentId, newStatus);
       
@@ -53,20 +54,20 @@ export default function AppointmentsProviderScreen() {
       setAppointments(prev => 
         prev.map(apt => 
           apt.id === appointmentId 
-            ? { ...apt, status: newStatus as any }
+            ? { ...apt, status: newStatus }
             : apt
         )
       );
       if (Platform.OS === 'web') {
-        window.alert(`Success: Appointment ${newStatus} successfully`);
+        window.alert(`Success: Appointment updated successfully`);
       } else {
-        Alert.alert('Success', `Appointment ${newStatus} successfully`);
+        Alert.alert('Success', `Appointment updated successfully`);
       }
     } catch (error) {
       if (Platform.OS === 'web') {
-        window.alert(`Error: Failed to update appointment to ${newStatus}`);
+        window.alert(`Error: Failed to update appointment status`);
       } else {
-        Alert.alert('Error', `Failed to update appointment to ${newStatus}`);
+        Alert.alert('Error', `Failed to update appointment status`);
       }
     }
   };
@@ -78,30 +79,30 @@ export default function AppointmentsProviderScreen() {
     });
   };
 
-  const getStatusConfig = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'confirmed':
+  const getStatusConfig = (status: number) => {
+    switch (status) {
+      case APPOINTMENT_STATUS.CONFIRMED:
         return {
           icon: CheckCircle,
           color: 'text-green-600',
           bg: 'bg-green-50',
           label: 'Confirmed'
         };
-      case 'pending':
+      case APPOINTMENT_STATUS.PENDING:
         return {
           icon: AlertCircle,
           color: 'text-yellow-600',
           bg: 'bg-yellow-50',
           label: 'Pending'
         };
-      case 'completed':
+      case APPOINTMENT_STATUS.COMPLETED:
         return {
           icon: CheckCircle,
           color: 'text-blue-600',
           bg: 'bg-blue-50',
           label: 'Completed'
         };
-      case 'cancelled':
+      case APPOINTMENT_STATUS.CANCELLED:
         return {
           icon: XCircle,
           color: 'text-red-600',
@@ -113,17 +114,17 @@ export default function AppointmentsProviderScreen() {
           icon: AlertCircle,
           color: 'text-gray-600',
           bg: 'bg-gray-50',
-          label: status
+          label: 'Unknown'
         };
     }
   };
 
   const upcomingAppointments = appointments.filter(apt => 
-    apt.status.toLowerCase() === 'confirmed' || apt.status.toLowerCase() === 'pending'
+    apt.status === APPOINTMENT_STATUS.CONFIRMED || apt.status === APPOINTMENT_STATUS.PENDING
   );
   
   const pastAppointments = appointments.filter(apt => 
-    apt.status.toLowerCase() === 'completed' || apt.status.toLowerCase() === 'cancelled'
+    apt.status === APPOINTMENT_STATUS.COMPLETED || apt.status === APPOINTMENT_STATUS.CANCELLED
   );
 
   const displayAppointments = activeTab === 'upcoming' ? upcomingAppointments : pastAppointments;
@@ -219,8 +220,8 @@ export default function AppointmentsProviderScreen() {
           displayAppointments.map((appointment) => {
             const statusConfig = getStatusConfig(appointment.status);
             const StatusIcon = statusConfig.icon;
-            const isPending = appointment.status.toLowerCase() === 'pending';
-            const isConfirmed = appointment.status.toLowerCase() === 'confirmed';
+            const isPending = appointment.status === APPOINTMENT_STATUS.PENDING;
+            const isConfirmed = appointment.status === APPOINTMENT_STATUS.CONFIRMED;
 
             return (
               <TouchableOpacity
@@ -290,7 +291,7 @@ export default function AppointmentsProviderScreen() {
                           <TouchableOpacity
                             onPress={(e) => {
                               e.stopPropagation();
-                              handleUpdateStatus(appointment.id, 'confirmed');
+                              handleUpdateStatus(appointment.id, APPOINTMENT_STATUS.CONFIRMED);
                             }}
                             className="flex-1 bg-primary py-3 rounded-xl flex-row items-center justify-center gap-2"
                           >
@@ -300,7 +301,7 @@ export default function AppointmentsProviderScreen() {
                           <TouchableOpacity
                             onPress={(e) => {
                               e.stopPropagation();
-                              handleUpdateStatus(appointment.id, 'cancelled');
+                              handleUpdateStatus(appointment.id, APPOINTMENT_STATUS.CANCELLED);
                             }}
                             className="flex-1 bg-muted py-3 rounded-xl flex-row items-center justify-center gap-2"
                           >
@@ -314,7 +315,7 @@ export default function AppointmentsProviderScreen() {
                           <TouchableOpacity
                             onPress={(e) => {
                               e.stopPropagation();
-                              handleUpdateStatus(appointment.id, 'completed');
+                              handleUpdateStatus(appointment.id, APPOINTMENT_STATUS.COMPLETED);
                             }}
                             className="flex-1 bg-green-600 py-3 rounded-xl flex-row items-center justify-center gap-2"
                           >
@@ -324,7 +325,7 @@ export default function AppointmentsProviderScreen() {
                           <TouchableOpacity
                             onPress={(e) => {
                               e.stopPropagation();
-                              handleUpdateStatus(appointment.id, 'cancelled');
+                              handleUpdateStatus(appointment.id, APPOINTMENT_STATUS.CANCELLED);
                             }}
                             className="flex-1 bg-muted py-3 rounded-xl flex-row items-center justify-center gap-2"
                           >

@@ -20,6 +20,7 @@ import {
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { authService, appointmentService, Appointment, userService, User, Provider } from '@/services/petCareService';
+import { APPOINTMENT_STATUS, getStatusLabel } from '@/constants/status';
 
 export default function ProviderDashboard() {
   const router = useRouter();
@@ -74,7 +75,7 @@ export default function ProviderDashboard() {
       const todayApps = appointments.filter(a => a.appointmentDate.startsWith(today));
       const upcomingApps = appointments.filter(a => {
         const appDate = a.appointmentDate.split('T')[0];
-        return appDate > today && a.status !== 'cancelled';
+        return appDate > today && a.status !== APPOINTMENT_STATUS.CANCELLED;
       });
       
       setTodayAppointments(todayApps);
@@ -82,11 +83,11 @@ export default function ProviderDashboard() {
       
       // Calculate simple revenue
       const todayRevenue = todayApps
-        .filter(a => a.status === 'confirmed' || a.status === 'completed')
+        .filter(a => a.status === APPOINTMENT_STATUS.CONFIRMED || a.status === APPOINTMENT_STATUS.COMPLETED)
         .reduce((sum, a) => sum + (a.totalPrice || 0), 0);
         
       const totalRevenue = appointments
-        .filter(a => a.status === 'confirmed' || a.status === 'completed')
+        .filter(a => a.status === APPOINTMENT_STATUS.CONFIRMED || a.status === APPOINTMENT_STATUS.COMPLETED)
         .reduce((sum, a) => sum + (a.totalPrice || 0), 0);
 
       setRevenue({
@@ -110,12 +111,12 @@ export default function ProviderDashboard() {
     );
   }
 
-  const getStatusColor = (status: string) => {
-    return status === 'confirmed' ? 'text-green-600' : 'text-yellow-600';
+  const getStatusColor = (status: number) => {
+    return status === APPOINTMENT_STATUS.CONFIRMED ? 'text-green-600' : 'text-yellow-600';
   };
 
-  const getStatusBgColor = (status: string) => {
-    return status === 'confirmed' ? 'bg-green-100' : 'bg-yellow-100';
+  const getStatusBgColor = (status: number) => {
+    return status === APPOINTMENT_STATUS.CONFIRMED ? 'bg-green-100' : 'bg-yellow-100';
   };
 
   return (
@@ -242,7 +243,7 @@ export default function ProviderDashboard() {
                     <View className="items-end gap-1">
                       <View className={`${getStatusBgColor(appointment.status)} px-2 py-0.5 rounded-full`}>
                         <Text className={`${getStatusColor(appointment.status)} text-[10px] font-bold capitalize`}>
-                          {appointment.status}
+                          {getStatusLabel(appointment.status)}
                         </Text>
                       </View>
                       <View className="bg-primary/10 px-2 py-1 rounded-md flex-row items-center gap-1">

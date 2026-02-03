@@ -123,10 +123,14 @@ D:\W\Asnet123\petcare\PetCareAPI\obj\Debug\net9.0\staticwebassets.build.json
 D:\W\Asnet123\petcare\PetCareAPI\obj\Debug\net9.0\staticwebassets.build.json.cache
 D:\W\Asnet123\petcare\PetCareAPI\obj\Debug\net9.0\staticwebassets.development.json
 D:\W\Asnet123\petcare\PetCareAPI\obj\Debug\net9.0\staticwebassets.build.endpoints.json
-D:\W\Asnet123\petcare\PetCareAPI\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt
 D:\W\Asnet123\petcare\PetCareAPI\obj\Debug\net9.0\PetCareAPI.csproj.Up2Date
 D:\W\Asnet123\petcare\PetCareAPI\obj\Debug\net9.0\PetCareAPI.dll
 D:\W\Asnet123\petcare\PetCareAPI\obj\Debug\net9.0\refint\PetCareAPI.dll
 D:\W\Asnet123\petcare\PetCareAPI\obj\Debug\net9.0\PetCareAPI.pdb
 D:\W\Asnet123\petcare\PetCareAPI\obj\Debug\net9.0\PetCareAPI.genruntimeconfig.cache
 D:\W\Asnet123\petcare\PetCareAPI\obj\Debug\net9.0\ref\PetCareAPI.dll
+d:\W\Asnet123\petcare\PetCareAPI\bin\Debug\net9.0\Newtonsoft.Json.dll
+d:\W\Asnet123\petcare\PetCareAPI\bin\Debug\net9.0\Stripe.net.dll
+d:\W\Asnet123\petcare\PetCareAPI\bin\Debug\net9.0\System.Configuration.ConfigurationManager.dll
+d:\W\Asnet123\petcare\PetCareAPI\bin\Debug\net9.0\System.Security.Cryptography.ProtectedData.dll
+D:\W\Asnet123\petcare\PetCareAPI\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt

@@ -7,7 +7,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { availabilityService, Availability } from '@/services/petCareService';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Calendar } from 'react-native-calendars';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 
 export default function ManageAvailabilityScreen() {
   const router = useRouter();
@@ -317,13 +317,13 @@ export default function ManageAvailabilityScreen() {
                     <View className="flex-row items-center gap-2 mb-1">
                       <CalendarIcon className="text-primary" size={16} />
                       <Text className="text-foreground font-semibold">
-                        {format(new Date(slot.date), 'PPP')}
+                        {format(parseISO(slot.date.toString()), 'PPP')}
                       </Text>
                     </View>
                     <View className="flex-row items-center gap-2">
                       <Clock className="text-muted-foreground" size={16} />
                       <Text className="text-muted-foreground">
-                        {format(new Date(slot.startTime), 'hh:mm a')} - {format(new Date(slot.endTime), 'hh:mm a')}
+                        {format(parseISO(slot.startTime.toString()), 'hh:mm a')} - {format(parseISO(slot.endTime.toString()), 'hh:mm a')}
                       </Text>
                     </View>
                   </View>

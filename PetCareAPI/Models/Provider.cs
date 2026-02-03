@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 
 namespace PetCareAPI.Models
 {
@@ -24,8 +26,11 @@ namespace PetCareAPI.Models
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         public virtual User? User { get; set; }
-        public virtual ICollection<ServiceType> ServiceTypes { get; set; } = new List<ServiceType>();
+        public virtual ICollection<ProviderService> ProviderServices { get; set; } = new List<ProviderService>();
         public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
         public virtual ICollection<Availability> Availabilities { get; set; } = new List<Availability>();
+
+        [NotMapped]
+        public virtual ICollection<ServiceType> ServiceTypes => ProviderServices?.Where(ps => ps?.ServiceType != null).Select(ps => ps.ServiceType!).ToList() ?? new List<ServiceType>();
     }
 }

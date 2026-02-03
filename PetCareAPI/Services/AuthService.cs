@@ -31,7 +31,7 @@ namespace PetCareAPI.Services
             {
                 Token = token,
                 UserId = user.Id,
-                UserType = user.UserType
+                RoleId = user.RoleId
             };
         }
 
@@ -47,7 +47,7 @@ namespace PetCareAPI.Services
                 FirstName = registerDto.FirstName,
                 LastName = registerDto.LastName,
                 PhoneNumber = registerDto.PhoneNumber,
-                UserType = registerDto.UserType
+                RoleId = registerDto.RoleId
             };
 
             _context.Users.Add(user);
@@ -65,7 +65,7 @@ namespace PetCareAPI.Services
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim("UserType", user.UserType)
+                new Claim("RoleId", user.RoleId.ToString())
             };
 
             var token = new JwtSecurityToken(

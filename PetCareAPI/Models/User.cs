@@ -11,12 +11,14 @@ namespace PetCareAPI.Models
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
-        public string UserType { get; set; } = string.Empty;
+        public int RoleId { get; set; }
         public bool IsActive { get; set; } = true;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+        public virtual UserRole? Role { get; set; }
         public virtual Provider? Provider { get; set; }
+        public virtual ICollection<Pet> Pets { get; set; } = new List<Pet>();
         public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
         public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
     }

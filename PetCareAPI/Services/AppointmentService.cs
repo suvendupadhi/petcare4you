@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using PetCareAPI.Constants;
 using PetCareAPI.Data;
 using PetCareAPI.Models;
 
@@ -19,6 +20,8 @@ namespace PetCareAPI.Services
                 .Include(a => a.Provider)
                     .ThenInclude(p => p!.User)
                 .Include(a => a.Owner)
+                .Include(a => a.Pet)
+                    .ThenInclude(p => p!.PetType)
                 .Include(a => a.Payment)
                 .FirstOrDefaultAsync(a => a.Id == id);
         }
@@ -28,6 +31,8 @@ namespace PetCareAPI.Services
             return await _context.Appointments
                 .Include(a => a.Provider)
                     .ThenInclude(p => p!.User)
+                .Include(a => a.Pet)
+                    .ThenInclude(p => p!.PetType)
                 .Where(a => a.OwnerId == userId)
                 .OrderByDescending(a => a.AppointmentDate)
                 .ToListAsync();
@@ -40,6 +45,8 @@ namespace PetCareAPI.Services
 
             return await _context.Appointments
                 .Include(a => a.Owner)
+                .Include(a => a.Pet)
+                    .ThenInclude(p => p!.PetType)
                 .Where(a => a.ProviderId == provider.Id)
                 .OrderByDescending(a => a.AppointmentDate)
                 .ToListAsync();
@@ -51,6 +58,20 @@ namespace PetCareAPI.Services
             appointment.AppointmentDate = DateTime.SpecifyKind(appointment.AppointmentDate.Date, DateTimeKind.Utc);
             appointment.StartTime = DateTime.SpecifyKind(appointment.StartTime, DateTimeKind.Utc);
             appointment.EndTime = DateTime.SpecifyKind(appointment.EndTime, DateTimeKind.Utc);
+
+            // If PetId is provided, ensure PetName and PetType are populated from the Pet entity
+            if (appointment.PetId.HasValue)
+            {
+                var pet = await _context.Pets
+                    .Include(p => p.PetType)
+                    .FirstOrDefaultAsync(p => p.Id == appointment.PetId.Value);
+                
+                if (pet != null)
+                {
+                    appointment.PetName = pet.Name;
+                    appointment.PetType = pet.PetType?.Name ?? string.Empty;
+                }
+            }
 
             // Validate availability - using StartTime which includes the date
             var availability = await _context.Availabilities
@@ -64,7 +85,7 @@ namespace PetCareAPI.Services
             }
 
             appointment.OwnerId = userId;
-            appointment.Status = "pending";
+            appointment.Status = StatusConstants.Appointment.Pending;
             appointment.CreatedAt = DateTime.UtcNow;
             appointment.UpdatedAt = DateTime.UtcNow;
 
@@ -77,7 +98,7 @@ namespace PetCareAPI.Services
             return appointment;
         }
 
-        public async Task<bool> UpdateStatusAsync(int appointmentId, string status)
+        public async Task<bool> UpdateStatusAsync(int appointmentId, int status)
         {
             var appointment = await _context.Appointments.FindAsync(appointmentId);
             if (appointment == null) return false;
@@ -130,8 +151,26 @@ namespace PetCareAPI.Services
                 appointment.EndTime = updatedAppointment.EndTime;
             }
 
-            appointment.PetName = updatedAppointment.PetName;
-            appointment.PetType = updatedAppointment.PetType;
+            appointment.PetId = updatedAppointment.PetId;
+            
+            if (appointment.PetId.HasValue)
+            {
+                var pet = await _context.Pets
+                    .Include(p => p.PetType)
+                    .FirstOrDefaultAsync(p => p.Id == appointment.PetId.Value);
+                
+                if (pet != null)
+                {
+                    appointment.PetName = pet.Name;
+                    appointment.PetType = pet.PetType?.Name ?? string.Empty;
+                }
+            }
+            else
+            {
+                appointment.PetName = updatedAppointment.PetName;
+                appointment.PetType = updatedAppointment.PetType;
+            }
+
             appointment.Description = updatedAppointment.Description;
             appointment.TotalPrice = updatedAppointment.TotalPrice;
             appointment.UpdatedAt = DateTime.UtcNow;

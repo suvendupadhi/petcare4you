@@ -7,10 +7,11 @@ namespace PetCareAPI.Models
         public int Id { get; set; }
         public int OwnerId { get; set; }
         public int ProviderId { get; set; }
+        public int? PetId { get; set; }
         public DateTime AppointmentDate { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
-        public string Status { get; set; } = string.Empty;
+        public int Status { get; set; }
         public string PetName { get; set; } = string.Empty;
         public string PetType { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
@@ -20,6 +21,7 @@ namespace PetCareAPI.Models
 
         public virtual User? Owner { get; set; }
         public virtual Provider? Provider { get; set; }
+        public virtual Pet? Pet { get; set; }
         public virtual Payment? Payment { get; set; }
     }
 }

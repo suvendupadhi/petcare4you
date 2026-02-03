@@ -1,15 +1,32 @@
-import { useStripe } from "@stripe/stripe-react-native";
 import { Alert } from "react-native";
 import { stripeService } from "@/services/petCareService";
+import Constants, { ExecutionEnvironment } from 'expo-constants';
+
+let useStripe: any = null;
+try {
+  const StripeModule = require('@stripe/stripe-react-native');
+  useStripe = StripeModule.useStripe;
+} catch (e) {
+  // Module not found
+}
 
 export const usePaymentGateway = () => {
-  const { initPaymentSheet, presentPaymentSheet } = useStripe();
+  const stripe = useStripe ? useStripe() : null;
+  const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
   const processPayment = async (paymentId: number, onSuccess: () => void) => {
+    if (isExpoGo || !stripe) {
+      Alert.alert(
+        'Stripe Not Supported',
+        'Stripe is not supported in Expo Go. Please use a development build to test payments on a physical device.'
+      );
+      return;
+    }
+
     try {
       const { clientSecret } = await stripeService.createPaymentIntent(paymentId);
 
-      const { error: initError } = await initPaymentSheet({
+      const { error: initError } = await stripe.initPaymentSheet({
         paymentIntentClientSecret: clientSecret,
         merchantDisplayName: 'PetCare Services',
       });
@@ -19,7 +36,7 @@ export const usePaymentGateway = () => {
         return;
       }
 
-      const { error: presentError } = await presentPaymentSheet();
+      const { error: presentError } = await stripe.presentPaymentSheet();
 
       if (presentError) {
         if (presentError.code !== 'Canceled') {

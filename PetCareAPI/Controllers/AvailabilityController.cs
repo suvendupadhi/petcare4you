@@ -23,7 +23,7 @@ namespace PetCareAPI.Controllers
         public async Task<ActionResult<IEnumerable<Availability>>> GetProviderAvailability(int providerId)
         {
             return await _context.Availabilities
-                .Where(a => a.ProviderId == providerId && a.Date >= DateTime.UtcNow.Date)
+                .Where(a => a.ProviderId == providerId)
                 .OrderBy(a => a.Date)
                 .ThenBy(a => a.StartTime)
                 .ToListAsync();
@@ -37,7 +37,7 @@ namespace PetCareAPI.Controllers
             if (provider == null) return NotFound("Provider profile not found");
 
             return await _context.Availabilities
-                .Where(a => a.ProviderId == provider.Id && a.Date >= DateTime.UtcNow.Date)
+                .Where(a => a.ProviderId == provider.Id)
                 .OrderBy(a => a.Date)
                 .ThenBy(a => a.StartTime)
                 .ToListAsync();

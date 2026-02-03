@@ -18,6 +18,7 @@ import {
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { authService, appointmentService, providerService, userService, Appointment, Provider, User as UserType } from '@/services/petCareService';
+import { getStatusLabel } from '@/constants/status';
 
 export default function OwnerDashboardScreen() {
   const router = useRouter();
@@ -212,7 +213,7 @@ export default function OwnerDashboardScreen() {
                     </View>
                     <View className="bg-primary/10 rounded-full px-3 py-1">
                       <Text className="text-primary text-xs font-semibold capitalize">
-                        {appointment.status}
+                        {getStatusLabel(appointment.status)}
                       </Text>
                     </View>
                   </View>

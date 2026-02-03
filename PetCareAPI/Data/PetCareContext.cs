@@ -11,11 +11,17 @@ namespace PetCareAPI.Data
         }
 
         public DbSet<User> Users { get; set; } = null!;
+        public DbSet<UserRole> UserRoles { get; set; } = null!;
         public DbSet<Provider> Providers { get; set; } = null!;
         public DbSet<ServiceType> ServiceTypes { get; set; } = null!;
+        public DbSet<ProviderService> ProviderServices { get; set; } = null!;
         public DbSet<Appointment> Appointments { get; set; } = null!;
         public DbSet<Availability> Availabilities { get; set; } = null!;
         public DbSet<Payment> Payments { get; set; } = null!;
+        public DbSet<StatusMaster> StatusMasters { get; set; } = null!;
+        public DbSet<PetType> PetTypes { get; set; } = null!;
+        public DbSet<Breed> Breeds { get; set; } = null!;
+        public DbSet<Pet> Pets { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -26,6 +32,43 @@ namespace PetCareAPI.Data
                 .HasIndex(u => u.Email)
                 .IsUnique();
 
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.Role)
+                .WithMany(r => r.Users)
+                .HasForeignKey(u => u.RoleId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Pet Configuration
+            modelBuilder.Entity<Pet>()
+                .HasOne(p => p.Owner)
+                .WithMany(u => u.Pets)
+                .HasForeignKey(p => p.OwnerId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Pet>()
+                .HasOne(p => p.PetType)
+                .WithMany(pt => pt.Pets)
+                .HasForeignKey(p => p.PetTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Pet>()
+                .HasOne(p => p.Breed)
+                .WithMany(b => b.Pets)
+                .HasForeignKey(p => p.BreedId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Breed>()
+                .HasOne(b => b.PetType)
+                .WithMany(pt => pt.Breeds)
+                .HasForeignKey(b => b.PetTypeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Appointment>()
+                .HasOne(a => a.Pet)
+                .WithMany(p => p.Appointments)
+                .HasForeignKey(a => a.PetId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             // Provider Configuration
             modelBuilder.Entity<Provider>()
                 .HasOne(p => p.User)
@@ -33,20 +76,21 @@ namespace PetCareAPI.Data
                 .HasForeignKey<Provider>(p => p.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // ServiceType Configuration
-            modelBuilder.Entity<Provider>()
-                .HasMany(p => p.ServiceTypes)
-                .WithMany(s => s.Providers)
-                .UsingEntity<Dictionary<string, object>>(
-                    "ProviderServiceType",
-                    j => j.HasOne<ServiceType>().WithMany().HasForeignKey("ServiceTypeId"),
-                    j => j.HasOne<Provider>().WithMany().HasForeignKey("ProviderId"),
-                    j => j.ToTable("provider_service_types", "petcare")
-                );
+            // ProviderService Configuration
+            modelBuilder.Entity<ProviderService>()
+                .HasOne(ps => ps.Provider)
+                .WithMany(p => p.ProviderServices)
+                .HasForeignKey(ps => ps.ProviderId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-            // Column naming for join table
-            modelBuilder.Entity("ProviderServiceType").Property<int>("ProviderId").HasColumnName("provider_id");
-            modelBuilder.Entity("ProviderServiceType").Property<int>("ServiceTypeId").HasColumnName("service_type_id");
+            modelBuilder.Entity<ProviderService>()
+                .HasOne(ps => ps.ServiceType)
+                .WithMany()
+                .HasForeignKey(ps => ps.ServiceTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ProviderService>().Property(ps => ps.ProviderId).HasColumnName("provider_id");
+            modelBuilder.Entity<ProviderService>().Property(ps => ps.ServiceTypeId).HasColumnName("service_type_id");
 
             // Appointment Configuration
             modelBuilder.Entity<Appointment>()

@@ -2,7 +2,41 @@
 CREATE SCHEMA IF NOT EXISTS petcare;
 SET search_path TO petcare;
 
--- 1. ServiceType Table
+-- 1. StatusMaster Table
+CREATE TABLE IF NOT EXISTS status_master (
+    id SERIAL PRIMARY KEY,
+    status_name VARCHAR(50) NOT NULL,
+    status_type VARCHAR(50) NOT NULL, -- 'appointment', 'payment'
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2. UserRoles Table
+CREATE TABLE IF NOT EXISTS user_roles (
+    id SERIAL PRIMARY KEY,
+    role_name VARCHAR(50) NOT NULL UNIQUE,
+    description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 3. PetTypes Table
+CREATE TABLE IF NOT EXISTS pet_types (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 4. Breeds Table
+CREATE TABLE IF NOT EXISTS breeds (
+    id SERIAL PRIMARY KEY,
+    pet_type_id INTEGER NOT NULL REFERENCES pet_types(id) ON DELETE CASCADE,
+    name VARCHAR(100) NOT NULL,
+    origin VARCHAR(100),
+    description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(pet_type_id, name)
+);
+
+-- 5. ServiceType Table
 CREATE TABLE IF NOT EXISTS service_types (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE,
@@ -12,7 +46,7 @@ CREATE TABLE IF NOT EXISTS service_types (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 2. Users Table
+-- 6. Users Table
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
@@ -20,13 +54,28 @@ CREATE TABLE IF NOT EXISTS users (
     first_name VARCHAR(100),
     last_name VARCHAR(100),
     phone_number VARCHAR(20),
-    user_type VARCHAR(20) NOT NULL, -- 'owner', 'provider'
+    role_id INTEGER NOT NULL REFERENCES user_roles(id),
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 3. Providers Table
+-- 7. Pets Table
+CREATE TABLE IF NOT EXISTS pets (
+    id SERIAL PRIMARY KEY,
+    owner_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    pet_type_id INTEGER NOT NULL REFERENCES pet_types(id),
+    breed_id INTEGER REFERENCES breeds(id),
+    name VARCHAR(100) NOT NULL,
+    age INTEGER,
+    weight DECIMAL(5, 2),
+    medical_notes TEXT,
+    profile_image_url VARCHAR(500),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 8. Providers Table
 CREATE TABLE IF NOT EXISTS providers (
     id SERIAL PRIMARY KEY,
     user_id INTEGER UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -41,35 +90,38 @@ CREATE TABLE IF NOT EXISTS providers (
     longitude DECIMAL(11, 8),
     profile_image_url VARCHAR(500),
     is_verified BOOLEAN DEFAULT FALSE,
+    stripe_account_id VARCHAR(100),
+    is_stripe_connected BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 4. ProviderServiceTypes (Join Table)
+-- 9. ProviderServiceTypes (Join Table)
 CREATE TABLE IF NOT EXISTS provider_service_types (
     provider_id INTEGER REFERENCES providers(id) ON DELETE CASCADE,
     service_type_id INTEGER REFERENCES service_types(id) ON DELETE CASCADE,
     PRIMARY KEY (provider_id, service_type_id)
 );
 
--- 5. Appointments Table
+-- 10. Appointments Table
 CREATE TABLE IF NOT EXISTS appointments (
     id SERIAL PRIMARY KEY,
     owner_id INTEGER NOT NULL REFERENCES users(id),
     provider_id INTEGER NOT NULL REFERENCES providers(id),
+    pet_id INTEGER REFERENCES pets(id),
     appointment_date DATE NOT NULL,
     start_time TIMESTAMP WITH TIME ZONE NOT NULL,
     end_time TIMESTAMP WITH TIME ZONE NOT NULL,
-    status VARCHAR(20) DEFAULT 'pending', -- pending, confirmed, completed, cancelled
-    pet_name VARCHAR(100) NOT NULL,
-    pet_type VARCHAR(50) NOT NULL,
+    status INTEGER NOT NULL REFERENCES status_master(id),
+    pet_name VARCHAR(100), -- Optional if pet_id is provided
+    pet_type VARCHAR(50), -- Optional if pet_id is provided
     description TEXT,
     total_price DECIMAL(10, 2) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 6. Availability Table
+-- 7. Availability Table
 CREATE TABLE IF NOT EXISTS availability (
     id SERIAL PRIMARY KEY,
     provider_id INTEGER NOT NULL REFERENCES providers(id) ON DELETE CASCADE,
@@ -80,15 +132,17 @@ CREATE TABLE IF NOT EXISTS availability (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 7. Payments Table
+-- 8. Payments Table
 CREATE TABLE IF NOT EXISTS payments (
     id SERIAL PRIMARY KEY,
     appointment_id INTEGER UNIQUE NOT NULL REFERENCES appointments(id) ON DELETE CASCADE,
     user_id INTEGER NOT NULL REFERENCES users(id),
     amount DECIMAL(10, 2) NOT NULL,
-    status VARCHAR(20) DEFAULT 'pending',
+    status INTEGER NOT NULL REFERENCES status_master(id),
     payment_method VARCHAR(50),
     transaction_id VARCHAR(100),
+    stripe_payment_intent_id VARCHAR(100),
+    stripe_client_secret VARCHAR(200),
     payment_date TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -100,6 +154,42 @@ CREATE INDEX idx_appointments_owner ON appointments(owner_id);
 CREATE INDEX idx_availability_provider ON availability(provider_id);
 
 -- SAMPLE DATA
+-- Insert Statuses
+INSERT INTO status_master (status_name, status_type)
+VALUES 
+    ('pending', 'appointment'),
+    ('confirmed', 'appointment'),
+    ('completed', 'appointment'),
+    ('cancelled', 'appointment'),
+    ('pending', 'payment'),
+    ('completed', 'payment'),
+    ('failed', 'payment')
+ON CONFLICT DO NOTHING;
+
+-- Insert User Roles
+INSERT INTO user_roles (role_name, description)
+VALUES 
+    ('owner', 'Pet Owner'),
+    ('provider', 'Service Provider'),
+    ('admin', 'Administrator')
+ON CONFLICT (role_name) DO NOTHING;
+
+-- Insert Pet Types
+INSERT INTO pet_types (name) 
+VALUES ('Dog'), ('Cat'), ('Bird'), ('Rabbit'), ('Other') 
+ON CONFLICT DO NOTHING;
+
+-- Insert Breeds
+INSERT INTO breeds (pet_type_id, name, origin) 
+VALUES 
+    (1, 'Golden Retriever', 'Scotland'),
+    (1, 'German Shepherd', 'Germany'),
+    (1, 'French Bulldog', 'France'),
+    (2, 'Siamese', 'Thailand'),
+    (2, 'Maine Coon', 'United States'),
+    (2, 'Persian', 'Iran')
+ON CONFLICT DO NOTHING;
+
 -- Insert Service Types
 INSERT INTO service_types (name, description, icon_name)
 VALUES 
@@ -118,10 +208,13 @@ VALUES
 ON CONFLICT (name) DO NOTHING;
 
 -- Passwords are stored in plain text (password for all is 'password123')
-INSERT INTO users (email, password_hash, first_name, last_name, phone_number, user_type)
+INSERT INTO users (email, password_hash, first_name, last_name, phone_number, role_id)
 VALUES 
-('owner@example.com', 'password123', 'John', 'Owner', '555-1234', 'owner'),
-('groomer@example.com', 'password123', 'Jane', 'Groomer', '555-5678', 'provider');
+('owner@example.com', 'password123', 'John', 'Owner', '555-1234', 1),
+('groomer@example.com', 'password123', 'Jane', 'Groomer', '555-5678', 2);
+
+INSERT INTO pets (owner_id, pet_type_id, breed_id, name, age)
+VALUES (1, 1, 1, 'Buddy', 3);
 
 INSERT INTO providers (user_id, company_name, description, hourly_rate, rating, review_count, address, city, is_verified)
 VALUES 

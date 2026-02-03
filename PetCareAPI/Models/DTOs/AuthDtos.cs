@@ -13,13 +13,13 @@ namespace PetCareAPI.Models.DTOs
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
-        public string UserType { get; set; } = string.Empty;
+        public int RoleId { get; set; }
     }
 
     public class AuthResponseDto
     {
         public string Token { get; set; } = string.Empty;
         public int UserId { get; set; }
-        public string UserType { get; set; } = string.Empty;
+        public int RoleId { get; set; }
     }
 }

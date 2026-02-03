@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using PetCareAPI.Constants;
 using PetCareAPI.Data;
 using Stripe;
 
@@ -30,12 +31,12 @@ namespace PetCareAPI.Controllers
                     _configuration["Stripe:WebhookSecret"]
                 );
 
-                if (stripeEvent.Type == Events.PaymentIntentSucceeded)
+                if (stripeEvent.Type == EventTypes.PaymentIntentSucceeded)
                 {
                     var paymentIntent = stripeEvent.Data.Object as PaymentIntent;
                     await HandlePaymentSucceeded(paymentIntent!);
                 }
-                else if (stripeEvent.Type == Events.AccountUpdated)
+                else if (stripeEvent.Type == EventTypes.AccountUpdated)
                 {
                     var account = stripeEvent.Data.Object as Account;
                     await HandleAccountUpdated(account!);
@@ -57,13 +58,13 @@ namespace PetCareAPI.Controllers
 
             if (payment != null)
             {
-                payment.Status = "Paid";
+                payment.Status = StatusConstants.Payment.Completed;
                 payment.PaymentDate = DateTime.UtcNow;
                 payment.TransactionId = intent.Id;
 
                 if (payment.Appointment != null)
                 {
-                    payment.Appointment.Status = "Confirmed";
+                    payment.Appointment.Status = StatusConstants.Appointment.Confirmed;
                 }
 
                 await _context.SaveChangesAsync();

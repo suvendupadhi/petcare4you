@@ -6,8 +6,35 @@ export interface User {
   phoneNumber?: string;
   firstName: string;
   lastName: string;
-  userType: 'owner' | 'provider';
+  roleId: number;
   provider?: Provider;
+}
+
+export interface PetType {
+  id: number;
+  name: string;
+}
+
+export interface Breed {
+  id: number;
+  petTypeId: number;
+  name: string;
+  origin?: string;
+  description?: string;
+}
+
+export interface Pet {
+  id: number;
+  ownerId: number;
+  petTypeId: number;
+  breedId?: number;
+  name: string;
+  age?: number;
+  weight?: number;
+  medicalNotes?: string;
+  profileImageUrl?: string;
+  petType?: PetType;
+  breed?: Breed;
 }
 
 export interface Provider {
@@ -36,16 +63,18 @@ export interface Appointment {
   id: number;
   ownerId: number;
   providerId: number;
+  petId?: number;
   appointmentDate: string;
   startTime: string;
   endTime: string;
-  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  status: number;
   petName: string;
   petType: string;
   description: string;
   totalPrice: number;
   provider?: Provider;
   owner?: User;
+  pet?: Pet;
   payment?: Payment;
 }
 
@@ -55,13 +84,42 @@ export const authService = {
     if (response.token) {
       await setToken(response.token);
     }
-    return response;
+    // Normalize response
+    return {
+      ...response,
+      roleId: response.roleId || response.RoleId,
+      userId: response.userId || response.UserId
+    };
   },
   register: async (userData: any) => {
     return await api.post('/auth/register', userData);
   },
   logout: async () => {
     await clearToken();
+  }
+};
+
+export const petService = {
+  getMyPets: async (): Promise<Pet[]> => {
+    return await api.get('/pets');
+  },
+  getPet: async (id: number): Promise<Pet> => {
+    return await api.get(`/pets/${id}`);
+  },
+  createPet: async (petData: any): Promise<Pet> => {
+    return await api.post('/pets', petData);
+  },
+  updatePet: async (id: number, petData: any): Promise<void> => {
+    return await api.put(`/pets/${id}`, petData);
+  },
+  deletePet: async (id: number): Promise<void> => {
+    return await api.delete(`/pets/${id}`);
+  },
+  getPetTypes: async (): Promise<PetType[]> => {
+    return await api.get('/pets/types');
+  },
+  getBreeds: async (typeId: number): Promise<Breed[]> => {
+    return await api.get(`/pets/breeds/${typeId}`);
   }
 };
 
@@ -116,7 +174,7 @@ export const appointmentService = {
   updateAppointment: async (id: number, appointmentData: any): Promise<Appointment> => {
     return await api.put(`/appointments/${id}`, appointmentData);
   },
-  updateStatus: async (id: number, status: string): Promise<void> => {
+  updateStatus: async (id: number, status: number): Promise<void> => {
     return await api.patch(`/appointments/${id}/status`, { status });
   }
 };
@@ -150,12 +208,27 @@ export interface Payment {
   appointmentId: number;
   userId: number;
   amount: number;
-  status: string;
+  status: number;
   paymentMethod: string;
   transactionId: string;
   paymentDate: string;
   appointment?: Appointment;
 }
+
+export interface StatusMaster {
+  id: number;
+  statusName: string;
+  statusType: 'appointment' | 'payment';
+}
+
+export const statusService = {
+  getStatuses: async (): Promise<StatusMaster[]> => {
+    return await api.get('/statuses');
+  },
+  getStatusesByType: async (type: string): Promise<StatusMaster[]> => {
+    return await api.get(`/statuses/${type}`);
+  }
+};
 
 export const paymentService = {
   getProviderPayments: async (): Promise<Payment[]> => {
@@ -181,9 +254,38 @@ export const stripeService = {
   }
 };
 
+export interface ProviderService {
+  id?: number;
+  providerId?: number;
+  serviceTypeId: number;
+  price: number;
+  description?: string;
+  serviceType?: ServiceType;
+}
+
+export const providerServicePricingService = {
+  getMyServices: async (): Promise<ProviderService[]> => {
+    return await api.get('/providerServices/MyServices');
+  },
+  createService: async (serviceData: ProviderService): Promise<ProviderService> => {
+    return await api.post('/providerServices', serviceData);
+  },
+  updateService: async (id: number, serviceData: ProviderService): Promise<void> => {
+    return await api.put(`/providerServices/${id}`, serviceData);
+  },
+  deleteService: async (id: number): Promise<void> => {
+    return await api.delete(`/providerServices/${id}`);
+  }
+};
+
 export const userService = {
   getCurrentUser: async (): Promise<User> => {
-    return await api.get('/users/me');
+    const response = await api.get('/users/me');
+    // Normalize response
+    return {
+      ...response,
+      roleId: response.roleId || response.RoleId
+    };
   },
   updateProfile: async (userData: any): Promise<void> => {
     return await api.put('/users/me', userData);

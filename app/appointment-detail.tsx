@@ -26,6 +26,7 @@ import {
 } from 'lucide-react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { authService, appointmentService, Appointment, paymentService } from '@/services/petCareService';
+import { APPOINTMENT_STATUS, PAYMENT_STATUS } from '@/constants/status';
 
 /*
 // Mock data - Replace with API calls
@@ -147,30 +148,30 @@ export default function AppointmentDetailScreen() {
     }
   };
 
-  const getStatusConfig = (status: string) => {
+  const getStatusConfig = (status: number) => {
     switch (status) {
-      case 'confirmed':
+      case APPOINTMENT_STATUS.CONFIRMED:
         return {
           icon: CheckCircle,
           color: 'text-green-600',
           bg: 'bg-green-50',
           label: 'Confirmed'
         };
-      case 'pending':
+      case APPOINTMENT_STATUS.PENDING:
         return {
           icon: AlertCircle,
           color: 'text-yellow-600',
           bg: 'bg-yellow-50',
           label: 'Pending Confirmation'
         };
-      case 'completed':
+      case APPOINTMENT_STATUS.COMPLETED:
         return {
           icon: CheckCircle,
           color: 'text-blue-600',
           bg: 'bg-blue-50',
           label: 'Completed'
         };
-      case 'cancelled':
+      case APPOINTMENT_STATUS.CANCELLED:
         return {
           icon: XCircle,
           color: 'text-red-600',
@@ -182,7 +183,7 @@ export default function AppointmentDetailScreen() {
           icon: AlertCircle,
           color: 'text-gray-600',
           bg: 'bg-gray-50',
-          label: status
+          label: 'Unknown'
         };
     }
   };
@@ -191,7 +192,7 @@ export default function AppointmentDetailScreen() {
     const cancelAction = async () => {
       try {
         if (appointment) {
-          await appointmentService.updateStatus(appointment.id, 'cancelled');
+          await appointmentService.updateStatus(appointment.id, APPOINTMENT_STATUS.CANCELLED);
           
           if (Platform.OS === 'web') {
             window.alert('Success: Appointment cancelled successfully');
@@ -274,7 +275,7 @@ export default function AppointmentDetailScreen() {
         appointmentId: appointment.id,
         amount: appointment.totalPrice,
         paymentMethod: 'Credit Card',
-        status: 'Paid',
+        status: PAYMENT_STATUS.COMPLETED,
         transactionId: `TRX-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
       });
       
@@ -322,9 +323,9 @@ export default function AppointmentDetailScreen() {
   const statusConfig = getStatusConfig(appointment.status);
   const StatusIcon = statusConfig.icon;
 
-  const canCancel = appointment.status === 'pending' || appointment.status === 'confirmed';
-  const canReschedule = appointment.status === 'pending';
-  const isPaid = appointment.payment && appointment.payment.status.toLowerCase() === 'paid';
+  const canCancel = appointment.status === APPOINTMENT_STATUS.PENDING || appointment.status === APPOINTMENT_STATUS.CONFIRMED;
+  const canReschedule = appointment.status === APPOINTMENT_STATUS.PENDING;
+  const isPaid = appointment.payment && appointment.payment.status === PAYMENT_STATUS.COMPLETED;
 
   return (
     <SafeAreaView className="flex-1 bg-background">
@@ -418,12 +419,18 @@ export default function AppointmentDetailScreen() {
           <View className="gap-3">
             <View className="flex-row items-center justify-between">
               <Text className="text-muted-foreground">Pet Name</Text>
-              <Text className="text-foreground font-semibold">{appointment.petName}</Text>
+              <Text className="text-foreground font-semibold">{appointment.pet?.name || appointment.petName}</Text>
             </View>
             <View className="flex-row items-center justify-between">
               <Text className="text-muted-foreground">Pet Type</Text>
-              <Text className="text-foreground font-semibold">{appointment.petType}</Text>
+              <Text className="text-foreground font-semibold">{appointment.pet?.petType?.name || appointment.petType}</Text>
             </View>
+            {appointment.pet?.breed?.name && (
+              <View className="flex-row items-center justify-between">
+                <Text className="text-muted-foreground">Breed</Text>
+                <Text className="text-foreground font-semibold">{appointment.pet.breed.name}</Text>
+              </View>
+            )}
             {appointment.description && (
               <View className="mt-2 p-3 bg-muted rounded-xl">
                 <Text className="text-muted-foreground text-xs mb-1">Special Notes</Text>

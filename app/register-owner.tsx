@@ -5,6 +5,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { ArrowLeft, User, Phone, Mail, Lock, CheckCircle2, ArrowRight } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { authService } from '@/services/petCareService';
+import { USER_ROLE } from '@/constants/status';
 
 export default function RegisterOwnerScreen() {
   const router = useRouter();
@@ -83,7 +84,7 @@ export default function RegisterOwnerScreen() {
         firstName,
         lastName,
         phoneNumber: contactNumber,
-        userType: 'owner'
+        roleId: USER_ROLE.OWNER
       });
       
       if (Platform.OS === 'web') {

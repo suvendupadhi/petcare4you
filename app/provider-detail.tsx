@@ -17,7 +17,8 @@ import {
   ChevronRight
 } from 'lucide-react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { providerService, appointmentService, availabilityService, Provider, Availability, Appointment } from '@/services/petCareService';
+import { providerService, appointmentService, availabilityService, petService, Provider, Availability, Appointment, Pet, PetType, Breed } from '@/services/petCareService';
+import { APPOINTMENT_STATUS } from '@/constants/status';
 import { Calendar } from 'react-native-calendars';
 import { format } from 'date-fns';
 
@@ -28,12 +29,18 @@ export default function ProviderDetailScreen() {
   const { id, rescheduleId } = useLocalSearchParams();
   const [provider, setProvider] = useState<Provider | null>(null);
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
+  const [myPets, setMyPets] = useState<Pet[]>([]);
+  const [petTypes, setPetTypes] = useState<PetType[]>([]);
+  const [breeds, setBreeds] = useState<Breed[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [selectedService, setSelectedService] = useState<string>('');
+  const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
   const [petName, setPetName] = useState<string>('');
   const [petType, setPetType] = useState<string>('Dog');
+  const [selectedPetTypeId, setSelectedPetTypeId] = useState<number | null>(null);
+  const [selectedBreedId, setSelectedBreedId] = useState<number | null>(null);
   const [description, setDescription] = useState<string>('');
   const [showBooking, setShowBooking] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -50,15 +57,38 @@ export default function ProviderDetailScreen() {
     }
   }, [rescheduleId]);
 
+  useEffect(() => {
+    if (selectedPetTypeId) {
+      loadBreeds(selectedPetTypeId);
+    }
+  }, [selectedPetTypeId]);
+
+  const loadBreeds = async (typeId: number) => {
+    try {
+      const breedData = await petService.getBreeds(typeId);
+      setBreeds(breedData);
+    } catch (error) {
+      console.error('Error loading breeds:', error);
+    }
+  };
+
   const loadProviderData = async () => {
     try {
       setLoading(true);
-      const [providerData, availabilityData] = await Promise.all([
+      const [providerData, availabilityData, petsData, typesData] = await Promise.all([
         providerService.getProvider(Number(id)),
-        availabilityService.getProviderAvailability(Number(id))
+        availabilityService.getProviderAvailability(Number(id)),
+        petService.getMyPets(),
+        petService.getPetTypes()
       ]);
       setProvider(providerData);
       setAvailabilities(availabilityData);
+      setMyPets(petsData);
+      setPetTypes(typesData);
+
+      if (petsData.length > 0) {
+        setSelectedPetId(petsData[0].id);
+      }
       
       if (providerData.serviceTypes && providerData.serviceTypes.length > 0) {
         setSelectedService(providerData.serviceTypes[0].name);
@@ -89,6 +119,7 @@ export default function ProviderDetailScreen() {
     try {
       const apt = await appointmentService.getAppointment(Number(rescheduleId));
       if (apt) {
+        setSelectedPetId(apt.petId || null);
         setPetName(apt.petName);
         setPetType(apt.petType);
         setDescription(apt.description);
@@ -171,6 +202,28 @@ export default function ProviderDetailScreen() {
 
     setIsSubmitting(true);
     try {
+      let petId = selectedPetId;
+
+      // If no pet selected, create a new one first
+      if (!petId) {
+        if (!selectedPetTypeId) {
+          if (Platform.OS === 'web') {
+            window.alert('Error: Please select a pet type');
+          } else {
+            Alert.alert('Error', 'Please select a pet type');
+          }
+          setIsSubmitting(false);
+          return;
+        }
+
+        const newPet = await petService.createPet({
+          name: petName,
+          petTypeId: selectedPetTypeId,
+          breedId: selectedBreedId,
+        });
+        petId = newPet.id;
+      }
+
       // Find the selected availability slot to get the correct end time if available
       const selectedSlot = availabilities.find(a => 
         a.date.split('T')[0] === selectedDate && 
@@ -185,11 +238,12 @@ export default function ProviderDetailScreen() {
         appointmentDate: selectedDate,
         startTime: startTime,
         endTime: endTime,
+        petId: petId,
         petName: petName,
         petType: petType,
         description: description || `Booking for ${selectedService}`,
         totalPrice: provider.hourlyRate,
-        status: 'pending'
+        status: APPOINTMENT_STATUS.PENDING
       };
 
       if (rescheduleId) {
@@ -430,37 +484,102 @@ export default function ProviderDetailScreen() {
               <View className="bg-card border border-border rounded-xl p-4 mb-4">
                 <Text className="text-sm font-semibold text-foreground mb-3">Pet Information</Text>
                 
-                <View className="mb-3">
-                  <Text className="text-xs text-muted-foreground mb-1">Pet Name</Text>
-                  <TextInput
-                    value={petName}
-                    onChangeText={setPetName}
-                    placeholder="Enter pet name"
-                    placeholderTextColor="#9CA3AF"
-                    className="bg-muted px-4 py-2 rounded-lg text-foreground"
-                  />
-                </View>
-
-                <View className="flex-row gap-3">
-                  <View className="flex-1">
-                    <Text className="text-xs text-muted-foreground mb-1">Pet Type</Text>
-                    <View className="flex-row gap-2">
-                      {['Dog', 'Cat', 'Other'].map((type) => (
+                {myPets.length > 0 && (
+                  <View className="mb-4">
+                    <Text className="text-xs text-muted-foreground mb-2">Select Your Pet</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row gap-2">
+                      {myPets.map((pet) => (
                         <TouchableOpacity
-                          key={type}
-                          onPress={() => setPetType(type)}
-                          className={`px-3 py-1.5 rounded-lg border ${
-                            petType === type ? 'bg-primary border-primary' : 'bg-muted border-border'
+                          key={pet.id}
+                          onPress={() => {
+                            setSelectedPetId(pet.id);
+                            setPetName(pet.name);
+                            setPetType(pet.petType?.name || 'Dog');
+                          }}
+                          className={`px-4 py-2 rounded-lg border ${
+                            selectedPetId === pet.id ? 'bg-primary border-primary' : 'bg-muted border-border'
                           }`}
                         >
-                          <Text className={`text-xs ${petType === type ? 'text-primary-foreground font-bold' : 'text-muted-foreground'}`}>
-                            {type}
+                          <Text className={`${selectedPetId === pet.id ? 'text-primary-foreground font-bold' : 'text-foreground'}`}>
+                            {pet.name}
                           </Text>
                         </TouchableOpacity>
                       ))}
-                    </View>
+                      <TouchableOpacity
+                        onPress={() => {
+                          setSelectedPetId(null);
+                          setPetName('');
+                        }}
+                        className={`px-4 py-2 rounded-lg border ${
+                          selectedPetId === null ? 'bg-primary border-primary' : 'bg-muted border-border'
+                        }`}
+                      >
+                        <Text className={`${selectedPetId === null ? 'text-primary-foreground font-bold' : 'text-foreground'}`}>
+                          + New Pet
+                        </Text>
+                      </TouchableOpacity>
+                    </ScrollView>
                   </View>
-                </View>
+                )}
+
+                {selectedPetId === null && (
+                  <>
+                    <View className="mb-3">
+                      <Text className="text-xs text-muted-foreground mb-1">Pet Name</Text>
+                      <TextInput
+                        value={petName}
+                        onChangeText={setPetName}
+                        placeholder="Enter pet name"
+                        placeholderTextColor="#9CA3AF"
+                        className="bg-muted px-4 py-2 rounded-lg text-foreground"
+                      />
+                    </View>
+
+                    <View className="mb-3">
+                      <Text className="text-xs text-muted-foreground mb-1">Pet Type</Text>
+                      <View className="flex-row flex-wrap gap-2">
+                        {petTypes.map((type) => (
+                          <TouchableOpacity
+                            key={type.id}
+                            onPress={() => {
+                              setSelectedPetTypeId(type.id);
+                              setPetType(type.name);
+                              setSelectedBreedId(null);
+                            }}
+                            className={`px-3 py-1.5 rounded-lg border ${
+                              selectedPetTypeId === type.id ? 'bg-primary border-primary' : 'bg-muted border-border'
+                            }`}
+                          >
+                            <Text className={`text-xs ${selectedPetTypeId === type.id ? 'text-primary-foreground font-bold' : 'text-muted-foreground'}`}>
+                              {type.name}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    </View>
+
+                    {breeds.length > 0 && (
+                      <View className="mb-3">
+                        <Text className="text-xs text-muted-foreground mb-1">Breed (Optional)</Text>
+                        <View className="flex-row flex-wrap gap-2">
+                          {breeds.map((breed) => (
+                            <TouchableOpacity
+                              key={breed.id}
+                              onPress={() => setSelectedBreedId(breed.id)}
+                              className={`px-3 py-1.5 rounded-lg border ${
+                                selectedBreedId === breed.id ? 'bg-primary border-primary' : 'bg-muted border-border'
+                              }`}
+                            >
+                              <Text className={`text-xs ${selectedBreedId === breed.id ? 'text-primary-foreground font-bold' : 'text-muted-foreground'}`}>
+                                {breed.name}
+                              </Text>
+                            </TouchableOpacity>
+                          ))}
+                        </View>
+                      </View>
+                    )}
+                  </>
+                )}
 
                 <View className="mt-3">
                   <Text className="text-xs text-muted-foreground mb-1">Special Notes (Optional)</Text>

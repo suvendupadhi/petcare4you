@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using PetCareAPI.Constants;
 using PetCareAPI.Data;
 using PetCareAPI.Models;
 using System.Security.Claims;
@@ -58,14 +59,16 @@ namespace PetCareAPI.Controllers
             payment.UserId = userId;
             payment.CreatedAt = DateTime.UtcNow;
             payment.PaymentDate = DateTime.UtcNow;
+            
+            if (payment.Status == 0) payment.Status = StatusConstants.Payment.Pending;
 
             _context.Payments.Add(payment);
             
             // Also update appointment status if needed
             var appointment = await _context.Appointments.FindAsync(payment.AppointmentId);
-            if (appointment != null && payment.Status == "Paid")
+            if (appointment != null && payment.Status == StatusConstants.Payment.Completed)
             {
-                // Logic for what happens after payment
+                appointment.Status = StatusConstants.Appointment.Confirmed;
             }
 
             await _context.SaveChangesAsync();

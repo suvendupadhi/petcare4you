@@ -9,7 +9,5 @@ namespace PetCareAPI.Models
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string IconName { get; set; } = string.Empty; // For frontend icons
-
-        public virtual ICollection<Provider> Providers { get; set; } = new List<Provider>();
     }
 }

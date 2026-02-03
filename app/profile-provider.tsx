@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator, TextInput, Platform } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator, TextInput, Platform, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { 
@@ -78,7 +78,20 @@ const mockPhotos = [
   'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=400',
 ];
 
-import { authService, userService, User, Provider, providerService, serviceTypeService, ServiceType } from '@/services/petCareService';
+import { 
+  authService, 
+  userService, 
+  User, 
+  Provider, 
+  providerService, 
+  serviceTypeService, 
+  ServiceType,
+  providerServicePricingService,
+  ProviderService,
+  availabilityService,
+  Availability
+} from '@/services/petCareService';
+import { format, parseISO } from 'date-fns';
 
 export default function ProfileProviderScreen() {
   const [loading, setLoading] = useState(true);
@@ -87,8 +100,26 @@ export default function ProfileProviderScreen() {
   const [provider, setProvider] = useState<Provider | null>(null);
   const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
   const [loadingServiceTypes, setLoadingServiceTypes] = useState(false);
-  const [services, setServices] = useState(mockServices);
+  const [services, setServices] = useState<ProviderService[]>([]);
+  const [availabilities, setAvailabilities] = useState<Availability[]>([]);
   const [photos, setPhotos] = useState(mockPhotos);
+
+  // Service Edit state
+  const [showServiceModal, setShowServiceModal] = useState(false);
+  const [editingService, setEditingService] = useState<ProviderService | null>(null);
+  const [serviceForm, setServiceForm] = useState({
+    serviceTypeId: 0,
+    price: 0,
+    description: ''
+  });
+
+  // Availability Edit state
+  const [showAvailabilityModal, setShowAvailabilityModal] = useState(false);
+  const [availabilityForm, setAvailabilityForm] = useState({
+    date: format(new Date(), 'yyyy-MM-dd'),
+    startTime: '09:00',
+    endTime: '17:00'
+  });
 
   // Edit form state
   const [editForm, setEditForm] = useState({
@@ -105,7 +136,74 @@ export default function ProfileProviderScreen() {
   useEffect(() => {
     loadProfileData();
     loadServiceTypes();
+    loadServices();
+    loadAvailability();
   }, []);
+
+  const loadAvailability = async () => {
+    try {
+      const data = await availabilityService.getMyAvailability();
+      setAvailabilities(data);
+    } catch (error) {
+      console.error('Error loading availability:', error);
+    }
+  };
+
+  const handleAddAvailability = async () => {
+    try {
+      if (!provider) return;
+      
+      // Combine date and time for API
+      const startDateTime = new Date(`${availabilityForm.date}T${availabilityForm.startTime}:00Z`).toISOString();
+      const endDateTime = new Date(`${availabilityForm.date}T${availabilityForm.endTime}:00Z`).toISOString();
+      const dateOnly = new Date(`${availabilityForm.date}T00:00:00Z`).toISOString();
+
+      await availabilityService.createAvailability({
+        date: dateOnly,
+        startTime: startDateTime,
+        endTime: endDateTime,
+        providerId: provider.id,
+        isBooked: false
+      });
+      setShowAvailabilityModal(false);
+      loadAvailability();
+    } catch (error) {
+      console.error('Error adding availability:', error);
+      Alert.alert('Error', 'Failed to add availability. Please ensure date (YYYY-MM-DD) and time (HH:mm) formats are correct.');
+    }
+  };
+
+  const handleDeleteAvailability = async (id: number) => {
+    Alert.alert(
+      'Delete Availability',
+      'Are you sure you want to delete this time slot?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Delete', 
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await availabilityService.deleteAvailability(id);
+              loadAvailability();
+            } catch (error) {
+              console.error('Error deleting availability:', error);
+              Alert.alert('Error', 'Failed to delete availability');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const loadServices = async () => {
+    try {
+      const data = await providerServicePricingService.getMyServices();
+      setServices(data);
+    } catch (error) {
+      console.error('Error loading services:', error);
+    }
+  };
 
   const loadServiceTypes = async () => {
     try {
@@ -198,28 +296,63 @@ export default function ProfileProviderScreen() {
     setEditMode(false);
   };
 
-  const handleEditService = (serviceId: string) => {
-    // TODO: Navigate to edit service screen
-    if (Platform.OS === 'web') {
-      window.alert(`Navigate to edit service ${serviceId} screen`);
-    } else {
-      Alert.alert('Edit Service', `Navigate to edit service ${serviceId} screen`);
-    }
+  const handleEditService = (service: ProviderService) => {
+    setEditingService(service);
+    setServiceForm({
+      serviceTypeId: service.serviceTypeId,
+      price: service.price,
+      description: service.description || ''
+    });
+    setShowServiceModal(true);
   };
 
   const handleAddService = () => {
-    // TODO: Navigate to add service screen
-    if (Platform.OS === 'web') {
-      window.alert('Navigate to add service screen');
-    } else {
-      Alert.alert('Add Service', 'Navigate to add service screen');
+    setEditingService(null);
+    setServiceForm({
+      serviceTypeId: serviceTypes.length > 0 ? serviceTypes[0].id : 0,
+      price: 0,
+      description: ''
+    });
+    setShowServiceModal(true);
+  };
+
+  const handleSaveService = async () => {
+    try {
+      if (editingService && editingService.id) {
+        await providerServicePricingService.updateService(editingService.id, {
+          ...editingService,
+          ...serviceForm
+        });
+      } else {
+        await providerServicePricingService.createService(serviceForm as ProviderService);
+      }
+      setShowServiceModal(false);
+      loadServices();
+      if (Platform.OS === 'web') {
+        window.alert('Success: Service saved');
+      } else {
+        Alert.alert('Success', 'Service saved');
+      }
+    } catch (error) {
+      console.error('Error saving service:', error);
+      Alert.alert('Error', 'Failed to save service');
     }
   };
 
-  const handleDeleteService = (serviceId: string, serviceName: string) => {
+  const handleDeleteService = (serviceId: number, serviceName: string) => {
+    const performDelete = async () => {
+      try {
+        await providerServicePricingService.deleteService(serviceId);
+        loadServices();
+      } catch (error) {
+        console.error('Error deleting service:', error);
+        Alert.alert('Error', 'Failed to delete service');
+      }
+    };
+
     if (Platform.OS === 'web') {
       if (window.confirm(`Are you sure you want to remove ${serviceName}?`)) {
-        setServices(services.filter(s => s.id !== serviceId));
+        performDelete();
       }
     } else {
       Alert.alert(
@@ -227,14 +360,7 @@ export default function ProfileProviderScreen() {
         `Are you sure you want to remove ${serviceName}?`,
         [
           { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Delete',
-            style: 'destructive',
-            onPress: () => {
-              // TODO: API call to delete service
-              setServices(services.filter(s => s.id !== serviceId));
-            },
-          },
+          { text: 'Delete', style: 'destructive', onPress: performDelete },
         ]
       );
     }
@@ -308,320 +434,571 @@ export default function ProfileProviderScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background">
       <ScrollView contentContainerStyle={{ paddingBottom: 128 }}>
-        {/* Header */}
-        <View className="p-6 flex-row items-center justify-between">
-          <TouchableOpacity onPress={() => router.back()}>
-            <ArrowLeft className="text-foreground" size={24} />
-          </TouchableOpacity>
-          <Text className="text-xl font-bold text-foreground">Business Profile</Text>
-          <View className="flex-row items-center gap-4">
-            <ThemeToggle />
-            <TouchableOpacity onPress={handleLogout}>
-              <LogOut className="text-destructive" size={24} />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Business Info Card */}
-        <View className="px-6 mb-6">
-          <View className="bg-card rounded-2xl p-6 border border-border">
-            <View className="flex-row items-center justify-between mb-4">
-              <View className="flex-row items-center flex-1">
-                <Image
-                  source={{ uri: 'https://images.unsplash.com/photo-1522276498395-f4f68f7f8454?w=400' }}
-                  className="w-20 h-20 rounded-xl"
-                />
-                <View className="flex-1 ml-4">
-                  {editMode ? (
-                    <TextInput
-                      value={editForm.companyName}
-                      onChangeText={(text) => setEditForm({ ...editForm, companyName: text })}
-                      className="text-xl font-bold text-foreground bg-muted rounded-lg px-3 py-2 mb-2"
-                      placeholder="Business Name"
-                    />
-                  ) : (
-                    <Text className="text-xl font-bold text-foreground">{provider?.companyName}</Text>
-                  )}
-                  <View className="flex-row items-center mt-1">
-                    <Star className="text-yellow-500 mr-1" size={16} />
-                    <Text className="text-foreground font-semibold">4.8</Text>
-                    <Text className="text-muted-foreground ml-1">(127 reviews)</Text>
-                  </View>
-                  <Text className="text-muted-foreground text-sm mt-1">Provider since 2024</Text>
-                </View>
-              </View>
-              {!editMode && (
-                <TouchableOpacity onPress={() => setEditMode(true)}>
-                  <Edit className="text-primary" size={20} />
+        <View className="items-center w-full">
+          <View className="w-full max-w-4xl">
+            {/* Header */}
+            <View className="p-6 flex-row items-center justify-between">
+              <TouchableOpacity onPress={() => router.back()}>
+                <ArrowLeft className="text-foreground" size={24} />
+              </TouchableOpacity>
+              <Text className="text-xl font-bold text-foreground">Business Profile</Text>
+              <View className="flex-row items-center gap-4">
+                <ThemeToggle />
+                <TouchableOpacity onPress={handleLogout}>
+                  <LogOut className="text-destructive" size={24} />
                 </TouchableOpacity>
-              )}
+              </View>
             </View>
 
-            {editMode ? (
-              <View className="gap-3">
-                <View>
-                  <Text className="text-sm text-muted-foreground mb-2">Service Types</Text>
-                  <MultiSelect
-                    options={serviceTypes}
-                    selectedValues={editForm.serviceTypeIds}
-                    onValueChange={(ids) => setEditForm(prev => ({ ...prev, serviceTypeIds: ids }))}
-                    placeholder="Select services"
-                    label="Business Services"
-                  />
-                </View>
-                <View>
-                  <Text className="text-sm text-muted-foreground mb-1">Hourly Rate ($)</Text>
-                  <TextInput
-                    value={editForm.hourlyRate.toString()}
-                    onChangeText={(text) => setEditForm({ ...editForm, hourlyRate: parseFloat(text) || 0 })}
-                    className="text-foreground bg-muted rounded-lg px-3 py-2"
-                    placeholder="50"
-                    keyboardType="numeric"
-                  />
-                </View>
-                <View>
-                  <Text className="text-sm text-muted-foreground mb-1">Address</Text>
-                  <TextInput
-                    value={editForm.address}
-                    onChangeText={(text) => setEditForm({ ...editForm, address: text })}
-                    className="text-foreground bg-muted rounded-lg px-3 py-2"
-                    placeholder="Address"
-                  />
-                </View>
-                <View>
-                  <Text className="text-sm text-muted-foreground mb-1">City</Text>
-                  <TextInput
-                    value={editForm.city}
-                    onChangeText={(text) => setEditForm({ ...editForm, city: text })}
-                    className="text-foreground bg-muted rounded-lg px-3 py-2"
-                    placeholder="City"
-                  />
-                </View>
-                <View>
-                  <Text className="text-sm text-muted-foreground mb-1">Description</Text>
-                  <TextInput
-                    value={editForm.description}
-                    onChangeText={(text) => setEditForm({ ...editForm, description: text })}
-                    className="text-foreground bg-muted rounded-lg px-3 py-2"
-                    placeholder="Business Description"
-                    multiline
-                    numberOfLines={4}
-                  />
-                </View>
-
-                <View className="flex-row gap-3 mt-2">
-                  <TouchableOpacity 
-                    onPress={handleSaveProfile}
-                    className="flex-1 bg-primary rounded-lg py-3 flex-row items-center justify-center"
-                  >
-                    <Save className="text-primary-foreground mr-2" size={18} />
-                    <Text className="text-primary-foreground font-semibold">Save Changes</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity 
-                    onPress={handleCancelEdit}
-                    className="flex-1 bg-muted rounded-lg py-3 flex-row items-center justify-center"
-                  >
-                    <X className="text-foreground mr-2" size={18} />
-                    <Text className="text-foreground font-semibold">Cancel</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ) : (
-              <View className="gap-3">
-                <View className="flex-row items-center flex-wrap gap-2">
-                  <Star className="text-primary mr-1" size={18} />
-                  {provider?.serviceTypes && provider.serviceTypes.length > 0 ? (
-                    provider.serviceTypes.map(st => (
-                      <View key={st.id} className="bg-primary/10 px-2 py-0.5 rounded">
-                        <Text className="text-primary text-xs font-medium">{st.name}</Text>
+            {/* Main Content Layout */}
+            <View className="flex-col md:flex-row gap-6 px-6">
+              {/* Left Column - Business Info & Services */}
+              <View className="flex-1 gap-6">
+                {/* Business Info Card */}
+                <View className="bg-card rounded-2xl p-6 border border-border">
+                  <View className="flex-row items-center justify-between mb-4">
+                    <View className="flex-row items-center flex-1">
+                      <Image
+                        source={{ uri: 'https://images.unsplash.com/photo-1522276498395-f4f68f7f8454?w=400' }}
+                        className="w-20 h-20 rounded-xl"
+                      />
+                      <View className="flex-1 ml-4">
+                        {editMode ? (
+                          <TextInput
+                            value={editForm.companyName}
+                            onChangeText={(text) => setEditForm({ ...editForm, companyName: text })}
+                            className="text-xl font-bold text-foreground bg-muted rounded-lg px-3 py-2 mb-2"
+                            placeholder="Business Name"
+                          />
+                        ) : (
+                          <Text className="text-xl font-bold text-foreground">{provider?.companyName}</Text>
+                        )}
+                        <View className="flex-row items-center mt-1">
+                          <Star className="text-yellow-500 mr-1" size={16} />
+                          <Text className="text-foreground font-semibold">4.8</Text>
+                          <Text className="text-muted-foreground ml-1">(127 reviews)</Text>
+                        </View>
+                        <Text className="text-muted-foreground text-sm mt-1">Provider since 2024</Text>
                       </View>
-                    ))
+                    </View>
+                    {!editMode && (
+                      <TouchableOpacity onPress={() => setEditMode(true)}>
+                        <Edit className="text-primary" size={20} />
+                      </TouchableOpacity>
+                    )}
+                  </View>
+
+                  {editMode ? (
+                    <View className="gap-3">
+                      <View>
+                        <Text className="text-sm text-muted-foreground mb-2">Service Types</Text>
+                        <MultiSelect
+                          options={serviceTypes}
+                          selectedValues={editForm.serviceTypeIds}
+                          onValueChange={(ids) => setEditForm(prev => ({ ...prev, serviceTypeIds: ids }))}
+                          placeholder="Select services"
+                          label="Business Services"
+                        />
+                      </View>
+                      <View>
+                        <Text className="text-sm text-muted-foreground mb-1">Hourly Rate ($)</Text>
+                        <TextInput
+                          value={editForm.hourlyRate.toString()}
+                          onChangeText={(text) => setEditForm({ ...editForm, hourlyRate: parseFloat(text) || 0 })}
+                          className="text-foreground bg-muted rounded-lg px-3 py-2"
+                          placeholder="50"
+                          keyboardType="numeric"
+                        />
+                      </View>
+                      <View>
+                        <Text className="text-sm text-muted-foreground mb-1">Address</Text>
+                        <TextInput
+                          value={editForm.address}
+                          onChangeText={(text) => setEditForm({ ...editForm, address: text })}
+                          className="text-foreground bg-muted rounded-lg px-3 py-2"
+                          placeholder="Address"
+                        />
+                      </View>
+                      <View>
+                        <Text className="text-sm text-muted-foreground mb-1">City</Text>
+                        <TextInput
+                          value={editForm.city}
+                          onChangeText={(text) => setEditForm({ ...editForm, city: text })}
+                          className="text-foreground bg-muted rounded-lg px-3 py-2"
+                          placeholder="City"
+                        />
+                      </View>
+                      <View>
+                        <Text className="text-sm text-muted-foreground mb-1">Description</Text>
+                        <TextInput
+                          value={editForm.description}
+                          onChangeText={(text) => setEditForm({ ...editForm, description: text })}
+                          className="text-foreground bg-muted rounded-lg px-3 py-2"
+                          placeholder="Business Description"
+                          multiline
+                          numberOfLines={4}
+                        />
+                      </View>
+
+                      <View className="flex-row gap-3 mt-2">
+                        <TouchableOpacity 
+                          onPress={handleSaveProfile}
+                          className="flex-1 bg-primary rounded-lg py-3 flex-row items-center justify-center"
+                        >
+                          <Save className="text-primary-foreground mr-2" size={18} />
+                          <Text className="text-primary-foreground font-semibold">Save Changes</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity 
+                          onPress={handleCancelEdit}
+                          className="flex-1 bg-muted rounded-lg py-3 flex-row items-center justify-center"
+                        >
+                          <X className="text-foreground mr-2" size={18} />
+                          <Text className="text-foreground font-semibold">Cancel</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
                   ) : (
-                    <Text className="text-foreground">No Service Types</Text>
+                    <View className="gap-3">
+                      <View className="flex-row items-center flex-wrap gap-2">
+                        <Star className="text-primary mr-1" size={18} />
+                        {provider?.serviceTypes && provider.serviceTypes.length > 0 ? (
+                          provider.serviceTypes.map(st => (
+                            <View key={st.id} className="bg-primary/10 px-2 py-0.5 rounded">
+                              <Text className="text-primary text-xs font-medium">{st.name}</Text>
+                            </View>
+                          ))
+                        ) : (
+                          <Text className="text-foreground">No Service Types</Text>
+                        )}
+                      </View>
+                      <View className="flex-row items-center">
+                        <DollarSign className="text-primary mr-3" size={18} />
+                        <Text className="text-foreground">${provider?.hourlyRate}/hr</Text>
+                      </View>
+                      <View className="flex-row items-center">
+                        <Building2 className="text-muted-foreground mr-3" size={18} />
+                        <Text className="text-foreground flex-1">{userData?.firstName} {userData?.lastName}</Text>
+                      </View>
+                      <View className="flex-row items-center">
+                        <Mail className="text-muted-foreground mr-3" size={18} />
+                        <Text className="text-foreground flex-1">{userData?.email}</Text>
+                      </View>
+                      <View className="flex-row items-center">
+                        <MapPin className="text-muted-foreground mr-3" size={18} />
+                        <Text className="text-foreground flex-1">{provider?.address}, {provider?.city}</Text>
+                      </View>
+                      <View className="mt-2 pt-3 border-t border-border">
+                        <Text className="text-foreground">{provider?.description}</Text>
+                      </View>
+                    </View>
                   )}
                 </View>
-                <View className="flex-row items-center">
-                  <DollarSign className="text-primary mr-3" size={18} />
-                  <Text className="text-foreground">${provider?.hourlyRate}/hr</Text>
-                </View>
-                <View className="flex-row items-center">
-                  <Building2 className="text-muted-foreground mr-3" size={18} />
-                  <Text className="text-foreground flex-1">{userData?.firstName} {userData?.lastName}</Text>
-                </View>
-                <View className="flex-row items-center">
-                  <Mail className="text-muted-foreground mr-3" size={18} />
-                  <Text className="text-foreground flex-1">{userData?.email}</Text>
-                </View>
-                <View className="flex-row items-center">
-                  <MapPin className="text-muted-foreground mr-3" size={18} />
-                  <Text className="text-foreground flex-1">{provider?.address}, {provider?.city}</Text>
-                </View>
-                <View className="mt-2 pt-3 border-t border-border">
-                  <Text className="text-foreground">{provider?.description}</Text>
-                </View>
-              </View>
-            )}
-          </View>
-        </View>
 
-        {/* Services Section */}
-        <View className="px-6 mb-6">
-          <View className="flex-row items-center justify-between mb-4">
-            <View className="flex-row items-center">
-              <DollarSign className="text-primary mr-2" size={20} />
-              <Text className="text-lg font-bold text-foreground">Services & Pricing</Text>
-            </View>
-            <TouchableOpacity onPress={handleAddService} className="flex-row items-center">
-              <Plus className="text-primary mr-1" size={18} />
-              <Text className="text-primary font-semibold">Add</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View className="gap-3">
-            {services.map((service) => (
-              <View key={service.id} className="bg-card rounded-xl p-4 border border-border">
-                <View className="flex-row items-start justify-between mb-2">
-                  <View className="flex-1">
-                    <Text className="text-lg font-bold text-foreground">{service.name}</Text>
-                    <Text className="text-muted-foreground mt-1">{service.description}</Text>
-                  </View>
-                  <View className="flex-row gap-2">
-                    <TouchableOpacity onPress={() => handleEditService(service.id)}>
-                      <Edit className="text-primary" size={18} />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => handleDeleteService(service.id, service.name)}>
-                      <Trash2 className="text-destructive" size={18} />
+                {/* Services Section */}
+                <View className="mb-6">
+                  <View className="flex-row items-center justify-between mb-4">
+                    <View className="flex-row items-center">
+                      <DollarSign className="text-primary mr-2" size={20} />
+                      <Text className="text-lg font-bold text-foreground">Services & Pricing</Text>
+                    </View>
+                    <TouchableOpacity onPress={handleAddService} className="flex-row items-center">
+                      <Plus className="text-primary mr-1" size={18} />
+                      <Text className="text-primary font-semibold">Add</Text>
                     </TouchableOpacity>
                   </View>
-                </View>
-                <View className="flex-row items-center justify-between mt-3 pt-3 border-t border-border">
-                  <View className="flex-row items-center">
-                    <Clock className="text-muted-foreground mr-2" size={16} />
-                    <Text className="text-sm text-muted-foreground">{service.duration}</Text>
+
+                  <View className="gap-3">
+                    {services.map((service) => (
+                      <View key={service.id} className="bg-card rounded-xl p-4 border border-border">
+                        <View className="flex-row items-start justify-between">
+                          <View className="flex-1">
+                            <Text className="text-lg font-bold text-foreground">
+                              {service.serviceType?.name || 'Unknown'}
+                            </Text>
+                            <Text className="text-muted-foreground mt-1">{service.description}</Text>
+                          </View>
+                          <View className="flex-row gap-2">
+                            <TouchableOpacity onPress={() => handleEditService(service)}>
+                              <Edit className="text-primary" size={18} />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => handleDeleteService(service.id!, service.serviceType?.name || 'service')}>
+                              <Trash2 className="text-destructive" size={18} />
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                        <View className="flex-row items-center justify-between mt-3 pt-3 border-t border-border">
+                          <Text className="text-xl font-bold text-primary">${service.price}</Text>
+                        </View>
+                      </View>
+                    ))}
+                    {services.length === 0 && (
+                      <View className="bg-card rounded-xl p-6 border border-dashed border-border items-center">
+                        <Text className="text-muted-foreground text-center">No individual services listed. Add one to set specific pricing!</Text>
+                      </View>
+                    )}
                   </View>
-                  <Text className="text-xl font-bold text-primary">${service.price}</Text>
                 </View>
               </View>
-            ))}
-          </View>
-        </View>
 
-        {/* Business Hours */}
-        <View className="px-6 mb-6">
-          <View className="flex-row items-center justify-between mb-4">
-            <View className="flex-row items-center">
-              <Clock className="text-primary mr-2" size={20} />
-              <Text className="text-lg font-bold text-foreground">Business Hours</Text>
+              {/* Right Column - Availability & Photo Gallery */}
+              <View className="flex-1 gap-6">
+                {/* Business Hours */}
+                <View className="mb-6">
+                  <View className="flex-row items-center justify-between mb-4">
+                    <View className="flex-row items-center">
+                      <Clock className="text-primary mr-2" size={20} />
+                      <Text className="text-lg font-bold text-foreground">Business Hours / Availability</Text>
+                    </View>
+                    <TouchableOpacity onPress={() => setShowAvailabilityModal(true)} className="flex-row items-center">
+                      <Plus className="text-primary mr-1" size={18} />
+                      <Text className="text-primary font-semibold">Add</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <View className="bg-card rounded-xl p-4 border border-border gap-3">
+                    {availabilities.length > 0 ? (
+                      availabilities.map((item) => (
+                        <View key={item.id} className="flex-row items-center justify-between border-b border-border/50 pb-2">
+                          <View>
+                            <Text className="text-foreground font-semibold">
+                              {format(parseISO(item.date), 'EEE, MMM d')}
+                            </Text>
+                            <Text className="text-muted-foreground text-xs">
+                              {format(parseISO(item.startTime), 'HH:mm')} - {format(parseISO(item.endTime), 'HH:mm')}
+                            </Text>
+                          </View>
+                          <View className="flex-row items-center gap-3">
+                            {item.isBooked && (
+                              <View className="bg-amber-100 px-2 py-0.5 rounded">
+                                <Text className="text-amber-700 text-[10px] font-bold">BOOKED</Text>
+                              </View>
+                            )}
+                            <TouchableOpacity onPress={() => handleDeleteAvailability(item.id!)}>
+                              <Trash2 className="text-destructive" size={16} />
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      ))
+                    ) : (
+                      <View className="py-4 items-center">
+                        <Text className="text-muted-foreground">No availability slots added yet.</Text>
+                      </View>
+                    )}
+                    <TouchableOpacity 
+                      onPress={() => router.push('/manage-availability')}
+                      className="mt-2 py-2 items-center"
+                    >
+                      <Text className="text-primary text-sm font-semibold">Advanced Manager</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* Photo Gallery */}
+                <View className="mb-6">
+                  <View className="flex-row items-center justify-between mb-4">
+                    <View className="flex-row items-center">
+                      <Camera className="text-primary mr-2" size={20} />
+                      <Text className="text-lg font-bold text-foreground">Photo Gallery</Text>
+                    </View>
+                    <TouchableOpacity onPress={handleAddPhoto} className="flex-row items-center">
+                      <Plus className="text-primary mr-1" size={18} />
+                      <Text className="text-primary font-semibold">Add</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <View className="flex-row flex-wrap gap-3">
+                    {photos.map((photo, index) => (
+                      <View key={index} className="basis-[48%] relative">
+                        <Image
+                          source={{ uri: photo }}
+                          className="w-full h-40 rounded-xl"
+                        />
+                        <TouchableOpacity 
+                          onPress={() => handleDeletePhoto(photo)}
+                          className="absolute top-2 right-2 bg-destructive rounded-full p-1.5"
+                        >
+                          <Trash2 className="text-white" size={14} />
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+
+                {/* Settings Section */}
+                <View className="mb-6">
+                  <Text className="text-lg font-bold text-foreground mb-4">Settings</Text>
+
+                  <View className="gap-2">
+                    <TouchableOpacity 
+                      onPress={() => router.push('/payment-invoice')}
+                      className="bg-card rounded-xl border border-border"
+                    >
+                      <View className="flex-row items-center justify-between p-4">
+                        <View className="flex-row items-center flex-1">
+                          <DollarSign className="text-foreground mr-3" size={20} />
+                          <Text className="text-foreground">Payments & Invoices</Text>
+                        </View>
+                        <ChevronRight className="text-muted-foreground" size={20} />
+                      </View>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity 
+                      onPress={() => router.push('/notifications')}
+                      className="bg-card rounded-xl border border-border"
+                    >
+                      <View className="flex-row items-center justify-between p-4">
+                        <View className="flex-row items-center flex-1">
+                          <Bell className="text-foreground mr-3" size={20} />
+                          <Text className="text-foreground">Notifications</Text>
+                        </View>
+                        <ChevronRight className="text-muted-foreground" size={20} />
+                      </View>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity 
+                      onPress={() => router.push('/privacy-security')}
+                      className="bg-card rounded-xl border border-border"
+                    >
+                      <View className="flex-row items-center justify-between p-4">
+                        <View className="flex-row items-center flex-1">
+                          <Shield className="text-foreground mr-3" size={20} />
+                          <Text className="text-foreground">Privacy & Security</Text>
+                        </View>
+                        <ChevronRight className="text-muted-foreground" size={20} />
+                      </View>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity 
+                      onPress={() => router.push('/help-support')}
+                      className="bg-card rounded-xl border border-border"
+                    >
+                      <View className="flex-row items-center justify-between p-4">
+                        <View className="flex-row items-center flex-1">
+                          <HelpCircle className="text-foreground mr-3" size={20} />
+                          <Text className="text-foreground">Help & Support</Text>
+                        </View>
+                        <ChevronRight className="text-muted-foreground" size={20} />
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
             </View>
-            <TouchableOpacity onPress={() => router.push('/manage-availability')}>
-              <Text className="text-primary font-semibold">Edit</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View className="bg-card rounded-xl p-4 border border-border gap-3">
-            {mockBusinessHours.map((item, index) => (
-              <View key={index} className="flex-row items-center justify-between">
-                <Text className="text-foreground font-semibold">{item.day}</Text>
-                <Text className="text-muted-foreground">{item.hours}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        {/* Photo Gallery */}
-        <View className="px-6 mb-6">
-          <View className="flex-row items-center justify-between mb-4">
-            <View className="flex-row items-center">
-              <Camera className="text-primary mr-2" size={20} />
-              <Text className="text-lg font-bold text-foreground">Photo Gallery</Text>
-            </View>
-            <TouchableOpacity onPress={handleAddPhoto} className="flex-row items-center">
-              <Plus className="text-primary mr-1" size={18} />
-              <Text className="text-primary font-semibold">Add</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View className="flex-row flex-wrap gap-3">
-            {photos.map((photo, index) => (
-              <View key={index} className="basis-[48%] relative">
-                <Image
-                  source={{ uri: photo }}
-                  className="w-full h-40 rounded-xl"
-                />
-                <TouchableOpacity 
-                  onPress={() => handleDeletePhoto(photo)}
-                  className="absolute top-2 right-2 bg-destructive rounded-full p-1.5"
-                >
-                  <Trash2 className="text-white" size={14} />
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        {/* Settings Section */}
-        <View className="px-6 mb-6">
-          <Text className="text-lg font-bold text-foreground mb-4">Settings</Text>
-
-          <View className="gap-2">
-            <TouchableOpacity 
-              onPress={() => router.push('/payment-invoice')}
-              className="bg-card rounded-xl border border-border"
-            >
-              <View className="flex-row items-center justify-between p-4">
-                <View className="flex-row items-center flex-1">
-                  <DollarSign className="text-foreground mr-3" size={20} />
-                  <Text className="text-foreground">Payments & Invoices</Text>
-                </View>
-                <ChevronRight className="text-muted-foreground" size={20} />
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity className="bg-card rounded-xl border border-border">
-              <View className="flex-row items-center justify-between p-4">
-                <View className="flex-row items-center flex-1">
-                  <Bell className="text-foreground mr-3" size={20} />
-                  <Text className="text-foreground">Notifications</Text>
-                </View>
-                <ChevronRight className="text-muted-foreground" size={20} />
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity className="bg-card rounded-xl border border-border">
-              <View className="flex-row items-center justify-between p-4">
-                <View className="flex-row items-center flex-1">
-                  <Shield className="text-foreground mr-3" size={20} />
-                  <Text className="text-foreground">Privacy & Security</Text>
-                </View>
-                <ChevronRight className="text-muted-foreground" size={20} />
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity className="bg-card rounded-xl border border-border">
-              <View className="flex-row items-center justify-between p-4">
-                <View className="flex-row items-center flex-1">
-                  <HelpCircle className="text-foreground mr-3" size={20} />
-                  <Text className="text-foreground">Help & Support</Text>
-                </View>
-                <ChevronRight className="text-muted-foreground" size={20} />
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              onPress={handleLogout}
-              className="bg-card rounded-xl border border-destructive"
-            >
-              <View className="flex-row items-center justify-between p-4">
-                <View className="flex-row items-center flex-1">
-                  <LogOut className="text-destructive mr-3" size={20} />
-                  <Text className="text-destructive font-semibold">Logout</Text>
-                </View>
-                <ChevronRight className="text-destructive" size={20} />
-              </View>
-            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
+
+      {/* Service Add/Edit Modal */}
+      <Modal
+        visible={showServiceModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowServiceModal(false)}
+      >
+        <View className="flex-1 justify-end bg-black/50">
+          <View className="bg-background rounded-t-3xl p-6">
+            <View className="flex-row items-center justify-between mb-6">
+              <Text className="text-xl font-bold text-foreground">
+                {editingService ? 'Edit Service' : 'Add Service'}
+              </Text>
+              <TouchableOpacity onPress={() => setShowServiceModal(false)}>
+                <X className="text-muted-foreground" size={24} />
+              </TouchableOpacity>
+            </View>
+
+            <View className="gap-4">
+              <View>
+                <Text className="text-sm font-medium text-muted-foreground mb-2">Service Type</Text>
+                <View className="bg-muted rounded-xl border border-border">
+                  {Platform.OS === 'web' ? (
+                    <select
+                      value={serviceForm.serviceTypeId}
+                      onChange={(e) => setServiceForm({ ...serviceForm, serviceTypeId: parseInt(e.target.value) })}
+                      style={{
+                        padding: 12,
+                        backgroundColor: 'transparent',
+                        color: 'inherit',
+                        border: 'none',
+                        width: '100%',
+                        fontSize: 16
+                      }}
+                    >
+                      <option value={0}>Select a service</option>
+                      {serviceTypes.map(st => (
+                        <option key={st.id} value={st.id}>{st.name}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} className="p-2">
+                      <View className="flex-row gap-2">
+                        {serviceTypes.map(st => (
+                          <TouchableOpacity
+                            key={st.id}
+                            onPress={() => setServiceForm({ ...serviceForm, serviceTypeId: st.id })}
+                            className={`px-4 py-2 rounded-full border ${
+                              serviceForm.serviceTypeId === st.id 
+                                ? 'bg-primary border-primary' 
+                                : 'bg-background border-border'
+                            }`}
+                          >
+                            <Text className={serviceForm.serviceTypeId === st.id ? 'text-primary-foreground' : 'text-foreground'}>
+                              {st.name}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    </ScrollView>
+                  )}
+                </View>
+              </View>
+
+              <View>
+                <Text className="text-sm font-medium text-muted-foreground mb-2">Price ($)</Text>
+                <TextInput
+                  value={serviceForm.price.toString()}
+                  onChangeText={(text) => setServiceForm({ ...serviceForm, price: parseFloat(text) || 0 })}
+                  className="bg-muted text-foreground p-4 rounded-xl border border-border"
+                  placeholder="0.00"
+                  keyboardType="numeric"
+                />
+              </View>
+
+              <View>
+                <Text className="text-sm font-medium text-muted-foreground mb-2">Description</Text>
+                <TextInput
+                  value={serviceForm.description}
+                  onChangeText={(text) => setServiceForm({ ...serviceForm, description: text })}
+                  className="bg-muted text-foreground p-4 rounded-xl border border-border h-24"
+                  placeholder="Tell us more about this service..."
+                  multiline
+                  numberOfLines={3}
+                />
+              </View>
+
+              <TouchableOpacity 
+                onPress={handleSaveService}
+                className="bg-primary p-4 rounded-xl flex-row items-center justify-center mt-2"
+              >
+                <Save className="text-primary-foreground mr-2" size={20} />
+                <Text className="text-primary-foreground font-bold text-lg">Save Service</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={{ height: Platform.OS === 'ios' ? 40 : 20 }} />
+          </View>
+        </View>
+      </Modal>
+
+      {/* Availability Add Modal */}
+      <Modal
+        visible={showAvailabilityModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowAvailabilityModal(false)}
+      >
+        <View className="flex-1 justify-end bg-black/50">
+          <View className="bg-background rounded-t-3xl p-6">
+            <View className="flex-row items-center justify-between mb-6">
+              <Text className="text-xl font-bold text-foreground">Add Availability Slot</Text>
+              <TouchableOpacity onPress={() => setShowAvailabilityModal(false)}>
+                <X className="text-muted-foreground" size={24} />
+              </TouchableOpacity>
+            </View>
+
+            <View className="gap-4">
+              <View>
+                <Text className="text-sm font-medium text-muted-foreground mb-2">Date (YYYY-MM-DD)</Text>
+                {Platform.OS === 'web' ? (
+                  <input
+                    type="date"
+                    value={availabilityForm.date}
+                    onChange={(e) => setAvailabilityForm({ ...availabilityForm, date: e.target.value })}
+                    style={{
+                      padding: 16,
+                      borderRadius: 12,
+                      backgroundColor: 'rgba(var(--muted), 1)',
+                      color: 'rgba(var(--foreground), 1)',
+                      border: '1px solid rgba(var(--border), 1)',
+                      width: '100%',
+                      fontSize: 16
+                    }}
+                  />
+                ) : (
+                  <TextInput
+                    value={availabilityForm.date}
+                    onChangeText={(text) => setAvailabilityForm({ ...availabilityForm, date: text })}
+                    className="bg-muted text-foreground p-4 rounded-xl border border-border"
+                    placeholder="2024-05-20"
+                  />
+                )}
+              </View>
+
+              <View className="flex-row gap-4">
+                <View className="flex-1">
+                  <Text className="text-sm font-medium text-muted-foreground mb-2">Start Time</Text>
+                  {Platform.OS === 'web' ? (
+                    <input
+                      type="time"
+                      value={availabilityForm.startTime}
+                      onChange={(e) => setAvailabilityForm({ ...availabilityForm, startTime: e.target.value })}
+                      style={{
+                        padding: 16,
+                        borderRadius: 12,
+                        backgroundColor: 'rgba(var(--muted), 1)',
+                        color: 'rgba(var(--foreground), 1)',
+                        border: '1px solid rgba(var(--border), 1)',
+                        width: '100%',
+                        fontSize: 16
+                      }}
+                    />
+                  ) : (
+                    <TextInput
+                      value={availabilityForm.startTime}
+                      onChangeText={(text) => setAvailabilityForm({ ...availabilityForm, startTime: text })}
+                      className="bg-muted text-foreground p-4 rounded-xl border border-border"
+                      placeholder="09:00"
+                    />
+                  )}
+                </View>
+                <View className="flex-1">
+                  <Text className="text-sm font-medium text-muted-foreground mb-2">End Time</Text>
+                  {Platform.OS === 'web' ? (
+                    <input
+                      type="time"
+                      value={availabilityForm.endTime}
+                      onChange={(e) => setAvailabilityForm({ ...availabilityForm, endTime: e.target.value })}
+                      style={{
+                        padding: 16,
+                        borderRadius: 12,
+                        backgroundColor: 'rgba(var(--muted), 1)',
+                        color: 'rgba(var(--foreground), 1)',
+                        border: '1px solid rgba(var(--border), 1)',
+                        width: '100%',
+                        fontSize: 16
+                      }}
+                    />
+                  ) : (
+                    <TextInput
+                      value={availabilityForm.endTime}
+                      onChangeText={(text) => setAvailabilityForm({ ...availabilityForm, endTime: text })}
+                      className="bg-muted text-foreground p-4 rounded-xl border border-border"
+                      placeholder="17:00"
+                    />
+                  )}
+                </View>
+              </View>
+
+              <TouchableOpacity 
+                onPress={handleAddAvailability}
+                className="bg-primary p-4 rounded-xl flex-row items-center justify-center mt-2"
+              >
+                <Plus className="text-primary-foreground mr-2" size={20} />
+                <Text className="text-primary-foreground font-bold text-lg">Add Time Slot</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={{ height: Platform.OS === 'ios' ? 40 : 20 }} />
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }

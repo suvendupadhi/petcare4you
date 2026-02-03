@@ -38,21 +38,24 @@ async function request(endpoint: string, options: RequestInit = {}) {
 
   const response = await fetch(`${BASE_URL}${endpoint}`, config);
 
+  const contentType = response.headers.get('content-type');
+  let data;
+
+  if (contentType && contentType.includes('application/json')) {
+    data = await response.json().catch(() => null);
+  } else {
+    data = await response.text();
+  }
+
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || response.statusText || 'API request failed');
+    throw new Error(data?.message || response.statusText || 'API request failed');
   }
 
   if (response.status === 204) {
     return null;
   }
 
-  const contentType = response.headers.get('content-type');
-  if (contentType && contentType.includes('application/json')) {
-    return await response.json();
-  }
-
-  return await response.text();
+  return data;
 }
 
 export const api = {

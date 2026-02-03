@@ -6,6 +6,7 @@ import { ArrowLeft, Building2, User, Phone, Mail, Lock, Globe, FileText, CheckCi
 import { useRouter } from 'expo-router';
 import { authService, providerService, serviceTypeService, ServiceType } from '@/services/petCareService';
 import { MultiSelect } from '@/components/MultiSelect';
+import { USER_ROLE } from '@/constants/status';
 
 export default function RegisterProviderScreen() {
   const router = useRouter();
@@ -122,7 +123,7 @@ export default function RegisterProviderScreen() {
         password,
         firstName: ownerFirstName,
         lastName: ownerLastName,
-        userType: 'provider'
+        roleId: USER_ROLE.PROVIDER
       });
 
       // 2. Login to get token

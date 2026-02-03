@@ -20,6 +20,7 @@ import {
 } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { authService } from "@/services/petCareService";
+import { USER_ROLE } from "@/constants/status";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -42,15 +43,18 @@ export default function LoginScreen() {
     try {
       const result = await authService.login({ email, password });
       
-      if (result.userType !== userType) {
+      const expectedRole = userType === "owner" ? USER_ROLE.OWNER : USER_ROLE.PROVIDER;
+      
+      if (result.roleId !== expectedRole) {
+        const roleName = result.roleId === USER_ROLE.OWNER ? "owner" : "provider";
         if (Platform.OS === 'web') {
-          window.alert(`Warning: Logging in as ${result.userType} instead of ${userType}`);
+          window.alert(`Warning: Logging in as ${roleName} instead of ${userType}`);
         } else {
-          Alert.alert("Warning", `Logging in as ${result.userType} instead of ${userType}`);
+          Alert.alert("Warning", `Logging in as ${roleName} instead of ${userType}`);
         }
       }
 
-      if (result.userType === "owner") {
+      if (result.roleId === USER_ROLE.OWNER) {
         router.push("/owner-dashboard");
       } else {
         router.push("/provider-dashboard");

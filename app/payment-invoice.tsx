@@ -27,6 +27,7 @@ import { useRouter } from "expo-router";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { usePaymentGateway } from "@/hooks/usePaymentGateway";
 import { paymentService, Payment, userService, User, stripeService } from "@/services/petCareService";
+import { PAYMENT_STATUS, getStatusLabel, USER_ROLE } from "@/constants/status";
 
 export default function PaymentInvoiceScreen() {
   const router = useRouter();
@@ -41,7 +42,7 @@ export default function PaymentInvoiceScreen() {
     transactionCount: 0,
   });
   const [filterStatus, setFilterStatus] = useState<
-    "all" | "Paid" | "Pending" | "Failed"
+    "all" | number
   >("all");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -55,16 +56,16 @@ export default function PaymentInvoiceScreen() {
       const currentUser = await userService.getCurrentUser();
       setUser(currentUser);
 
-      const data = currentUser.userType === 'provider' 
+      const data = currentUser.roleId === USER_ROLE.PROVIDER 
         ? await paymentService.getProviderPayments()
         : await paymentService.getOwnerPayments();
 
       const totalRevenue = data
-        .filter(p => p.status.toLowerCase() === 'paid')
+        .filter(p => p.status === PAYMENT_STATUS.COMPLETED)
         .reduce((sum, p) => sum + p.amount, 0);
         
       const pendingPayments = data
-        .filter(p => p.status.toLowerCase() === 'pending')
+        .filter(p => p.status === PAYMENT_STATUS.PENDING)
         .reduce((sum, p) => sum + p.amount, 0);
 
       setInvoices(data);
@@ -142,39 +143,39 @@ export default function PaymentInvoiceScreen() {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "paid":
+  const getStatusColor = (status: number) => {
+    switch (status) {
+      case PAYMENT_STATUS.COMPLETED:
         return "text-green-600";
-      case "pending":
+      case PAYMENT_STATUS.PENDING:
         return "text-yellow-600";
-      case "failed":
+      case PAYMENT_STATUS.FAILED:
         return "text-red-600";
       default:
         return "text-muted-foreground";
     }
   };
 
-  const getStatusBgColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "paid":
+  const getStatusBgColor = (status: number) => {
+    switch (status) {
+      case PAYMENT_STATUS.COMPLETED:
         return "bg-green-50";
-      case "pending":
+      case PAYMENT_STATUS.PENDING:
         return "bg-yellow-50";
-      case "failed":
+      case PAYMENT_STATUS.FAILED:
         return "bg-red-50";
       default:
         return "bg-muted";
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "paid":
+  const getStatusIcon = (status: number) => {
+    switch (status) {
+      case PAYMENT_STATUS.COMPLETED:
         return CheckCircle;
-      case "pending":
+      case PAYMENT_STATUS.PENDING:
         return Clock;
-      case "failed":
+      case PAYMENT_STATUS.FAILED:
         return XCircle;
       default:
         return Clock;
@@ -183,10 +184,10 @@ export default function PaymentInvoiceScreen() {
 
   const filteredInvoices = invoices.filter((invoice) => {
     const matchesStatus =
-      filterStatus === "all" || invoice.status.toLowerCase() === filterStatus.toLowerCase();
+      filterStatus === "all" || invoice.status === filterStatus;
     const matchesSearch =
       searchQuery === "" ||
-      (user?.userType === 'provider' 
+      (user?.roleId === USER_ROLE.PROVIDER 
         ? invoice.appointment?.owner?.firstName.toLowerCase().includes(searchQuery.toLowerCase())
         : invoice.appointment?.provider?.companyName.toLowerCase().includes(searchQuery.toLowerCase())) ||
       invoice.id.toString().includes(searchQuery.toLowerCase());
@@ -215,7 +216,7 @@ export default function PaymentInvoiceScreen() {
                 Payments & Invoices
               </Text>
               <Text className="text-sm text-muted-foreground">
-                {user?.userType === 'provider' ? 'Manage your earnings' : 'View your payment history'}
+                {user?.roleId === USER_ROLE.PROVIDER ? 'Manage your earnings' : 'View your payment history'}
               </Text>
             </View>
           </View>
@@ -231,7 +232,7 @@ export default function PaymentInvoiceScreen() {
                 ${stats.totalRevenue.toFixed(2)}
               </Text>
               <Text className="text-xs text-muted-foreground">
-                {user?.userType === 'provider' ? 'Total Revenue' : 'Total Spent'}
+                {user?.roleId === USER_ROLE.PROVIDER ? 'Total Revenue' : 'Total Spent'}
               </Text>
             </View>
             <View className="flex-1 bg-card rounded-2xl p-4 border border-border">
@@ -249,7 +250,7 @@ export default function PaymentInvoiceScreen() {
                 ${stats.paidThisMonth.toFixed(2)}
               </Text>
               <Text className="text-xs text-muted-foreground">
-                {user?.userType === 'provider' ? 'Paid This Month' : 'Spent This Month'}
+                {user?.roleId === USER_ROLE.PROVIDER ? 'Paid This Month' : 'Spent This Month'}
               </Text>
             </View>
             <View className="flex-1 bg-card rounded-2xl p-4 border border-border">
@@ -262,7 +263,7 @@ export default function PaymentInvoiceScreen() {
               </Text>
             </View>
           </View>
-          {user?.userType === 'provider' && (
+          {user?.roleId === USER_ROLE.PROVIDER && (
             <TouchableOpacity 
               onPress={handleOnboard}
               className="mt-4 bg-primary p-4 rounded-2xl flex-row items-center justify-center gap-2"
@@ -275,25 +276,40 @@ export default function PaymentInvoiceScreen() {
           )}
         </View>
 
-        {/* Filters */}
         <View className="px-6 mb-4">
           <View className="flex-row gap-2">
-            {["all", "Paid", "Pending", "Failed"].map((status) => (
+            <TouchableOpacity
+              onPress={() => setFilterStatus("all")}
+              className={`px-4 py-2 rounded-full ${
+                filterStatus === "all" ? "bg-primary" : "bg-secondary"
+              }`}
+            >
+              <Text
+                className={`text-sm font-medium capitalize ${
+                  filterStatus === "all"
+                    ? "text-primary-foreground"
+                    : "text-secondary-foreground"
+                }`}
+              >
+                All
+              </Text>
+            </TouchableOpacity>
+            {[PAYMENT_STATUS.COMPLETED, PAYMENT_STATUS.PENDING, PAYMENT_STATUS.FAILED].map((statusId) => (
               <TouchableOpacity
-                key={status}
-                onPress={() => setFilterStatus(status as any)}
+                key={statusId}
+                onPress={() => setFilterStatus(statusId)}
                 className={`px-4 py-2 rounded-full ${
-                  filterStatus === status ? "bg-primary" : "bg-secondary"
+                  filterStatus === statusId ? "bg-primary" : "bg-secondary"
                 }`}
               >
                 <Text
                   className={`text-sm font-medium capitalize ${
-                    filterStatus === status
+                    filterStatus === statusId
                       ? "text-primary-foreground"
                       : "text-secondary-foreground"
                   }`}
                 >
-                  {status}
+                  {getStatusLabel(statusId)}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -344,7 +360,7 @@ export default function PaymentInvoiceScreen() {
                     {/* Customer/Provider Info */}
                     <View className="mb-3">
                       <Text className="text-lg font-bold text-foreground">
-                        {user?.userType === 'provider' 
+                        {user?.roleId === USER_ROLE.PROVIDER 
                           ? `${invoice.appointment?.owner?.firstName} ${invoice.appointment?.owner?.lastName}`
                           : invoice.appointment?.provider?.companyName}
                       </Text>

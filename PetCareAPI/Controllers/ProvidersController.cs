@@ -25,13 +25,14 @@ namespace PetCareAPI.Controllers
             [FromQuery] string? city = null)
         {
             var query = _context.Providers
-                .Include(p => p.ServiceTypes)
+                .Include(p => p.ProviderServices)
+                    .ThenInclude(ps => ps.ServiceType)
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(serviceTypeIds))
             {
                 var ids = serviceTypeIds.Split(',').Select(int.Parse).ToList();
-                query = query.Where(p => p.ServiceTypes.Any(st => ids.Contains(st.Id)));
+                query = query.Where(p => p.ProviderServices.Any(ps => ids.Contains(ps.ServiceTypeId)));
             }
 
             if (!string.IsNullOrEmpty(city))
@@ -45,7 +46,8 @@ namespace PetCareAPI.Controllers
         {
             var provider = await _context.Providers
                 .Include(p => p.User)
-                .Include(p => p.ServiceTypes)
+                .Include(p => p.ProviderServices)
+                    .ThenInclude(ps => ps.ServiceType)
                 .FirstOrDefaultAsync(p => p.Id == id);
 
             if (provider == null)
@@ -78,10 +80,14 @@ namespace PetCareAPI.Controllers
 
             if (providerDto.ServiceTypeIds.Any())
             {
-                var serviceTypes = await _context.ServiceTypes
-                    .Where(st => providerDto.ServiceTypeIds.Contains(st.Id))
-                    .ToListAsync();
-                provider.ServiceTypes = serviceTypes;
+                foreach (var stId in providerDto.ServiceTypeIds)
+                {
+                    provider.ProviderServices.Add(new ProviderService 
+                    { 
+                        ServiceTypeId = stId,
+                        Price = provider.HourlyRate // Use default hourly rate as initial price
+                    });
+                }
             }
 
             _context.Providers.Add(provider);
@@ -100,7 +106,7 @@ namespace PetCareAPI.Controllers
                 return Unauthorized();
 
             var existing = await _context.Providers
-                .Include(p => p.ServiceTypes)
+                .Include(p => p.ProviderServices)
                 .FirstOrDefaultAsync(p => p.Id == id);
 
             if (existing == null)
@@ -118,16 +124,30 @@ namespace PetCareAPI.Controllers
             existing.Longitude = providerDto.Longitude;
             existing.UpdatedAt = DateTime.UtcNow;
 
-            // Update ServiceTypes
-            existing.ServiceTypes.Clear();
-            if (providerDto.ServiceTypeIds.Any())
+            // Update ProviderServices (syncing based on IDs provided in DTO)
+            if (existing.ProviderServices == null) existing.ProviderServices = new List<ProviderService>();
+            
+            var currentServiceTypeIds = existing.ProviderServices
+                .Where(ps => ps != null)
+                .Select(ps => ps.ServiceTypeId)
+                .ToList();
+            
+            // Remove those not in new list
+            var toRemove = existing.ProviderServices
+                .Where(ps => ps != null && !providerDto.ServiceTypeIds.Contains(ps.ServiceTypeId))
+                .ToList();
+            foreach (var ps in toRemove) existing.ProviderServices.Remove(ps);
+
+            // Add new ones
+            foreach (var stId in providerDto.ServiceTypeIds)
             {
-                var serviceTypes = await _context.ServiceTypes
-                    .Where(st => providerDto.ServiceTypeIds.Contains(st.Id))
-                    .ToListAsync();
-                foreach (var st in serviceTypes)
+                if (!currentServiceTypeIds.Contains(stId))
                 {
-                    existing.ServiceTypes.Add(st);
+                    existing.ProviderServices.Add(new ProviderService 
+                    { 
+                        ServiceTypeId = stId,
+                        Price = existing.HourlyRate 
+                    });
                 }
             }
 
