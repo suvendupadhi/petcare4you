@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   Clock,
   LogOut,
+  Home,
   Stethoscope,
   Award,
   Dog
@@ -187,7 +188,6 @@ export default function SearchProvidersScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      {/* Header */}
       <View className="px-6 pt-4 pb-3 flex-row items-center justify-between border-b border-border">
         <View className="flex-row items-center gap-3 flex-1">
           <TouchableOpacity onPress={() => router.back()}>
@@ -196,6 +196,12 @@ export default function SearchProvidersScreen() {
           <Text className="text-foreground font-bold text-xl">Find Pet Services</Text>
         </View>
         <View className="flex-row items-center gap-4">
+          <TouchableOpacity 
+            onPress={() => router.push('/owner-dashboard')}
+            className="bg-primary/10 p-2 rounded-full"
+          >
+            <HomeIcon className="text-primary" size={24} />
+          </TouchableOpacity>
           <ThemeToggle />
           <TouchableOpacity onPress={handleLogout}>
             <LogOut className="text-destructive" size={24} />

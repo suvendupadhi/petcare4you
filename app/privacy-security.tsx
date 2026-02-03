@@ -1,23 +1,71 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Switch, TextInput } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Switch, TextInput, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ArrowLeft, Lock, Shield, Eye, Smartphone, ChevronRight } from 'lucide-react-native';
+import { ArrowLeft, Lock, Shield, Eye, Smartphone, ChevronRight, LogOut, Home } from 'lucide-react-native';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { authService, userService, User } from '@/services/petCareService';
+import { USER_ROLE } from '@/constants/status';
 
 export default function PrivacySecurityScreen() {
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    userService.getCurrentUser().then(setUser).catch(console.error);
+  }, []);
+
   const [twoFactor, setTwoFactor] = useState(false);
   const [biometric, setBiometric] = useState(true);
+
+  const handleLogout = () => {
+    if (Platform.OS === 'web') {
+      if (window.confirm('Are you sure you want to logout?')) {
+        authService.logout().then(() => router.replace('/'));
+      }
+    } else {
+      Alert.alert(
+        'Logout',
+        'Are you sure you want to logout?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Logout',
+            style: 'destructive',
+            onPress: async () => {
+              await authService.logout();
+              router.replace('/');
+            },
+          },
+        ]
+      );
+    }
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-background">
       <ScrollView>
-        <View className="p-6 flex-row items-center justify-between">
-          <TouchableOpacity onPress={() => router.back()}>
-            <ArrowLeft className="text-foreground" size={24} />
-          </TouchableOpacity>
-          <Text className="text-xl font-bold text-foreground">Privacy & Security</Text>
-          <ThemeToggle />
+        <View className="p-6 flex-row items-center justify-between border-b border-border">
+          <View className="flex-row items-center gap-3">
+            <TouchableOpacity onPress={() => router.back()}>
+              <ArrowLeft className="text-foreground" size={24} />
+            </TouchableOpacity>
+            <Text className="text-xl font-bold text-foreground">Privacy & Security</Text>
+          </View>
+          <View className="flex-row items-center gap-4">
+            <TouchableOpacity 
+              onPress={() => router.push(user?.roleId === USER_ROLE.PROVIDER ? '/provider-dashboard' : '/owner-dashboard')}
+              className="bg-primary/10 p-2 rounded-full"
+            >
+              <Home className="text-primary" size={24} />
+            </TouchableOpacity>
+            <ThemeToggle />
+            <TouchableOpacity 
+              onPress={handleLogout}
+              className="bg-destructive/10 p-2 rounded-full"
+            >
+              <LogOut className="text-destructive" size={24} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View className="px-6 mb-8">

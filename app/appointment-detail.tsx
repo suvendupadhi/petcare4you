@@ -22,11 +22,12 @@ import {
   Navigation,
   CreditCard,
   FileText,
-  LogOut
+  LogOut,
+  Home
 } from 'lucide-react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { authService, appointmentService, Appointment, paymentService } from '@/services/petCareService';
-import { APPOINTMENT_STATUS, PAYMENT_STATUS } from '@/constants/status';
+import { authService, appointmentService, Appointment, paymentService, userService, User as UserType } from '@/services/petCareService';
+import { APPOINTMENT_STATUS, PAYMENT_STATUS, USER_ROLE } from '@/constants/status';
 
 /*
 // Mock data - Replace with API calls
@@ -101,12 +102,17 @@ export default function AppointmentDetailScreen() {
   const { id } = useLocalSearchParams();
   const [loading, setLoading] = useState(true);
   const [appointment, setAppointment] = useState<Appointment | null>(null);
+  const [user, setUser] = useState<UserType | null>(null);
 
   useEffect(() => {
     if (id) {
       loadAppointmentDetails();
     }
   }, [id]);
+
+  useEffect(() => {
+    userService.getCurrentUser().then(setUser).catch(console.error);
+  }, []);
 
   const handleLogout = () => {
     if (Platform.OS === 'web') {
@@ -339,6 +345,12 @@ export default function AppointmentDetailScreen() {
             <Text className="text-xl font-bold text-foreground">Appointment Details</Text>
           </View>
           <View className="flex-row items-center gap-4">
+            <TouchableOpacity 
+              onPress={() => router.push(user?.roleId === USER_ROLE.PROVIDER ? '/provider-dashboard' : '/owner-dashboard')}
+              className="bg-primary/10 p-2 rounded-full"
+            >
+              <Home className="text-primary" size={24} />
+            </TouchableOpacity>
             <ThemeToggle />
             <TouchableOpacity onPress={handleLogout}>
               <LogOut className="text-destructive" size={24} />

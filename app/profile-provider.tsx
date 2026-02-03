@@ -6,7 +6,6 @@ import {
   ArrowLeft, 
   Building2, 
   Mail, 
-  Phone, 
   MapPin,
   Edit,
   Star,
@@ -21,63 +20,11 @@ import {
   Trash2,
   Camera,
   Save,
-  X
+  X,
+  Home
 } from 'lucide-react-native';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { MultiSelect } from '@/components/MultiSelect';
-
-// Mock data - replace with API calls
-const mockBusinessData = {
-  id: '1',
-  businessName: 'Happy Paws Grooming',
-  ownerName: 'John Smith',
-  email: 'john@happypaws.com',
-  phone: '+1 (555) 987-6543',
-  address: '456 Pet Street, San Francisco, CA 94103',
-  description: 'Professional pet grooming services with over 10 years of experience. We specialize in all breeds and provide a stress-free environment for your pets.',
-  rating: 4.8,
-  reviewCount: 127,
-  memberSince: 'March 2023',
-  logo: 'https://images.unsplash.com/photo-1522276498395-f4f68f7f8454?w=400',
-};
-
-const mockServices = [
-  {
-    id: '1',
-    name: 'Basic Grooming',
-    description: 'Bath, brush, nail trim, ear cleaning',
-    duration: '60 min',
-    price: 45,
-  },
-  {
-    id: '2',
-    name: 'Full Grooming Package',
-    description: 'Complete grooming with haircut and styling',
-    duration: '120 min',
-    price: 85,
-  },
-  {
-    id: '3',
-    name: 'Nail Trim Only',
-    description: 'Quick nail trimming service',
-    duration: '15 min',
-    price: 15,
-  },
-];
-
-const mockBusinessHours = [
-  { day: 'Monday - Friday', hours: '9:00 AM - 6:00 PM' },
-  { day: 'Saturday', hours: '10:00 AM - 4:00 PM' },
-  { day: 'Sunday', hours: 'Closed' },
-];
-
-const mockPhotos = [
-  'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=400',
-  'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=400',
-  'https://images.unsplash.com/photo-1560807707-8cc77767d783?w=400',
-  'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=400',
-];
-
 import { 
   authService, 
   userService, 
@@ -93,13 +40,20 @@ import {
 } from '@/services/petCareService';
 import { format, parseISO } from 'date-fns';
 
+// Photo gallery state
+const mockPhotos = [
+  'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=400',
+  'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=400',
+  'https://images.unsplash.com/photo-1560807707-8cc77767d783?w=400',
+  'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=400',
+];
+
 export default function ProfileProviderScreen() {
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
   const [userData, setUserData] = useState<User | null>(null);
   const [provider, setProvider] = useState<Provider | null>(null);
   const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
-  const [loadingServiceTypes, setLoadingServiceTypes] = useState(false);
   const [services, setServices] = useState<ProviderService[]>([]);
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
   const [photos, setPhotos] = useState(mockPhotos);
@@ -207,13 +161,10 @@ export default function ProfileProviderScreen() {
 
   const loadServiceTypes = async () => {
     try {
-      setLoadingServiceTypes(true);
       const types = await serviceTypeService.getServiceTypes();
       setServiceTypes(types);
     } catch (error) {
       console.error('Error loading service types:', error);
-    } finally {
-      setLoadingServiceTypes(false);
     }
   };
 
@@ -240,15 +191,6 @@ export default function ProfileProviderScreen() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const toggleServiceType = (id: number) => {
-    setEditForm(prev => ({
-      ...prev,
-      serviceTypeIds: prev.serviceTypeIds.includes(id)
-        ? prev.serviceTypeIds.filter(item => item !== id)
-        : [...prev.serviceTypeIds, id]
-    }));
   };
 
   const handleSaveProfile = async () => {
@@ -443,6 +385,12 @@ export default function ProfileProviderScreen() {
               </TouchableOpacity>
               <Text className="text-xl font-bold text-foreground">Business Profile</Text>
               <View className="flex-row items-center gap-4">
+                <TouchableOpacity 
+                  onPress={() => router.push('/provider-dashboard')}
+                  className="bg-primary/10 p-2 rounded-full"
+                >
+                  <Home className="text-primary" size={24} />
+                </TouchableOpacity>
                 <ThemeToggle />
                 <TouchableOpacity onPress={handleLogout}>
                   <LogOut className="text-destructive" size={24} />

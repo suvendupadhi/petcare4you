@@ -13,10 +13,12 @@ import {
   AlertCircle,
   XCircle,
   Mail,
-  Check
+  Check,
+  LogOut,
+  Home
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
-import { appointmentService, Appointment } from '@/services/petCareService';
+import { appointmentService, authService, Appointment } from '@/services/petCareService';
 import { APPOINTMENT_STATUS } from '@/constants/status';
 
 export default function AppointmentsProviderScreen() {
@@ -77,6 +79,30 @@ export default function AppointmentsProviderScreen() {
       pathname: '/appointment-detail',
       params: { id: appointmentId }
     });
+  };
+
+  const handleLogout = () => {
+    if (Platform.OS === 'web') {
+      if (window.confirm('Are you sure you want to logout?')) {
+        authService.logout().then(() => router.replace('/'));
+      }
+    } else {
+      Alert.alert(
+        'Logout',
+        'Are you sure you want to logout?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Logout',
+            style: 'destructive',
+            onPress: async () => {
+              await authService.logout();
+              router.replace('/');
+            },
+          },
+        ]
+      );
+    }
   };
 
   const getStatusConfig = (status: number) => {
@@ -168,7 +194,21 @@ export default function AppointmentsProviderScreen() {
             </TouchableOpacity>
             <Text className="text-2xl font-bold text-foreground">Client Bookings</Text>
           </View>
-          <ThemeToggle />
+          <View className="flex-row items-center gap-4">
+            <TouchableOpacity 
+              onPress={() => router.push('/provider-dashboard')}
+              className="bg-primary/10 p-2 rounded-full"
+            >
+              <Home className="text-primary" size={24} />
+            </TouchableOpacity>
+            <ThemeToggle />
+            <TouchableOpacity 
+              onPress={handleLogout}
+              className="bg-destructive/10 p-2 rounded-full"
+            >
+              <LogOut className="text-destructive" size={24} />
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
 

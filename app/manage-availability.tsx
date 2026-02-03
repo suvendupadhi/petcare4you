@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Platform, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Clock, Calendar as CalendarIcon, Plus, Trash2 } from 'lucide-react-native';
+import { ArrowLeft, Clock, Calendar as CalendarIcon, Plus, Trash2, LogOut, Home } from 'lucide-react-native';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { availabilityService, Availability } from '@/services/petCareService';
+import { availabilityService, authService, Availability } from '@/services/petCareService';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Calendar } from 'react-native-calendars';
 import { format, parseISO } from 'date-fns';
@@ -126,6 +126,30 @@ export default function ManageAvailabilityScreen() {
     }
   };
 
+  const handleLogout = () => {
+    if (Platform.OS === 'web') {
+      if (window.confirm('Are you sure you want to logout?')) {
+        authService.logout().then(() => router.replace('/'));
+      }
+    } else {
+      Alert.alert(
+        'Logout',
+        'Are you sure you want to logout?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Logout',
+            style: 'destructive',
+            onPress: async () => {
+              await authService.logout();
+              router.replace('/');
+            },
+          },
+        ]
+      );
+    }
+  };
+
   if (loading) {
     return (
       <SafeAreaView className="flex-1 bg-background items-center justify-center">
@@ -139,20 +163,32 @@ export default function ManageAvailabilityScreen() {
     <SafeAreaView className="flex-1 bg-background">
       <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
         {/* Header */}
-        <View className="px-6 pt-4 pb-6">
-          <View className="flex-row items-center justify-between mb-4">
-            <TouchableOpacity
-              onPress={() => router.back()}
-              className="mr-4"
-            >
-              <ArrowLeft className="text-foreground" size={24} />
-            </TouchableOpacity>
-            <ThemeToggle />
+        <View className="px-6 pt-4 pb-6 border-b border-border mb-4">
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center gap-3">
+              <TouchableOpacity
+                onPress={() => router.back()}
+              >
+                <ArrowLeft className="text-foreground" size={24} />
+              </TouchableOpacity>
+              <Text className="text-2xl font-bold text-foreground">Manage Availability</Text>
+            </View>
+            <View className="flex-row items-center gap-4">
+              <TouchableOpacity 
+                onPress={() => router.push('/provider-dashboard')}
+                className="bg-primary/10 p-2 rounded-full"
+              >
+                <Home className="text-primary" size={24} />
+              </TouchableOpacity>
+              <ThemeToggle />
+              <TouchableOpacity 
+                onPress={handleLogout}
+                className="bg-destructive/10 p-2 rounded-full"
+              >
+                <LogOut className="text-destructive" size={24} />
+              </TouchableOpacity>
+            </View>
           </View>
-          <Text className="text-3xl font-bold text-foreground">Manage Availability</Text>
-          <Text className="text-muted-foreground mt-2">
-            Create time slots for clients to book your services
-          </Text>
         </View>
 
         {/* Add New Slot Form */}

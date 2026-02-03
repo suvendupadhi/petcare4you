@@ -2,8 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
 // Use 10.0.2.2 for Android emulator to access localhost on host machine
-const BASE_URL = Platform.OS === 'android' ? 'http://10.0.2.2:5088/api' : 'http://localhost:5088/api';
-//const BASE_URL = Platform.OS === 'android' ? 'http://10.0.2.2:5088/api' : 'http://192.168.1.4:5088/api';
+//const BASE_URL = Platform.OS === 'android' ? 'http://10.0.2.2:5088/api' : 'http://localhost:5088/api';
+const BASE_URL = Platform.OS === 'android' ? 'http://10.0.2.2:5088/api' : 'http://192.168.1.4:5088/api';
 
 const TOKEN_KEY = 'auth_token';
 

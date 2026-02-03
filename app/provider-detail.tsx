@@ -14,10 +14,11 @@ import {
   Scissors,
   Home as HomeIcon,
   Check,
-  ChevronRight
+  ChevronRight,
+  LogOut
 } from 'lucide-react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { providerService, appointmentService, availabilityService, petService, Provider, Availability, Appointment, Pet, PetType, Breed } from '@/services/petCareService';
+import { providerService, appointmentService, availabilityService, petService, authService, Provider, Availability, Appointment, Pet, PetType, Breed } from '@/services/petCareService';
 import { APPOINTMENT_STATUS } from '@/constants/status';
 import { Calendar } from 'react-native-calendars';
 import { format } from 'date-fns';
@@ -279,6 +280,30 @@ export default function ProviderDetailScreen() {
     }
   };
 
+  const handleLogout = () => {
+    if (Platform.OS === 'web') {
+      if (window.confirm('Are you sure you want to logout?')) {
+        authService.logout().then(() => router.replace('/'));
+      }
+    } else {
+      Alert.alert(
+        'Logout',
+        'Are you sure you want to logout?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Logout',
+            style: 'destructive',
+            onPress: async () => {
+              await authService.logout();
+              router.replace('/');
+            },
+          },
+        ]
+      );
+    }
+  };
+
   if (loading) {
     return (
       <SafeAreaView className="flex-1 bg-background items-center justify-center">
@@ -304,11 +329,27 @@ export default function ProviderDetailScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
         {/* Header */}
         <View className="flex-row items-center justify-between p-4 border-b border-border">
-          <TouchableOpacity onPress={() => router.back()}>
-            <ChevronLeft className="text-foreground" size={24} />
-          </TouchableOpacity>
-          <Text className="text-lg font-semibold text-foreground">Provider Details</Text>
-          <ThemeToggle />
+          <View className="flex-row items-center gap-3">
+            <TouchableOpacity onPress={() => router.back()}>
+              <ChevronLeft className="text-foreground" size={24} />
+            </TouchableOpacity>
+            <Text className="text-lg font-semibold text-foreground">Provider Details</Text>
+          </View>
+          <View className="flex-row items-center gap-4">
+            <TouchableOpacity 
+              onPress={() => router.push('/owner-dashboard')}
+              className="bg-primary/10 p-2 rounded-full"
+            >
+              <HomeIcon className="text-primary" size={24} />
+            </TouchableOpacity>
+            <ThemeToggle />
+            <TouchableOpacity 
+              onPress={handleLogout}
+              className="bg-destructive/10 p-2 rounded-full"
+            >
+              <LogOut className="text-destructive" size={24} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Photo Gallery */}

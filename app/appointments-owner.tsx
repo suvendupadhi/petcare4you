@@ -15,10 +15,12 @@ import {
   CheckCircle,
   AlertCircle,
   XCircle,
-  Plus
+  Plus,
+  LogOut,
+  Home
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
-import { appointmentService, Appointment } from '@/services/petCareService';
+import { appointmentService, authService, Appointment } from '@/services/petCareService';
 import { APPOINTMENT_STATUS } from '@/constants/status';
 
 // Mock data - Replace with API calls
@@ -198,6 +200,30 @@ export default function AppointmentsOwnerScreen() {
     router.push(`/appointment-detail?id=${appointmentId}`);
   };
 
+  const handleLogout = () => {
+    if (Platform.OS === 'web') {
+      if (window.confirm('Are you sure you want to logout?')) {
+        authService.logout().then(() => router.replace('/'));
+      }
+    } else {
+      Alert.alert(
+        'Logout',
+        'Are you sure you want to logout?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Logout',
+            style: 'destructive',
+            onPress: async () => {
+              await authService.logout();
+              router.replace('/');
+            },
+          },
+        ]
+      );
+    }
+  };
+
   const getStatusConfig = (status: number) => {
     switch (status) {
       case APPOINTMENT_STATUS.CONFIRMED:
@@ -287,7 +313,13 @@ export default function AppointmentsOwnerScreen() {
             </TouchableOpacity>
             <Text className="text-2xl font-bold text-foreground">My Appointments</Text>
           </View>
-          <View className="flex-row items-center gap-2">
+          <View className="flex-row items-center gap-4">
+            <TouchableOpacity 
+              onPress={() => router.push('/owner-dashboard')}
+              className="bg-primary/10 p-2 rounded-full"
+            >
+              <Home className="text-primary" size={24} />
+            </TouchableOpacity>
             <TouchableOpacity 
               onPress={() => router.push('/search-providers')}
               className="bg-primary/10 p-2 rounded-full"
@@ -295,6 +327,12 @@ export default function AppointmentsOwnerScreen() {
               <Plus className="text-primary" size={24} />
             </TouchableOpacity>
             <ThemeToggle />
+            <TouchableOpacity 
+              onPress={handleLogout}
+              className="bg-destructive/10 p-2 rounded-full"
+            >
+              <LogOut className="text-destructive" size={24} />
+            </TouchableOpacity>
           </View>
         </View>
       </View>

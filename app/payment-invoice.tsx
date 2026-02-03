@@ -22,11 +22,13 @@ import {
   Search,
   Filter,
   ExternalLink,
+  LogOut,
+  Home,
 } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { usePaymentGateway } from "@/hooks/usePaymentGateway";
-import { paymentService, Payment, userService, User, stripeService } from "@/services/petCareService";
+import { paymentService, Payment, userService, User, stripeService, authService } from "@/services/petCareService";
 import { PAYMENT_STATUS, getStatusLabel, USER_ROLE } from "@/constants/status";
 
 export default function PaymentInvoiceScreen() {
@@ -143,6 +145,30 @@ export default function PaymentInvoiceScreen() {
     }
   };
 
+  const handleLogout = () => {
+    if (Platform.OS === 'web') {
+      if (window.confirm('Are you sure you want to logout?')) {
+        authService.logout().then(() => router.replace('/'));
+      }
+    } else {
+      Alert.alert(
+        'Logout',
+        'Are you sure you want to logout?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Logout',
+            style: 'destructive',
+            onPress: async () => {
+              await authService.logout();
+              router.replace('/');
+            },
+          },
+        ]
+      );
+    }
+  };
+
   const getStatusColor = (status: number) => {
     switch (status) {
       case PAYMENT_STATUS.COMPLETED:
@@ -206,7 +232,7 @@ export default function PaymentInvoiceScreen() {
     <SafeAreaView className="flex-1 bg-background">
       <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
         {/* Header */}
-        <View className="p-6 flex-row items-center justify-between">
+        <View className="p-6 flex-row items-center justify-between border-b border-border">
           <View className="flex-row items-center gap-3">
             <TouchableOpacity onPress={() => router.back()}>
               <ArrowLeft className="text-foreground" size={24} />
@@ -220,7 +246,21 @@ export default function PaymentInvoiceScreen() {
               </Text>
             </View>
           </View>
-          <ThemeToggle />
+          <View className="flex-row items-center gap-4">
+            <TouchableOpacity 
+              onPress={() => router.push(user?.roleId === USER_ROLE.PROVIDER ? '/provider-dashboard' : '/owner-dashboard')}
+              className="bg-primary/10 p-2 rounded-full"
+            >
+              <Home className="text-primary" size={24} />
+            </TouchableOpacity>
+            <ThemeToggle />
+            <TouchableOpacity 
+              onPress={handleLogout}
+              className="bg-destructive/10 p-2 rounded-full"
+            >
+              <LogOut className="text-destructive" size={24} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Stats Cards */}

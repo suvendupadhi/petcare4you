@@ -4,10 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { 
   ArrowLeft, 
-  User, 
   Mail, 
-  Phone, 
-  MapPin,
   Edit,
   PawPrint,
   Heart,
@@ -19,9 +16,11 @@ import {
   Plus,
   Star,
   Trash2,
-  CreditCard
+  CreditCard,
+  Home
 } from 'lucide-react-native';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { authService, userService, User as UserType } from '@/services/petCareService';
 
 // Mock data - replace with API calls
 /*
@@ -73,8 +72,6 @@ const mockSavedProviders = [
     photo: 'https://images.unsplash.com/photo-1628009368231-7bb7cfcb0def?w=400',
   },
 ];
-
-import { authService, userService, User as UserType } from '@/services/petCareService';
 
 export default function ProfileOwnerScreen() {
   const [loading, setLoading] = useState(true);
@@ -215,6 +212,12 @@ export default function ProfileOwnerScreen() {
           </TouchableOpacity>
           <Text className="text-xl font-bold text-foreground">My Profile</Text>
           <View className="flex-row items-center gap-4">
+            <TouchableOpacity 
+              onPress={() => router.push('/owner-dashboard')}
+              className="bg-primary/10 p-2 rounded-full"
+            >
+              <Home className="text-primary" size={24} />
+            </TouchableOpacity>
             <ThemeToggle />
             <TouchableOpacity onPress={handleLogout}>
               <LogOut className="text-destructive" size={24} />

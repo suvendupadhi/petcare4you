@@ -211,7 +211,7 @@ export default function ProviderDashboard() {
         {/* Today's Schedule */}
         <View className="px-6 mb-6">
           <View className="flex-row items-center justify-between mb-3">
-            <Text className="text-foreground text-lg font-semibold">Today's Schedule</Text>
+            <Text className="text-foreground text-lg font-semibold">Today&apos;s Schedule</Text>
             <Text className="text-primary font-medium">{todayAppointments.length} appointments</Text>
           </View>
 
