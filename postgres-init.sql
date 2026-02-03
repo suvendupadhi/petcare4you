@@ -90,7 +90,11 @@ CREATE TABLE IF NOT EXISTS providers (
     longitude DECIMAL(11, 8),
     profile_image_url VARCHAR(500),
     is_verified BOOLEAN DEFAULT FALSE,
+<<<<<<< HEAD
     stripe_account_id VARCHAR(100),
+=======
+    stripe_account_id VARCHAR(255),
+>>>>>>> c8da3a7bdd05cc407da8ec877dd6e19ac389b23a
     is_stripe_connected BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -141,8 +145,13 @@ CREATE TABLE IF NOT EXISTS payments (
     status INTEGER NOT NULL REFERENCES status_master(id),
     payment_method VARCHAR(50),
     transaction_id VARCHAR(100),
+<<<<<<< HEAD
     stripe_payment_intent_id VARCHAR(100),
     stripe_client_secret VARCHAR(200),
+=======
+    stripe_payment_intent_id VARCHAR(255),
+    stripe_client_secret VARCHAR(255),
+>>>>>>> c8da3a7bdd05cc407da8ec877dd6e19ac389b23a
     payment_date TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

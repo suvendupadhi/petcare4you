@@ -16,8 +16,8 @@ namespace PetCareAPI.Models
         public int ReviewCount { get; set; } = 0;
         public string Address { get; set; } = string.Empty;
         public string City { get; set; } = string.Empty;
-        public decimal Latitude { get; set; }
-        public decimal Longitude { get; set; }
+        public decimal? Latitude { get; set; }
+        public decimal? Longitude { get; set; }
         public string? ProfileImageUrl { get; set; }
         public bool IsVerified { get; set; } = false;
         public string? StripeAccountId { get; set; }
