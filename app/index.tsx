@@ -80,7 +80,10 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
+      <ScrollView 
+        contentContainerStyle={{ paddingBottom: 32 }}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Header */}
         <View className="px-6 pt-8 pb-6 flex-row items-center justify-between">
           <View className="flex-row items-center gap-3">

@@ -375,7 +375,10 @@ export default function ProfileProviderScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <ScrollView contentContainerStyle={{ paddingBottom: 128 }}>
+      <ScrollView 
+        contentContainerStyle={{ paddingBottom: 128 }}
+        keyboardShouldPersistTaps="handled"
+      >
         <View className="items-center w-full">
           <View className="w-full max-w-4xl">
             {/* Header */}

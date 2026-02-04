@@ -204,7 +204,10 @@ export default function ProfileOwnerScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <ScrollView contentContainerStyle={{ paddingBottom: 128 }}>
+      <ScrollView 
+        contentContainerStyle={{ paddingBottom: 128 }}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Header */}
         <View className="p-6 flex-row items-center justify-between">
           <TouchableOpacity onPress={() => router.back()}>

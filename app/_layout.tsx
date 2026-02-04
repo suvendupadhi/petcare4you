@@ -3,6 +3,7 @@ import '@/global.css';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StripeWrapper } from '@/components/StripeWrapper';
+import { DismissKeyboard } from '@/components/DismissKeyboard';
 import { cssInterop } from 'react-native-css-interop';
 import * as Icons from 'lucide-react-native';
 
@@ -27,7 +28,9 @@ export default function RootLayout() {
     <StripeWrapper>
       <ThemeProvider>
         <SafeAreaProvider>
-          <Stack screenOptions={{ headerShown: false }} />
+          <DismissKeyboard>
+            <Stack screenOptions={{ headerShown: false }} />
+          </DismissKeyboard>
         </SafeAreaProvider>
       </ThemeProvider>
     </StripeWrapper>

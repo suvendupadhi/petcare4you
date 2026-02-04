@@ -359,7 +359,10 @@ export default function AppointmentDetailScreen() {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
+      <ScrollView 
+        contentContainerStyle={{ paddingBottom: 120 }}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Status Banner */}
         <View className={`${statusConfig.bg} mx-6 mt-6 p-4 rounded-xl flex-row items-center gap-3`}>
           <StatusIcon className={statusConfig.color} size={24} />

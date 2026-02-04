@@ -161,7 +161,10 @@ export default function ManageAvailabilityScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
+      <ScrollView 
+        contentContainerStyle={{ paddingBottom: 120 }}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Header */}
         <View className="px-6 pt-4 pb-6 border-b border-border mb-4">
           <View className="flex-row items-center justify-between">

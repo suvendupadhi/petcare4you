@@ -209,7 +209,10 @@ export default function SearchProvidersScreen() {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
+      <ScrollView 
+        contentContainerStyle={{ paddingBottom: 32 }}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Search Form */}
         <View className="p-6 gap-4">
           {/* City Input */}

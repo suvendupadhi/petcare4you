@@ -326,7 +326,10 @@ export default function ProviderDetailScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
+      <ScrollView 
+        contentContainerStyle={{ paddingBottom: 120 }}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Header */}
         <View className="flex-row items-center justify-between p-4 border-b border-border">
           <View className="flex-row items-center gap-3">
