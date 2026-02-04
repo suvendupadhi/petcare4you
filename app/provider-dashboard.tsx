@@ -21,9 +21,13 @@ import {
 import { useRouter } from 'expo-router';
 import { authService, appointmentService, Appointment, userService, User, Provider } from '@/services/petCareService';
 import { APPOINTMENT_STATUS, getStatusLabel } from '@/constants/status';
+import { useColorScheme } from 'react-native';
 
 export default function ProviderDashboard() {
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [provider, setProvider] = useState<Provider | null>(null);
@@ -121,7 +125,10 @@ export default function ProviderDashboard() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <ScrollView contentContainerStyle={{ paddingBottom: 128 }}>
+      <ScrollView 
+        contentContainerStyle={{ paddingBottom: 128 }}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Header */}
         <View className="p-6 flex-row justify-between items-center">
           <View>
@@ -131,13 +138,13 @@ export default function ProviderDashboard() {
           <View className="flex-row items-center gap-4">
             <ThemeToggle />
             <TouchableOpacity onPress={() => router.push('/profile-provider')}>
-              <UserIcon className="text-foreground" size={24} />
+              <UserIcon color={isDark ? '#f8fafc' : '#1e293b'} size={24} />
             </TouchableOpacity>
             <TouchableOpacity onPress={handleLogout}>
-              <LogOut className="text-destructive" size={24} />
+              <LogOut color={isDark ? '#f87171' : '#dc2626'} size={24} />
             </TouchableOpacity>
             <TouchableOpacity className="relative">
-              <Bell className="text-foreground" size={24} />
+              <Bell color={isDark ? '#f8fafc' : '#1e293b'} size={24} />
               <View className="absolute -top-1 -right-1 bg-red-500 w-4 h-4 rounded-full items-center justify-center">
                 <Text className="text-white text-xs font-bold">3</Text>
               </View>
@@ -151,8 +158,8 @@ export default function ProviderDashboard() {
           <View className="flex-row gap-3">
             <View className="flex-1 bg-card border border-border rounded-2xl p-4">
               <View className="flex-row items-center justify-between mb-2">
-                <DollarSign className="text-primary" size={20} />
-                <TrendingUp className="text-green-600" size={16} />
+                <DollarSign color={isDark ? '#fb923c' : '#2563eb'} size={20} />
+                <TrendingUp color="#16a34a" size={16} />
               </View>
               <Text className="text-foreground text-2xl font-bold">${revenue.today}</Text>
               <Text className="text-muted-foreground text-xs mt-1">Today</Text>
@@ -160,8 +167,8 @@ export default function ProviderDashboard() {
 
             <View className="flex-1 bg-card border border-border rounded-2xl p-4">
               <View className="flex-row items-center justify-between mb-2">
-                <DollarSign className="text-primary" size={20} />
-                <TrendingUp className="text-green-600" size={16} />
+                <DollarSign color={isDark ? '#fb923c' : '#2563eb'} size={20} />
+                <TrendingUp color="#16a34a" size={16} />
               </View>
               <Text className="text-foreground text-2xl font-bold">${revenue.week}</Text>
               <Text className="text-muted-foreground text-xs mt-1">This Week</Text>
@@ -169,8 +176,8 @@ export default function ProviderDashboard() {
 
             <View className="flex-1 bg-card border border-border rounded-2xl p-4">
               <View className="flex-row items-center justify-between mb-2">
-                <DollarSign className="text-primary" size={20} />
-                <TrendingUp className="text-green-600" size={16} />
+                <DollarSign color={isDark ? '#fb923c' : '#2563eb'} size={20} />
+                <TrendingUp color="#16a34a" size={16} />
               </View>
               <Text className="text-foreground text-2xl font-bold">${revenue.month}</Text>
               <Text className="text-muted-foreground text-xs mt-1">This Month</Text>
@@ -186,24 +193,24 @@ export default function ProviderDashboard() {
               className="flex-1 bg-primary rounded-2xl p-4 items-center"
               onPress={() => router.push('/manage-availability')}
             >
-              <Calendar className="text-primary-foreground mb-2" size={24} />
-              <Text className="text-primary-foreground font-semibold text-center">Manage Availability</Text>
+              <Calendar color="#ffffff" size={24} />
+              <Text className="text-primary-foreground font-semibold text-center mt-2">Manage Availability</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
               className="flex-1 bg-card border border-border rounded-2xl p-4 items-center"
               onPress={() => router.push('/appointments-provider')}
             >
-              <Clock className="text-primary mb-2" size={24} />
-              <Text className="text-foreground font-semibold text-center">All Bookings</Text>
+              <Clock color={isDark ? '#fb923c' : '#2563eb'} size={24} />
+              <Text className="text-foreground font-semibold text-center mt-2">All Bookings</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
               className="flex-1 bg-card border border-border rounded-2xl p-4 items-center"
               onPress={() => router.push('/payment-invoice')}
             >
-              <DollarSign className="text-primary mb-2" size={24} />
-              <Text className="text-foreground font-semibold text-center">Payments</Text>
+              <DollarSign color={isDark ? '#fb923c' : '#2563eb'} size={24} />
+              <Text className="text-foreground font-semibold text-center mt-2">Payments</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -231,7 +238,7 @@ export default function ProviderDashboard() {
                   <View className="flex-row items-center justify-between mb-3">
                     <View className="flex-row items-center gap-2">
                       <View className="bg-primary/10 w-10 h-10 rounded-full items-center justify-center">
-                        <PawPrint className="text-primary" size={20} />
+                        <PawPrint color={isDark ? '#fb923c' : '#ea580c'} size={20} />
                       </View>
                       <View>
                         <Text className="text-foreground font-semibold">{appointment.petName}</Text>
@@ -247,7 +254,7 @@ export default function ProviderDashboard() {
                         </Text>
                       </View>
                       <View className="bg-primary/10 px-2 py-1 rounded-md flex-row items-center gap-1">
-                        <Clock className="text-primary" size={10} />
+                        <Clock color={isDark ? '#fb923c' : '#ea580c'} size={10} />
                         <Text className="text-primary font-bold text-[10px]">
                           {new Date(appointment.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </Text>
@@ -257,11 +264,11 @@ export default function ProviderDashboard() {
 
                   <View className="flex-row items-center gap-4">
                     <View className="flex-row items-center gap-1">
-                      <DollarSign className="text-muted-foreground" size={14} />
+                      <DollarSign color={isDark ? '#94a3b8' : '#64748b'} size={14} />
                       <Text className="text-muted-foreground text-sm font-medium">${appointment.totalPrice}</Text>
                     </View>
                     <View className="flex-row items-center gap-1">
-                      <Users className="text-muted-foreground" size={14} />
+                      <Users color={isDark ? '#94a3b8' : '#64748b'} size={14} />
                       <Text className="text-muted-foreground text-sm font-medium">{appointment.petType}</Text>
                     </View>
                   </View>
@@ -270,7 +277,7 @@ export default function ProviderDashboard() {
             </View>
           ) : (
             <View className="bg-card border border-border rounded-2xl p-6 items-center">
-              <Calendar className="text-muted-foreground mb-2" size={48} />
+              <Calendar color={isDark ? '#475569' : '#94a3b8'} size={48} />
               <Text className="text-foreground font-semibold">No appointments today</Text>
               <Text className="text-muted-foreground text-sm text-center mt-1">
                 You have a free day! Check upcoming bookings below.
@@ -304,7 +311,7 @@ export default function ProviderDashboard() {
                   <View className="flex-row items-center justify-between">
                     <View className="flex-row items-center gap-3">
                       <View className="bg-primary/10 w-8 h-8 rounded-full items-center justify-center">
-                        <PawPrint className="text-primary" size={16} />
+                        <PawPrint color={isDark ? '#fb923c' : '#ea580c'} size={16} />
                       </View>
                       <View>
                         <Text className="text-foreground font-medium">{appointment.petName}</Text>

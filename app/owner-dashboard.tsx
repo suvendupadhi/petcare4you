@@ -19,9 +19,13 @@ import {
 import { useRouter } from 'expo-router';
 import { authService, appointmentService, providerService, userService, Appointment, Provider, User as UserType } from '@/services/petCareService';
 import { getStatusLabel } from '@/constants/status';
+import { useColorScheme } from 'react-native';
 
 export default function OwnerDashboardScreen() {
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -89,7 +93,10 @@ export default function OwnerDashboardScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
+      <ScrollView 
+        contentContainerStyle={{ paddingBottom: 32 }}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Header */}
         <View className="px-6 pt-6 pb-4">
           <View className="flex-row items-center justify-between mb-6">
@@ -99,17 +106,17 @@ export default function OwnerDashboardScreen() {
             </View>
             <View className="flex-row items-center gap-4">
               <TouchableOpacity onPress={() => router.push('/search-providers')}>
-                <Plus className="text-primary" size={24} />
+                <Plus color={isDark ? '#fb923c' : '#ea580c'} size={24} />
               </TouchableOpacity>
               <TouchableOpacity>
-                <Bell className="text-foreground" size={24} />
+                <Bell color={isDark ? '#f8fafc' : '#1e293b'} size={24} />
               </TouchableOpacity>
               <ThemeToggle />
               <TouchableOpacity onPress={() => router.push('/profile-owner')}>
-                <User className="text-foreground" size={24} />
+                <User color={isDark ? '#f8fafc' : '#1e293b'} size={24} />
               </TouchableOpacity>
               <TouchableOpacity onPress={handleLogout}>
-                <LogOut className="text-destructive" size={24} />
+                <LogOut color={isDark ? '#f87171' : '#dc2626'} size={24} />
               </TouchableOpacity>
             </View>
           </View>
@@ -119,11 +126,11 @@ export default function OwnerDashboardScreen() {
             onPress={handleSearch}
             className="bg-card border border-border rounded-2xl p-4 flex-row items-center"
           >
-            <Search className="text-primary mr-3" size={22} />
-            <Text className="flex-1 text-muted-foreground text-base">
+            <Search color={isDark ? '#fb923c' : '#ea580c'} size={22} />
+            <Text className="flex-1 text-muted-foreground text-base ml-3">
               Book a new service...
             </Text>
-            <ChevronRight className="text-muted-foreground" size={20} />
+            <ChevronRight color={isDark ? '#94a3b8' : '#64748b'} size={20} />
           </TouchableOpacity>
         </View>
 
@@ -134,8 +141,8 @@ export default function OwnerDashboardScreen() {
               onPress={handleSearch}
               className="flex-1 bg-primary rounded-xl p-4 items-center"
             >
-              <Search className="text-primary-foreground mb-2" size={24} />
-              <Text className="text-primary-foreground font-semibold text-sm">
+              <Search color="#ffffff" size={24} />
+              <Text className="text-primary-foreground font-semibold text-sm mt-2">
                 Book Now
               </Text>
             </TouchableOpacity>
@@ -144,8 +151,8 @@ export default function OwnerDashboardScreen() {
               onPress={() => router.push('/appointments-owner')}
               className="flex-1 bg-card border border-border rounded-xl p-4 items-center"
             >
-              <Calendar className="text-primary mb-2" size={24} />
-              <Text className="text-foreground font-semibold text-sm">
+              <Calendar color={isDark ? '#fb923c' : '#2563eb'} size={24} />
+              <Text className="text-foreground font-semibold text-sm mt-2">
                 My Bookings
               </Text>
             </TouchableOpacity>
@@ -154,8 +161,8 @@ export default function OwnerDashboardScreen() {
               onPress={() => router.push('/profile-owner')}
               className="flex-1 bg-card border border-border rounded-xl p-4 items-center"
             >
-              <User className="text-primary mb-2" size={24} />
-              <Text className="text-foreground font-semibold text-sm">
+              <User color={isDark ? '#fb923c' : '#2563eb'} size={24} />
+              <Text className="text-foreground font-semibold text-sm mt-2">
                 My Profile
               </Text>
             </TouchableOpacity>
@@ -173,7 +180,7 @@ export default function OwnerDashboardScreen() {
 
           {appointments.length === 0 ? (
             <View className="mx-6 bg-muted rounded-xl p-8 items-center">
-              <Calendar className="text-muted-foreground mb-3" size={48} />
+              <Calendar color={isDark ? '#475569' : '#94a3b8'} size={48} />
               <Text className="text-foreground font-semibold text-base mb-2">
                 No Upcoming Appointments
               </Text>
@@ -205,7 +212,7 @@ export default function OwnerDashboardScreen() {
                         {appointment.provider?.companyName || 'Unknown Provider'}
                       </Text>
                       <View className="flex-row items-center gap-1">
-                        <Star className="text-primary" size={14} fill="#EA580C" />
+                        <Star color={isDark ? '#fb923c' : '#ea580c'} size={14} fill={isDark ? '#fb923c' : '#EA580C'} />
                         <Text className="text-muted-foreground text-sm">
                           {appointment.provider?.serviceType?.name || 'Service'}
                         </Text>
@@ -220,8 +227,8 @@ export default function OwnerDashboardScreen() {
 
                   <View className="bg-muted rounded-xl p-3 mb-3">
                     <View className="flex-row items-center mb-2">
-                      <Calendar className="text-primary mr-2" size={16} />
-                      <Text className="text-foreground font-semibold">
+                      <Calendar color={isDark ? '#fb923c' : '#ea580c'} size={16} />
+                      <Text className="text-foreground font-semibold ml-2">
                         {new Date(appointment.appointmentDate).toLocaleDateString('en-US', {
                           weekday: 'short',
                           month: 'short',
@@ -230,23 +237,23 @@ export default function OwnerDashboardScreen() {
                       </Text>
                     </View>
                     <View className="flex-row items-center">
-                      <Clock className="text-primary mr-2" size={16} />
-                      <Text className="text-foreground font-semibold">
+                      <Clock color={isDark ? '#fb923c' : '#ea580c'} size={16} />
+                      <Text className="text-foreground font-semibold ml-2">
                         {new Date(appointment.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </Text>
                     </View>
                   </View>
 
                   <View className="flex-row items-center">
-                    <MapPin className="text-muted-foreground mr-2" size={16} />
-                    <Text className="text-muted-foreground text-sm flex-1" numberOfLines={1}>
+                    <MapPin color={isDark ? '#94a3b8' : '#64748b'} size={16} />
+                    <Text className="text-muted-foreground text-sm flex-1 ml-2" numberOfLines={1}>
                       {appointment.provider?.address || 'Address not available'}
                     </Text>
                   </View>
 
                   <View className="flex-row items-center mt-2">
-                    <PawPrint className="text-primary mr-2" size={16} />
-                    <Text className="text-foreground font-semibold">
+                    <PawPrint color={isDark ? '#fb923c' : '#ea580c'} size={16} />
+                    <Text className="text-foreground font-semibold ml-2">
                       Pet: {appointment.petName}
                     </Text>
                   </View>
@@ -278,7 +285,7 @@ export default function OwnerDashboardScreen() {
                       {provider.companyName}
                     </Text>
                     <View className="flex-row items-center gap-1">
-                      <Star className="text-primary" size={14} fill="#EA580C" />
+                      <Star color={isDark ? '#fb923c' : '#ea580c'} size={14} fill={isDark ? '#fb923c' : '#EA580C'} />
                       <Text className="text-foreground font-semibold text-sm">
                         4.8
                       </Text>
@@ -287,7 +294,7 @@ export default function OwnerDashboardScreen() {
                       </Text>
                     </View>
                   </View>
-                  <ChevronRight className="text-muted-foreground" size={20} />
+                  <ChevronRight color={isDark ? '#94a3b8' : '#64748b'} size={20} />
                 </View>
 
                 <View className="flex-row items-center justify-between">

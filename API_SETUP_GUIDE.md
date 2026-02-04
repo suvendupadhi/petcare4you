@@ -3,20 +3,13 @@
 ## Project Overview
 This guide provides a complete C# ASP.NET Core API structure for the PetCare Services mobile application with appointment booking, provider management, and user authentication.
 
-## Database Recommendation
+## Database Setup
 
-### **PostgreSQL (Recommended)**
-- **Why**: Free, open-source, production-ready, excellent for mobile backends
+### **PostgreSQL (Active)**
+The project is currently configured to use PostgreSQL. 
 - **Installation**: https://www.postgresql.org/download/
-- **Connection String Format**:
-  ```
-  Server=localhost;Port=5432;Database=petcare;User Id=postgres;Password=yourpassword;
-  ```
-- **Download**: Free from official site
-- **Alternatives**:
-  - MySQL (free, popular)
-  - SQL Server Express (Microsoft's free tier, Windows only)
-  - SQLite (lightweight, file-based, good for development)
+- **Connection String**: Located in `appsettings.json`
+- **Initialization**: Run `postgres-init.sql` to set up the schema and sample data.
 
 ---
 
@@ -70,21 +63,18 @@ PetCareAPI/
 ### 1. Create ASP.NET Core API Project
 
 ```bash
-dotnet new webapi -n PetCareAPI -f net8.0
+dotnet new webapi -n PetCareAPI -f net9.0
 cd PetCareAPI
 ```
 
 ### 2. Install NuGet Packages
 
 ```bash
-dotnet add package Microsoft.EntityFrameworkCore
+dotnet add package Microsoft.EntityFrameworkCore.Design
 dotnet add package Npgsql.EntityFrameworkCore.PostgreSQL
-dotnet add package Microsoft.EntityFrameworkCore.Tools
-dotnet add package Microsoft.AspNetCore.Identity.EntityFrameworkCore
 dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer
-dotnet add package System.IdentityModel.Tokens.Jwt
-dotnet add package AutoMapper.Extensions.Microsoft.DependencyInjection
-dotnet add package FluentValidation.DependencyInjectionExtensions
+dotnet add package Stripe.net
+dotnet add package Swashbuckle.AspNetCore
 ```
 
 ---
@@ -93,139 +83,17 @@ dotnet add package FluentValidation.DependencyInjectionExtensions
 
 ### Models (Entities)
 
-**User.cs**
-```csharp
-using System;
-using System.Collections.Generic;
+The project uses a comprehensive relational schema. Refer to the `PetCareAPI/Models/` directory for full implementations.
 
-namespace PetCareAPI.Models
-{
-    public class User
-    {
-        public int Id { get; set; }
-        public string Email { get; set; }
-        public string PasswordHash { get; set; }
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
-        public string PhoneNumber { get; set; }
-        public string UserType { get; set; } // "Owner" or "Provider"
-        public DateTime CreatedAt { get; set; }
-        public DateTime UpdatedAt { get; set; }
-        public bool IsActive { get; set; } = true;
-
-        public virtual Provider Provider { get; set; }
-        public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
-        public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
-    }
-}
-```
-
-**Provider.cs**
-```csharp
-using System;
-using System.Collections.Generic;
-
-namespace PetCareAPI.Models
-{
-    public class Provider
-    {
-        public int Id { get; set; }
-        public int UserId { get; set; }
-        public string CompanyName { get; set; }
-        public string Description { get; set; }
-        public string ServiceType { get; set; } // "Grooming", "Training", "Walking", etc.
-        public decimal HourlyRate { get; set; }
-        public decimal Rating { get; set; } = 5.0m;
-        public int ReviewCount { get; set; } = 0;
-        public string Address { get; set; }
-        public string City { get; set; }
-        public decimal Latitude { get; set; }
-        public decimal Longitude { get; set; }
-        public string ProfileImageUrl { get; set; }
-        public bool IsVerified { get; set; } = false;
-        public DateTime CreatedAt { get; set; }
-        public DateTime UpdatedAt { get; set; }
-
-        public virtual User User { get; set; }
-        public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
-        public virtual ICollection<Availability> Availabilities { get; set; } = new List<Availability>();
-    }
-}
-```
-
-**Appointment.cs**
-```csharp
-using System;
-
-namespace PetCareAPI.Models
-{
-    public class Appointment
-    {
-        public int Id { get; set; }
-        public int OwnerId { get; set; }
-        public int ProviderId { get; set; }
-        public DateTime AppointmentDate { get; set; }
-        public DateTime StartTime { get; set; }
-        public DateTime EndTime { get; set; }
-        public string Status { get; set; } // "Pending", "Confirmed", "Completed", "Cancelled"
-        public string PetName { get; set; }
-        public string PetType { get; set; } // "Dog", "Cat", etc.
-        public string Description { get; set; }
-        public decimal TotalPrice { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime UpdatedAt { get; set; }
-
-        public virtual User Owner { get; set; }
-        public virtual Provider Provider { get; set; }
-        public virtual Payment Payment { get; set; }
-    }
-}
-```
-
-**Availability.cs**
-```csharp
-using System;
-
-namespace PetCareAPI.Models
-{
-    public class Availability
-    {
-        public int Id { get; set; }
-        public int ProviderId { get; set; }
-        public DateTime Date { get; set; }
-        public TimeSpan StartTime { get; set; }
-        public TimeSpan EndTime { get; set; }
-        public bool IsBooked { get; set; } = false;
-        public DateTime CreatedAt { get; set; }
-
-        public virtual Provider Provider { get; set; }
-    }
-}
-```
-
-**Payment.cs**
-```csharp
-using System;
-
-namespace PetCareAPI.Models
-{
-    public class Payment
-    {
-        public int Id { get; set; }
-        public int AppointmentId { get; set; }
-        public int UserId { get; set; }
-        public decimal Amount { get; set; }
-        public string Status { get; set; } // "Pending", "Completed", "Failed"
-        public string PaymentMethod { get; set; } // "Card", "Wallet", etc.
-        public string TransactionId { get; set; }
-        public DateTime PaymentDate { get; set; }
-        public DateTime CreatedAt { get; set; }
-
-        public virtual Appointment Appointment { get; set; }
-        public virtual User User { get; set; }
-    }
-}
-```
+Key entities include:
+- **User**: Core user account (Owner, Provider, Admin)
+- **Provider**: Business profile for service providers
+- **Pet**: Pet information linked to an owner
+- **Appointment**: Booking details connecting owner, provider, and pet
+- **Availability**: Time slots managed by providers
+- **Payment**: Transaction records for appointments
+- **ServiceType**: Categorization of services (Grooming, Veterinary, etc.)
+- **StatusMaster**: Centralized status management for appointments and payments
 
 ### Data Context
 

@@ -10,8 +10,8 @@ The PetCare Services repository now contains:
 
 2. **C# ASP.NET Core API** (New - Added)
    - Location: `/PetCareAPI` directory
-   - Built with: .NET 7, Apache Cassandra, JWT Authentication
-   - Features: User authentication, provider management, appointment booking
+   - Built with: .NET 9, PostgreSQL, JWT Authentication
+   - Features: User authentication, provider management, appointment booking, Stripe payments
 
 ---
 
@@ -19,50 +19,54 @@ The PetCare Services repository now contains:
 
 ### Prerequisites
 
-- **Docker** and **Docker Compose** (for Cassandra database)
-- **.NET 7 SDK** or higher
+- **PostgreSQL 15+** (Local installation or Docker)
+- **.NET 9 SDK**
 - **Windows Command Prompt** or **PowerShell**
 
-### Step 1: Start Cassandra Database
+### Step 1: Start PostgreSQL Database
 
+#### Option A: Local Installation
+1. Install PostgreSQL from [postgresql.org](https://www.postgresql.org/download/).
+2. Create a database named `petcare`.
+3. Run the `postgres-init.sql` script (found in project root) to set up tables and seed data.
+
+#### Option B: Docker Compose
 From the project root directory:
 
 ```bash
-docker-compose up -d cassandra
+docker-compose up -d petcare-db
 ```
 
 This will:
-- Pull the Cassandra 4.1 image
-- Start a Cassandra container
-- Initialize the database schema
-- Wait for the cluster to be ready
+- Pull the PostgreSQL image (if using Docker)
+- Start a database container
+- Initialize the database schema via `postgres-init.sql`
 
-**Verify Cassandra is running:**
+**Verify Database is running:**
 
 ```bash
 docker ps
 ```
 
-You should see `petcare-cassandra` running.
+You should see `petcare-db` running.
 
 ### Step 2: Verify Database Initialization
 
-Connect to Cassandra and check if tables were created:
+Connect to PostgreSQL and check if tables were created:
 
 ```bash
-docker exec -it petcare-cassandra cqlsh
+psql -U postgres -d petcare
 ```
 
-Then in the CQL shell:
+Then check tables:
 
-```cql
-USE petcare;
-DESCRIBE TABLES;
+```sql
+\dt
 ```
 
-You should see tables like: `users`, `providers`, `appointments`, `availability`, `payments`
+You should see tables like: `users`, `providers`, `appointments`, `availability`, `payments`.
 
-Exit CQL shell: `exit`
+Exit psql: `\q`
 
 ### Step 3: Run the API
 
@@ -122,7 +126,7 @@ curl -X POST "https://localhost:7099/api/auth/register" \
   "message": "User registered successfully",
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "user": {
-    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "id": 1,
     "email": "john@example.com",
     "firstName": "John",
     "lastName": "Doe",
@@ -332,23 +336,17 @@ petcare/
 │   │   ├── Availability.cs
 │   │   ├── Payment.cs
 │   │   └── DTOs/
-│   ├── Repositories/
-│   │   ├── UserRepository.cs
-│   │   ├── ProviderRepository.cs
-│   │   └── AppointmentRepository.cs
-│   ├── Services/
-│   │   └── AuthService.cs
 │   ├── Data/
-│   │   └── CassandraSession.cs
+│   │   ├── PetCareContext.cs
 │   ├── Program.cs
 │   ├── appsettings.json
 │   ├── README.md
 │   └── PetCareAPI.csproj
 │
-├── cassandra-init.cql            # Cassandra schema
+├── postgres-init.sql             # PostgreSQL schema
 ├── docker-compose.yml            # Docker configuration
 ├── API_SETUP_GUIDE.md           # PostgreSQL API guide (reference)
-├── API_CASSANDRA_GUIDE.md       # Cassandra API guide (reference)
+├── API_POSTGRES_GUIDE.md        # PostgreSQL API guide (reference)
 └── SETUP_INSTRUCTIONS.md        # This file
 ```
 
@@ -356,45 +354,38 @@ petcare/
 
 ## Troubleshooting
 
-### Issue: Cassandra Won't Start
+### Issue: Database Won't Start
 
 **Solution:**
 
-1. Check if port 9042 is already in use:
+1. Check if port 5432 is already in use:
    ```bash
-   netstat -ano | findstr :9042
+   netstat -ano | findstr :5432
    ```
 
-2. Kill the process or change the port in `docker-compose.yml`
+2. Kill the process or change the port in `docker-compose.yml`.
 
 3. Restart:
    ```bash
    docker-compose down
-   docker-compose up -d cassandra
+   docker-compose up -d petcare-db
    ```
 
-### Issue: API Can't Connect to Cassandra
+### Issue: API Can't Connect to PostgreSQL
 
 **Solution:**
 
-1. Verify Cassandra container is running:
+1. Verify database container is running:
    ```bash
    docker ps
    ```
 
-2. Check Cassandra logs:
+2. Check database logs:
    ```bash
-   docker logs petcare-cassandra
+   docker logs petcare-db
    ```
 
-3. Verify connection string in `PetCareAPI/appsettings.json`:
-   ```json
-   "Cassandra": {
-     "ContactPoints": "localhost",
-     "Port": 9042,
-     "Keyspace": "petcare"
-   }
-   ```
+3. Verify connection string in `PetCareAPI/appsettings.json`.
 
 ### Issue: JWT Token Invalid
 
@@ -433,15 +424,14 @@ The API is configured to accept requests from any origin. If you still get CORS 
 | Table | Purpose |
 |-------|---------|
 | `users` | User accounts (owners & providers) |
-| `users_by_email` | Email lookup index |
+| `user_roles` | Role definitions (owner, provider, admin) |
 | `providers` | Service provider information |
-| `providers_by_user` | User-to-provider mapping |
-| `providers_by_city` | Geographic search index |
+| `service_types` | Categories of services offered |
+| `provider_service_types` | Mapping of providers to services |
 | `appointments` | Booking records |
-| `appointments_by_owner` | User's appointments |
-| `appointments_by_provider` | Provider's appointments |
 | `availability` | Provider time slots |
 | `payments` | Payment transactions |
+| `pets` | Pet profiles linked to owners |
 
 ---
 
@@ -463,15 +453,16 @@ The API is configured to accept requests from any origin. If you still get CORS 
 
 ### Database Changes
 
-1. Update `cassandra-init.cql` for schema changes
-2. Restart Cassandra: `docker-compose down && docker-compose up -d cassandra`
+1. Update `postgres-init.sql` for schema changes
+2. Restart Database: `docker-compose down && docker-compose up -d petcare-db`
 3. Update model classes in `PetCareAPI/Models/`
+4. Apply EF Core migrations if applicable: `dotnet ef database update`
 
 ---
 
 ## Next Steps
 
-1. ✅ **Start Cassandra**: `docker-compose up -d cassandra`
+1. ✅ **Start PostgreSQL**: `docker-compose up -d petcare-db`
 2. ✅ **Run API**: `cd PetCareAPI && dotnet run`
 3. ✅ **Test endpoints** in Swagger UI
 4. ⏭️ **Integrate with mobile app** using provided code examples
@@ -482,9 +473,9 @@ The API is configured to accept requests from any origin. If you still get CORS 
 ## Additional Resources
 
 - **API Documentation**: `PetCareAPI/README.md`
-- **Cassandra Guide**: `API_CASSANDRA_GUIDE.md`
+- **PostgreSQL Guide**: `API_POSTGRES_GUIDE.md`
 - **Expo Documentation**: https://docs.expo.dev
-- **Cassandra Documentation**: https://cassandra.apache.org/doc
+- **PostgreSQL Documentation**: https://www.postgresql.org/docs/
 
 ---
 
@@ -494,6 +485,6 @@ For issues or questions about the setup:
 
 1. Check the troubleshooting section above
 2. Review the README files in each directory
-3. Check Docker logs: `docker logs petcare-cassandra`
+3. Check Docker logs: `docker logs petcare-db`
 4. Check API logs: Terminal output when running `dotnet run`
 

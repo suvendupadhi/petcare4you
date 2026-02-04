@@ -51,7 +51,10 @@ export default function DevMenuScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
+      <ScrollView 
+        contentContainerStyle={{ paddingBottom: 32 }}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Header */}
         <View className="p-6 bg-primary">
           <View className="flex-row items-center gap-3">

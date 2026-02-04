@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator, TextInput, Platform, Modal } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator, TextInput, Platform, Modal, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { 
@@ -49,6 +49,9 @@ const mockPhotos = [
 ];
 
 export default function ProfileProviderScreen() {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
   const [userData, setUserData] = useState<User | null>(null);
@@ -384,7 +387,7 @@ export default function ProfileProviderScreen() {
             {/* Header */}
             <View className="p-6 flex-row items-center justify-between">
               <TouchableOpacity onPress={() => router.back()}>
-                <ArrowLeft className="text-foreground" size={24} />
+                <ArrowLeft color={isDark ? '#f8fafc' : '#1e293b'} size={24} />
               </TouchableOpacity>
               <Text className="text-xl font-bold text-foreground">Business Profile</Text>
               <View className="flex-row items-center gap-4">
@@ -392,11 +395,11 @@ export default function ProfileProviderScreen() {
                   onPress={() => router.push('/provider-dashboard')}
                   className="bg-primary/10 p-2 rounded-full"
                 >
-                  <Home className="text-primary" size={24} />
+                  <Home color={isDark ? '#fb923c' : '#ea580c'} size={24} />
                 </TouchableOpacity>
                 <ThemeToggle />
                 <TouchableOpacity onPress={handleLogout}>
-                  <LogOut className="text-destructive" size={24} />
+                  <LogOut color={isDark ? '#f87171' : '#dc2626'} size={24} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -425,8 +428,8 @@ export default function ProfileProviderScreen() {
                           <Text className="text-xl font-bold text-foreground">{provider?.companyName}</Text>
                         )}
                         <View className="flex-row items-center mt-1">
-                          <Star className="text-yellow-500 mr-1" size={16} />
-                          <Text className="text-foreground font-semibold">4.8</Text>
+                          <Star color="#EAB308" size={16} fill="#EAB308" />
+                          <Text className="text-foreground font-semibold ml-1">4.8</Text>
                           <Text className="text-muted-foreground ml-1">(127 reviews)</Text>
                         </View>
                         <Text className="text-muted-foreground text-sm mt-1">Provider since 2024</Text>
@@ -434,7 +437,7 @@ export default function ProfileProviderScreen() {
                     </View>
                     {!editMode && (
                       <TouchableOpacity onPress={() => setEditMode(true)}>
-                        <Edit className="text-primary" size={20} />
+                        <Edit color={isDark ? '#fb923c' : '#ea580c'} size={20} />
                       </TouchableOpacity>
                     )}
                   </View>
@@ -496,47 +499,47 @@ export default function ProfileProviderScreen() {
                           onPress={handleSaveProfile}
                           className="flex-1 bg-primary rounded-lg py-3 flex-row items-center justify-center"
                         >
-                          <Save className="text-primary-foreground mr-2" size={18} />
-                          <Text className="text-primary-foreground font-semibold">Save Changes</Text>
+                          <Save color="#ffffff" size={18} />
+                          <Text className="text-primary-foreground font-semibold ml-2">Save Changes</Text>
                         </TouchableOpacity>
                         <TouchableOpacity 
                           onPress={handleCancelEdit}
                           className="flex-1 bg-muted rounded-lg py-3 flex-row items-center justify-center"
                         >
-                          <X className="text-foreground mr-2" size={18} />
-                          <Text className="text-foreground font-semibold">Cancel</Text>
+                          <X color={isDark ? '#f8fafc' : '#1e293b'} size={18} />
+                          <Text className="text-foreground font-semibold ml-2">Cancel</Text>
                         </TouchableOpacity>
                       </View>
                     </View>
                   ) : (
                     <View className="gap-3">
                       <View className="flex-row items-center flex-wrap gap-2">
-                        <Star className="text-primary mr-1" size={18} />
+                        <Star color={isDark ? '#fb923c' : '#ea580c'} size={18} />
                         {provider?.serviceTypes && provider.serviceTypes.length > 0 ? (
                           provider.serviceTypes.map(st => (
-                            <View key={st.id} className="bg-primary/10 px-2 py-0.5 rounded">
+                            <View key={st.id} className="bg-primary/10 px-2 py-0.5 rounded ml-1">
                               <Text className="text-primary text-xs font-medium">{st.name}</Text>
                             </View>
                           ))
                         ) : (
-                          <Text className="text-foreground">No Service Types</Text>
+                          <Text className="text-foreground ml-1">No Service Types</Text>
                         )}
                       </View>
                       <View className="flex-row items-center">
-                        <DollarSign className="text-primary mr-3" size={18} />
-                        <Text className="text-foreground">${provider?.hourlyRate}/hr</Text>
+                        <DollarSign color={isDark ? '#fb923c' : '#ea580c'} size={18} />
+                        <Text className="text-foreground ml-3">${provider?.hourlyRate}/hr</Text>
                       </View>
                       <View className="flex-row items-center">
-                        <Building2 className="text-muted-foreground mr-3" size={18} />
-                        <Text className="text-foreground flex-1">{userData?.firstName} {userData?.lastName}</Text>
+                        <Building2 color={isDark ? '#94a3b8' : '#475569'} size={18} />
+                        <Text className="text-foreground flex-1 ml-3">{userData?.firstName} {userData?.lastName}</Text>
                       </View>
                       <View className="flex-row items-center">
-                        <Mail className="text-muted-foreground mr-3" size={18} />
-                        <Text className="text-foreground flex-1">{userData?.email}</Text>
+                        <Mail color={isDark ? '#94a3b8' : '#475569'} size={18} />
+                        <Text className="text-foreground flex-1 ml-3">{userData?.email}</Text>
                       </View>
                       <View className="flex-row items-center">
-                        <MapPin className="text-muted-foreground mr-3" size={18} />
-                        <Text className="text-foreground flex-1">{provider?.address}, {provider?.city}</Text>
+                        <MapPin color={isDark ? '#94a3b8' : '#475569'} size={18} />
+                        <Text className="text-foreground flex-1 ml-3">{provider?.address}, {provider?.city}</Text>
                       </View>
                       <View className="mt-2 pt-3 border-t border-border">
                         <Text className="text-foreground">{provider?.description}</Text>
@@ -549,12 +552,12 @@ export default function ProfileProviderScreen() {
                 <View className="mb-6">
                   <View className="flex-row items-center justify-between mb-4">
                     <View className="flex-row items-center">
-                      <DollarSign className="text-primary mr-2" size={20} />
-                      <Text className="text-lg font-bold text-foreground">Services & Pricing</Text>
+                      <DollarSign color={isDark ? '#fb923c' : '#ea580c'} size={20} />
+                      <Text className="text-lg font-bold text-foreground ml-2">Services & Pricing</Text>
                     </View>
                     <TouchableOpacity onPress={handleAddService} className="flex-row items-center">
-                      <Plus className="text-primary mr-1" size={18} />
-                      <Text className="text-primary font-semibold">Add</Text>
+                      <Plus color={isDark ? '#fb923c' : '#ea580c'} size={18} />
+                      <Text className="text-primary font-semibold ml-1">Add</Text>
                     </TouchableOpacity>
                   </View>
 
@@ -570,10 +573,10 @@ export default function ProfileProviderScreen() {
                           </View>
                           <View className="flex-row gap-2">
                             <TouchableOpacity onPress={() => handleEditService(service)}>
-                              <Edit className="text-primary" size={18} />
+                              <Edit color={isDark ? '#fb923c' : '#ea580c'} size={18} />
                             </TouchableOpacity>
                             <TouchableOpacity onPress={() => handleDeleteService(service.id!, service.serviceType?.name || 'service')}>
-                              <Trash2 className="text-destructive" size={18} />
+                              <Trash2 color={isDark ? '#f87171' : '#dc2626'} size={18} />
                             </TouchableOpacity>
                           </View>
                         </View>
@@ -597,12 +600,12 @@ export default function ProfileProviderScreen() {
                 <View className="mb-6">
                   <View className="flex-row items-center justify-between mb-4">
                     <View className="flex-row items-center">
-                      <Clock className="text-primary mr-2" size={20} />
-                      <Text className="text-lg font-bold text-foreground">Business Hours / Availability</Text>
+                      <Clock color={isDark ? '#fb923c' : '#ea580c'} size={20} />
+                      <Text className="text-lg font-bold text-foreground ml-2">Business Hours / Availability</Text>
                     </View>
                     <TouchableOpacity onPress={() => setShowAvailabilityModal(true)} className="flex-row items-center">
-                      <Plus className="text-primary mr-1" size={18} />
-                      <Text className="text-primary font-semibold">Add</Text>
+                      <Plus color={isDark ? '#fb923c' : '#ea580c'} size={18} />
+                      <Text className="text-primary font-semibold ml-1">Add</Text>
                     </TouchableOpacity>
                   </View>
 
@@ -625,7 +628,7 @@ export default function ProfileProviderScreen() {
                               </View>
                             )}
                             <TouchableOpacity onPress={() => handleDeleteAvailability(item.id!)}>
-                              <Trash2 className="text-destructive" size={16} />
+                              <Trash2 color={isDark ? '#f87171' : '#dc2626'} size={16} />
                             </TouchableOpacity>
                           </View>
                         </View>
@@ -648,12 +651,12 @@ export default function ProfileProviderScreen() {
                 <View className="mb-6">
                   <View className="flex-row items-center justify-between mb-4">
                     <View className="flex-row items-center">
-                      <Camera className="text-primary mr-2" size={20} />
-                      <Text className="text-lg font-bold text-foreground">Photo Gallery</Text>
+                      <Camera color={isDark ? '#fb923c' : '#ea580c'} size={20} />
+                      <Text className="text-lg font-bold text-foreground ml-2">Photo Gallery</Text>
                     </View>
                     <TouchableOpacity onPress={handleAddPhoto} className="flex-row items-center">
-                      <Plus className="text-primary mr-1" size={18} />
-                      <Text className="text-primary font-semibold">Add</Text>
+                      <Plus color={isDark ? '#fb923c' : '#ea580c'} size={18} />
+                      <Text className="text-primary font-semibold ml-1">Add</Text>
                     </TouchableOpacity>
                   </View>
 
@@ -668,7 +671,7 @@ export default function ProfileProviderScreen() {
                           onPress={() => handleDeletePhoto(photo)}
                           className="absolute top-2 right-2 bg-destructive rounded-full p-1.5"
                         >
-                          <Trash2 className="text-white" size={14} />
+                          <Trash2 color="#ffffff" size={14} />
                         </TouchableOpacity>
                       </View>
                     ))}
@@ -686,10 +689,10 @@ export default function ProfileProviderScreen() {
                     >
                       <View className="flex-row items-center justify-between p-4">
                         <View className="flex-row items-center flex-1">
-                          <DollarSign className="text-foreground mr-3" size={20} />
-                          <Text className="text-foreground">Payments & Invoices</Text>
+                          <DollarSign color={isDark ? '#f8fafc' : '#1e293b'} size={20} />
+                          <Text className="text-foreground ml-3">Payments & Invoices</Text>
                         </View>
-                        <ChevronRight className="text-muted-foreground" size={20} />
+                        <ChevronRight color={isDark ? '#94a3b8' : '#475569'} size={20} />
                       </View>
                     </TouchableOpacity>
 
@@ -699,10 +702,10 @@ export default function ProfileProviderScreen() {
                     >
                       <View className="flex-row items-center justify-between p-4">
                         <View className="flex-row items-center flex-1">
-                          <Bell className="text-foreground mr-3" size={20} />
-                          <Text className="text-foreground">Notifications</Text>
+                          <Bell color={isDark ? '#f8fafc' : '#1e293b'} size={20} />
+                          <Text className="text-foreground ml-3">Notifications</Text>
                         </View>
-                        <ChevronRight className="text-muted-foreground" size={20} />
+                        <ChevronRight color={isDark ? '#94a3b8' : '#475569'} size={20} />
                       </View>
                     </TouchableOpacity>
 
@@ -712,10 +715,10 @@ export default function ProfileProviderScreen() {
                     >
                       <View className="flex-row items-center justify-between p-4">
                         <View className="flex-row items-center flex-1">
-                          <Shield className="text-foreground mr-3" size={20} />
-                          <Text className="text-foreground">Privacy & Security</Text>
+                          <Shield color={isDark ? '#f8fafc' : '#1e293b'} size={20} />
+                          <Text className="text-foreground ml-3">Privacy & Security</Text>
                         </View>
-                        <ChevronRight className="text-muted-foreground" size={20} />
+                        <ChevronRight color={isDark ? '#94a3b8' : '#475569'} size={20} />
                       </View>
                     </TouchableOpacity>
 
@@ -725,10 +728,10 @@ export default function ProfileProviderScreen() {
                     >
                       <View className="flex-row items-center justify-between p-4">
                         <View className="flex-row items-center flex-1">
-                          <HelpCircle className="text-foreground mr-3" size={20} />
-                          <Text className="text-foreground">Help & Support</Text>
+                          <HelpCircle color={isDark ? '#f8fafc' : '#1e293b'} size={20} />
+                          <Text className="text-foreground ml-3">Help & Support</Text>
                         </View>
-                        <ChevronRight className="text-muted-foreground" size={20} />
+                        <ChevronRight color={isDark ? '#94a3b8' : '#475569'} size={20} />
                       </View>
                     </TouchableOpacity>
                   </View>
@@ -753,7 +756,7 @@ export default function ProfileProviderScreen() {
                 {editingService ? 'Edit Service' : 'Add Service'}
               </Text>
               <TouchableOpacity onPress={() => setShowServiceModal(false)}>
-                <X className="text-muted-foreground" size={24} />
+                <X color={isDark ? '#94a3b8' : '#475569'} size={24} />
               </TouchableOpacity>
             </View>
 
@@ -830,8 +833,8 @@ export default function ProfileProviderScreen() {
                 onPress={handleSaveService}
                 className="bg-primary p-4 rounded-xl flex-row items-center justify-center mt-2"
               >
-                <Save className="text-primary-foreground mr-2" size={20} />
-                <Text className="text-primary-foreground font-bold text-lg">Save Service</Text>
+                <Save color="#ffffff" size={20} />
+                <Text className="text-primary-foreground font-bold text-lg ml-2">Save Service</Text>
               </TouchableOpacity>
             </View>
             <View style={{ height: Platform.OS === 'ios' ? 40 : 20 }} />
@@ -851,7 +854,7 @@ export default function ProfileProviderScreen() {
             <View className="flex-row items-center justify-between mb-6">
               <Text className="text-xl font-bold text-foreground">Add Availability Slot</Text>
               <TouchableOpacity onPress={() => setShowAvailabilityModal(false)}>
-                <X className="text-muted-foreground" size={24} />
+                <X color={isDark ? '#94a3b8' : '#475569'} size={24} />
               </TouchableOpacity>
             </View>
 
@@ -942,8 +945,8 @@ export default function ProfileProviderScreen() {
                 onPress={handleAddAvailability}
                 className="bg-primary p-4 rounded-xl flex-row items-center justify-center mt-2"
               >
-                <Plus className="text-primary-foreground mr-2" size={20} />
-                <Text className="text-primary-foreground font-bold text-lg">Add Time Slot</Text>
+                <Plus color="#ffffff" size={20} />
+                <Text className="text-primary-foreground font-bold text-lg ml-2">Add Time Slot</Text>
               </TouchableOpacity>
             </View>
             <View style={{ height: Platform.OS === 'ios' ? 40 : 20 }} />

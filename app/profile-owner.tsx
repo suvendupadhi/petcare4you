@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator, Platform, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { 
@@ -74,6 +74,9 @@ const mockSavedProviders = [
 ];
 
 export default function ProfileOwnerScreen() {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState<UserType | null>(null);
   const [pets, setPets] = useState(mockPets);
@@ -211,7 +214,7 @@ export default function ProfileOwnerScreen() {
         {/* Header */}
         <View className="p-6 flex-row items-center justify-between">
           <TouchableOpacity onPress={() => router.back()}>
-            <ArrowLeft className="text-foreground" size={24} />
+            <ArrowLeft color={isDark ? '#f8fafc' : '#1e293b'} size={24} />
           </TouchableOpacity>
           <Text className="text-xl font-bold text-foreground">My Profile</Text>
           <View className="flex-row items-center gap-4">
@@ -219,11 +222,11 @@ export default function ProfileOwnerScreen() {
               onPress={() => router.push('/owner-dashboard')}
               className="bg-primary/10 p-2 rounded-full"
             >
-              <Home className="text-primary" size={24} />
+              <Home color={isDark ? '#fb923c' : '#ea580c'} size={24} />
             </TouchableOpacity>
             <ThemeToggle />
             <TouchableOpacity onPress={handleLogout}>
-              <LogOut className="text-destructive" size={24} />
+              <LogOut color={isDark ? '#f87171' : '#dc2626'} size={24} />
             </TouchableOpacity>
           </View>
         </View>
@@ -241,13 +244,13 @@ export default function ProfileOwnerScreen() {
                 <Text className="text-muted-foreground mt-1">Pet Owner</Text>
               </View>
               <TouchableOpacity onPress={handleEditProfile}>
-                <Edit className="text-primary" size={20} />
+                <Edit color={isDark ? '#fb923c' : '#ea580c'} size={20} />
               </TouchableOpacity>
             </View>
 
             <View className="mt-6 gap-3">
               <View className="flex-row items-center">
-                <Mail className="text-muted-foreground mr-3" size={18} />
+                <Mail color={isDark ? '#94a3b8' : '#475569'} size={18} />
                 <Text className="text-foreground flex-1">{userData?.email}</Text>
               </View>
               {/* Phone and Address not in current User model but can be added later */}
@@ -259,12 +262,12 @@ export default function ProfileOwnerScreen() {
         <View className="px-6 mb-6">
           <View className="flex-row items-center justify-between mb-4">
             <View className="flex-row items-center">
-              <PawPrint className="text-primary mr-2" size={20} />
-              <Text className="text-lg font-bold text-foreground">My Pets</Text>
+              <PawPrint color={isDark ? '#fb923c' : '#ea580c'} size={20} />
+              <Text className="text-lg font-bold text-foreground ml-2">My Pets</Text>
             </View>
             <TouchableOpacity onPress={handleAddPet} className="flex-row items-center">
-              <Plus className="text-primary mr-1" size={18} />
-              <Text className="text-primary font-semibold">Add Pet</Text>
+              <Plus color={isDark ? '#fb923c' : '#ea580c'} size={18} />
+              <Text className="text-primary font-semibold ml-1">Add Pet</Text>
             </TouchableOpacity>
           </View>
 
@@ -287,10 +290,10 @@ export default function ProfileOwnerScreen() {
                   </View>
                   <View className="flex-row gap-2">
                     <TouchableOpacity onPress={() => handleEditPet(pet.id)}>
-                      <Edit className="text-primary" size={18} />
+                      <Edit color={isDark ? '#fb923c' : '#ea580c'} size={18} />
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => handleDeletePet(pet.id, pet.name)}>
-                      <Trash2 className="text-destructive" size={18} />
+                      <Trash2 color={isDark ? '#f87171' : '#dc2626'} size={18} />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -302,14 +305,14 @@ export default function ProfileOwnerScreen() {
         {/* Saved Providers Section */}
         <View className="px-6 mb-6">
           <View className="flex-row items-center mb-4">
-            <Heart className="text-primary mr-2" size={20} />
-            <Text className="text-lg font-bold text-foreground">Saved Providers</Text>
+            <Heart color={isDark ? '#fb923c' : '#ea580c'} size={20} />
+            <Text className="text-lg font-bold text-foreground ml-2">Saved Providers</Text>
           </View>
 
           {savedProviders.length === 0 ? (
             <View className="bg-muted rounded-xl p-6 items-center">
-              <Heart className="text-muted-foreground mb-2" size={32} />
-              <Text className="text-muted-foreground text-center">No saved providers yet</Text>
+              <Heart color={isDark ? '#94a3b8' : '#475569'} size={32} />
+              <Text className="text-muted-foreground text-center mt-2">No saved providers yet</Text>
             </View>
           ) : (
             <View className="gap-3">
@@ -327,13 +330,13 @@ export default function ProfileOwnerScreen() {
                     <View className="flex-1 ml-4">
                       <Text className="text-base font-bold text-foreground">{provider.name}</Text>
                       <View className="flex-row items-center mt-1">
-                        <Star className="text-yellow-500 mr-1" size={14} />
-                        <Text className="text-sm text-foreground font-semibold">{provider.rating}</Text>
+                        <Star color="#EAB308" size={14} fill="#EAB308" />
+                        <Text className="text-sm text-foreground font-semibold ml-1">{provider.rating}</Text>
                       </View>
                       <Text className="text-sm text-muted-foreground mt-1">{provider.services}</Text>
                     </View>
                     <TouchableOpacity onPress={() => handleRemoveSavedProvider(provider.id, provider.name)}>
-                      <Heart className="text-destructive" size={20} fill="currentColor" />
+                      <Heart color="#f87171" size={20} fill="#f87171" />
                     </TouchableOpacity>
                   </View>
                 </TouchableOpacity>
@@ -353,40 +356,40 @@ export default function ProfileOwnerScreen() {
             >
               <View className="flex-row items-center justify-between p-4">
                 <View className="flex-row items-center flex-1">
-                  <CreditCard className="text-foreground mr-3" size={20} />
-                  <Text className="text-foreground">Payments & Invoices</Text>
+                  <CreditCard color={isDark ? '#f8fafc' : '#1e293b'} size={20} />
+                  <Text className="text-foreground ml-3">Payments & Invoices</Text>
                 </View>
-                <ChevronRight className="text-muted-foreground" size={20} />
+                <ChevronRight color={isDark ? '#94a3b8' : '#475569'} size={20} />
               </View>
             </TouchableOpacity>
 
             <TouchableOpacity className="bg-card rounded-xl border border-border">
               <View className="flex-row items-center justify-between p-4">
                 <View className="flex-row items-center flex-1">
-                  <Bell className="text-foreground mr-3" size={20} />
-                  <Text className="text-foreground">Notifications</Text>
+                  <Bell color={isDark ? '#f8fafc' : '#1e293b'} size={20} />
+                  <Text className="text-foreground ml-3">Notifications</Text>
                 </View>
-                <ChevronRight className="text-muted-foreground" size={20} />
+                <ChevronRight color={isDark ? '#94a3b8' : '#475569'} size={20} />
               </View>
             </TouchableOpacity>
 
             <TouchableOpacity className="bg-card rounded-xl border border-border">
               <View className="flex-row items-center justify-between p-4">
                 <View className="flex-row items-center flex-1">
-                  <Shield className="text-foreground mr-3" size={20} />
-                  <Text className="text-foreground">Privacy & Security</Text>
+                  <Shield color={isDark ? '#f8fafc' : '#1e293b'} size={20} />
+                  <Text className="text-foreground ml-3">Privacy & Security</Text>
                 </View>
-                <ChevronRight className="text-muted-foreground" size={20} />
+                <ChevronRight color={isDark ? '#94a3b8' : '#475569'} size={20} />
               </View>
             </TouchableOpacity>
 
             <TouchableOpacity className="bg-card rounded-xl border border-border">
               <View className="flex-row items-center justify-between p-4">
                 <View className="flex-row items-center flex-1">
-                  <HelpCircle className="text-foreground mr-3" size={20} />
-                  <Text className="text-foreground">Help & Support</Text>
+                  <HelpCircle color={isDark ? '#f8fafc' : '#1e293b'} size={20} />
+                  <Text className="text-foreground ml-3">Help & Support</Text>
                 </View>
-                <ChevronRight className="text-muted-foreground" size={20} />
+                <ChevronRight color={isDark ? '#94a3b8' : '#475569'} size={20} />
               </View>
             </TouchableOpacity>
 
@@ -396,10 +399,10 @@ export default function ProfileOwnerScreen() {
             >
               <View className="flex-row items-center justify-between p-4">
                 <View className="flex-row items-center flex-1">
-                  <LogOut className="text-destructive mr-3" size={20} />
-                  <Text className="text-destructive font-semibold">Logout</Text>
+                  <LogOut color={isDark ? '#f87171' : '#dc2626'} size={20} />
+                  <Text className="text-destructive font-semibold ml-3">Logout</Text>
                 </View>
-                <ChevronRight className="text-destructive" size={20} />
+                <ChevronRight color={isDark ? '#f87171' : '#dc2626'} size={20} />
               </View>
             </TouchableOpacity>
           </View>

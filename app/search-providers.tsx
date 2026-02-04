@@ -21,9 +21,12 @@ import {
 import { useRouter } from 'expo-router';
 import { authService, providerService, serviceTypeService, Provider, ServiceType } from '@/services/petCareService';
 import { MultiSelect } from '@/components/MultiSelect';
+import { useColorScheme } from 'react-native';
 
 export default function SearchProvidersScreen() {
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const [city, setCity] = useState('');
   const [radius, setRadius] = useState(10);
   const [selectedServiceTypeIds, setSelectedServiceTypeIds] = useState<number[]>([]);
@@ -107,13 +110,14 @@ export default function SearchProvidersScreen() {
   const radiusOptions = [5, 10, 15, 25, 50];
 
   const getServiceIcon = (iconName: string) => {
+    const iconColor = isDark ? '#94a3b8' : '#64748b';
     switch (iconName?.toLowerCase()) {
-      case 'scissors': return <Scissors className="text-muted-foreground" size={12} />;
-      case 'stethoscope': return <Stethoscope className="text-muted-foreground" size={12} />;
-      case 'dog': return <Dog className="text-muted-foreground" size={12} />;
-      case 'home': return <HomeIcon className="text-muted-foreground" size={12} />;
-      case 'award': return <Award className="text-muted-foreground" size={12} />;
-      default: return <HomeIcon className="text-muted-foreground" size={12} />;
+      case 'scissors': return <Scissors color={iconColor} size={12} />;
+      case 'stethoscope': return <Stethoscope color={iconColor} size={12} />;
+      case 'dog': return <Dog color={iconColor} size={12} />;
+      case 'home': return <HomeIcon color={iconColor} size={12} />;
+      case 'award': return <Award color={iconColor} size={12} />;
+      default: return <HomeIcon color={iconColor} size={12} />;
     }
   };
 
@@ -132,7 +136,7 @@ export default function SearchProvidersScreen() {
           </Text>
           <View className="flex-row items-center gap-2">
             <View className="flex-row items-center gap-1">
-              <Star className="text-yellow-500" size={16} fill="#EAB308" />
+              <Star color="#EAB308" size={16} fill="#EAB308" />
               <Text className="text-foreground font-semibold">4.8</Text>
               <Text className="text-muted-foreground text-sm">(124)</Text>
             </View>
@@ -155,7 +159,7 @@ export default function SearchProvidersScreen() {
           </View>
         )) || (
           <View className="bg-muted px-3 py-1 rounded-full flex-row items-center gap-1">
-            <HomeIcon className="text-muted-foreground" size={12} />
+            <HomeIcon color={isDark ? '#94a3b8' : '#64748b'} size={12} />
             <Text className="text-muted-foreground text-xs font-medium">General Service</Text>
           </View>
         )}
@@ -164,14 +168,14 @@ export default function SearchProvidersScreen() {
       {/* Location & Distance */}
       <View className="flex-row items-center justify-between pt-3 border-t border-border">
         <View className="flex-row items-center gap-2 flex-1">
-          <MapPin className="text-muted-foreground" size={16} />
-          <Text className="text-muted-foreground text-sm flex-1" numberOfLines={1}>
+          <MapPin color={isDark ? '#94a3b8' : '#64748b'} size={16} />
+          <Text className="text-muted-foreground text-sm flex-1 ml-2" numberOfLines={1}>
             {item.address}, {item.city}
           </Text>
         </View>
         <View className="flex-row items-center gap-1">
-          <Navigation className="text-primary" size={14} />
-          <Text className="text-primary font-semibold text-sm">2.3 mi</Text>
+          <Navigation color={isDark ? '#fb923c' : '#2563eb'} size={14} />
+          <Text className="text-primary font-semibold text-sm ml-1">2.3 mi</Text>
         </View>
       </View>
 
@@ -179,8 +183,8 @@ export default function SearchProvidersScreen() {
       <View className="mt-3 flex-row items-center gap-2">
         <Text className="text-muted-foreground text-xs">Next available:</Text>
         <View className="bg-primary/10 px-2 py-1 rounded-md flex-row items-center gap-1">
-          <Clock className="text-primary" size={12} />
-          <Text className="text-primary font-bold text-xs">Today at 2:00 PM</Text>
+          <Clock color={isDark ? '#fb923c' : '#2563eb'} size={12} />
+          <Text className="text-primary font-bold text-xs ml-1">Today at 2:00 PM</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -191,7 +195,7 @@ export default function SearchProvidersScreen() {
       <View className="px-6 pt-4 pb-3 flex-row items-center justify-between border-b border-border">
         <View className="flex-row items-center gap-3 flex-1">
           <TouchableOpacity onPress={() => router.back()}>
-            <ChevronLeft className="text-foreground" size={24} />
+            <ChevronLeft color={isDark ? '#f8fafc' : '#1e293b'} size={24} />
           </TouchableOpacity>
           <Text className="text-foreground font-bold text-xl">Find Pet Services</Text>
         </View>
@@ -200,11 +204,11 @@ export default function SearchProvidersScreen() {
             onPress={() => router.push('/owner-dashboard')}
             className="bg-primary/10 p-2 rounded-full"
           >
-            <HomeIcon className="text-primary" size={24} />
+            <HomeIcon color={isDark ? '#fb923c' : '#ea580c'} size={24} />
           </TouchableOpacity>
           <ThemeToggle />
           <TouchableOpacity onPress={handleLogout}>
-            <LogOut className="text-destructive" size={24} />
+            <LogOut color={isDark ? '#f87171' : '#dc2626'} size={24} />
           </TouchableOpacity>
         </View>
       </View>
@@ -219,13 +223,13 @@ export default function SearchProvidersScreen() {
           <View>
             <Text className="text-foreground font-semibold mb-2">Location</Text>
             <View className="bg-card border border-border rounded-xl flex-row items-center px-4 py-3">
-              <MapPin className="text-muted-foreground mr-3" size={20} />
+              <MapPin color={isDark ? '#fb923c' : '#ea580c'} size={20} />
               <TextInput
                 placeholder="Enter city name"
-                placeholderTextColor="#999"
+                placeholderTextColor={isDark ? '#94a3b8' : '#64748b'}
                 value={city}
                 onChangeText={setCity}
-                className="flex-1 text-foreground text-base"
+                className="flex-1 text-foreground text-base ml-3"
               />
             </View>
           </View>
@@ -279,7 +283,7 @@ export default function SearchProvidersScreen() {
             }`}
           >
             <Search
-              className={!city || isSearching ? 'text-muted-foreground' : 'text-primary-foreground'}
+              color={!city || isSearching ? (isDark ? '#475569' : '#94a3b8') : '#ffffff'}
               size={20}
             />
             <Text
@@ -303,7 +307,7 @@ export default function SearchProvidersScreen() {
                 onPress={() => setShowFilters(!showFilters)}
                 className="flex-row items-center gap-2"
               >
-                <SlidersHorizontal className="text-primary" size={20} />
+                <SlidersHorizontal color={isDark ? '#fb923c' : '#ea580c'} size={20} />
                 <Text className="text-primary font-semibold">Filters</Text>
               </TouchableOpacity>
             </View>
@@ -321,7 +325,7 @@ export default function SearchProvidersScreen() {
         {!isSearching && results.length === 0 && city && (
           <View className="items-center py-12 px-6">
             <View className="bg-muted rounded-full p-6 mb-4">
-              <Search className="text-muted-foreground" size={48} />
+              <Search color={isDark ? '#475569' : '#94a3b8'} size={48} />
             </View>
             <Text className="text-foreground font-bold text-xl mb-2">No Results</Text>
             <Text className="text-muted-foreground text-center">

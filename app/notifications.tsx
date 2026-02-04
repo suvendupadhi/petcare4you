@@ -53,7 +53,7 @@ export default function NotificationsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <ScrollView>
+      <ScrollView keyboardShouldPersistTaps="handled">
         <View className="p-6 flex-row items-center justify-between border-b border-border">
           <View className="flex-row items-center gap-3">
             <TouchableOpacity onPress={() => router.back()}>

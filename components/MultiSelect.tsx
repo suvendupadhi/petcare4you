@@ -92,7 +92,7 @@ export function MultiSelect({
               />
             </View>
 
-            <ScrollView className="mb-6">
+            <ScrollView className="mb-6" keyboardShouldPersistTaps="handled">
               <View className="gap-2">
                 {filteredOptions.map(opt => {
                   const isSelected = selectedValues.includes(opt.id);

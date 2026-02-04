@@ -22,11 +22,14 @@ import { providerService, appointmentService, availabilityService, petService, a
 import { APPOINTMENT_STATUS } from '@/constants/status';
 import { Calendar } from 'react-native-calendars';
 import { format } from 'date-fns';
+import { useColorScheme } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
 export default function ProviderDetailScreen() {
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const { id, rescheduleId } = useLocalSearchParams();
   const [provider, setProvider] = useState<Provider | null>(null);
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
@@ -334,7 +337,7 @@ export default function ProviderDetailScreen() {
         <View className="flex-row items-center justify-between p-4 border-b border-border">
           <View className="flex-row items-center gap-3">
             <TouchableOpacity onPress={() => router.back()}>
-              <ChevronLeft className="text-foreground" size={24} />
+              <ChevronLeft color={isDark ? '#f8fafc' : '#1e293b'} size={24} />
             </TouchableOpacity>
             <Text className="text-lg font-semibold text-foreground">Provider Details</Text>
           </View>
@@ -343,14 +346,14 @@ export default function ProviderDetailScreen() {
               onPress={() => router.push('/owner-dashboard')}
               className="bg-primary/10 p-2 rounded-full"
             >
-              <HomeIcon className="text-primary" size={24} />
+              <HomeIcon color={isDark ? '#fb923c' : '#ea580c'} size={24} />
             </TouchableOpacity>
             <ThemeToggle />
             <TouchableOpacity 
               onPress={handleLogout}
               className="bg-destructive/10 p-2 rounded-full"
             >
-              <LogOut className="text-destructive" size={24} />
+              <LogOut color={isDark ? '#f87171' : '#dc2626'} size={24} />
             </TouchableOpacity>
           </View>
         </View>
@@ -381,7 +384,7 @@ export default function ProviderDetailScreen() {
               </Text>
               <View className="flex-row items-center gap-2">
                 <View className="flex-row items-center">
-                  <Star className="text-yellow-500" size={18} fill="#EAB308" />
+                  <Star color="#EAB308" size={18} fill="#EAB308" />
                   <Text className="text-foreground font-semibold ml-1">
                     4.8
                   </Text>
@@ -404,16 +407,16 @@ export default function ProviderDetailScreen() {
               provider.serviceTypes.map(st => (
                 <View key={st.id} className="bg-primary/10 px-3 py-1.5 rounded-full flex-row items-center gap-1">
                   {st.name.toLowerCase().includes('grooming') ? (
-                    <Scissors className="text-primary" size={14} />
+                    <Scissors color={isDark ? '#fb923c' : '#ea580c'} size={14} />
                   ) : (
-                    <HomeIcon className="text-primary" size={14} />
+                    <HomeIcon color={isDark ? '#fb923c' : '#ea580c'} size={14} />
                   )}
                   <Text className="text-primary text-sm font-medium">{st.name}</Text>
                 </View>
               ))
             ) : (
               <View className="bg-primary/10 px-3 py-1.5 rounded-full flex-row items-center gap-1">
-                <HomeIcon className="text-primary" size={14} />
+                <HomeIcon color={isDark ? '#fb923c' : '#ea580c'} size={14} />
                 <Text className="text-primary text-sm font-medium">General Service</Text>
               </View>
             )}
@@ -422,19 +425,19 @@ export default function ProviderDetailScreen() {
           {/* Contact Info */}
           <View className="bg-card border border-border rounded-xl p-4 gap-3 mb-4">
             <View className="flex-row items-center gap-3">
-              <MapPin className="text-muted-foreground" size={20} />
+              <MapPin color={isDark ? '#94a3b8' : '#64748b'} size={20} />
               <Text className="text-foreground flex-1">{provider.address}, {provider.city}</Text>
             </View>
             <View className="flex-row items-center gap-3">
-              <Phone className="text-muted-foreground" size={20} />
+              <Phone color={isDark ? '#94a3b8' : '#64748b'} size={20} />
               <Text className="text-foreground">{provider.user?.email || 'N/A'}</Text>
             </View>
             <View className="flex-row items-center gap-3">
-              <Globe className="text-muted-foreground" size={20} />
+              <Globe color={isDark ? '#94a3b8' : '#64748b'} size={20} />
               <Text className="text-primary">www.{provider.companyName.toLowerCase().replace(/\s/g, '')}.com</Text>
             </View>
             <View className="flex-row items-center gap-3">
-              <Clock className="text-muted-foreground" size={20} />
+              <Clock color={isDark ? '#94a3b8' : '#64748b'} size={20} />
               <Text className="text-foreground">Mon-Sat: 8:00 AM - 6:00 PM</Text>
             </View>
           </View>
@@ -469,18 +472,18 @@ export default function ProviderDetailScreen() {
                       </Text>
                       <View className="flex-row items-center gap-4">
                         <View className="flex-row items-center gap-1">
-                          <Clock className="text-muted-foreground" size={14} />
+                          <Clock color={isDark ? '#94a3b8' : '#64748b'} size={14} />
                           <Text className="text-muted-foreground text-sm">1 hour</Text>
                         </View>
                         <View className="flex-row items-center gap-1">
-                          <DollarSign className="text-primary" size={14} />
+                          <DollarSign color={isDark ? '#fb923c' : '#ea580c'} size={14} />
                           <Text className="text-primary font-bold">${provider.hourlyRate}/hr</Text>
                         </View>
                       </View>
                     </View>
                     {selectedService === st.name && (
                       <View className="bg-primary rounded-full p-1">
-                        <Check className="text-primary-foreground" size={16} />
+                        <Check color="#ffffff" size={16} />
                       </View>
                     )}
                   </View>
@@ -503,11 +506,11 @@ export default function ProviderDetailScreen() {
                     </Text>
                     <View className="flex-row items-center gap-4">
                       <View className="flex-row items-center gap-1">
-                        <Clock className="text-muted-foreground" size={14} />
+                        <Clock color={isDark ? '#94a3b8' : '#64748b'} size={14} />
                         <Text className="text-muted-foreground text-sm">1 hour</Text>
                       </View>
                       <View className="flex-row items-center gap-1">
-                        <DollarSign className="text-primary" size={14} />
+                        <DollarSign color={isDark ? '#fb923c' : '#ea580c'} size={14} />
                         <Text className="text-primary font-bold">${provider.hourlyRate}/hr</Text>
                       </View>
                     </View>
@@ -659,16 +662,16 @@ export default function ProviderDetailScreen() {
                     theme={{
                       backgroundColor: 'transparent',
                       calendarBackground: 'transparent',
-                      textSectionTitleColor: '#6b7280',
+                      textSectionTitleColor: isDark ? '#94a3b8' : '#6b7280',
                       selectedDayBackgroundColor: '#2563eb',
                       selectedDayTextColor: '#ffffff',
                       todayTextColor: '#2563eb',
-                      dayTextColor: '#374151',
-                      textDisabledColor: '#d1d5db',
+                      dayTextColor: isDark ? '#f8fafc' : '#374151',
+                      textDisabledColor: isDark ? '#334155' : '#d1d5db',
                       dotColor: '#2563eb',
                       selectedDotColor: '#ffffff',
                       arrowColor: '#2563eb',
-                      monthTextColor: '#111827',
+                      monthTextColor: isDark ? '#f8fafc' : '#111827',
                       indicatorColor: '#2563eb',
                     }}
                   />
@@ -710,7 +713,7 @@ export default function ProviderDetailScreen() {
                     </View>
                   ) : (
                     <View className="bg-muted p-4 rounded-xl items-center justify-center mb-4">
-                      <Clock className="text-muted-foreground mb-2" size={24} />
+                      <Clock color={isDark ? '#94a3b8' : '#64748b'} size={24} />
                       <Text className="text-muted-foreground text-center">
                         No time slots available for this date.
                       </Text>
@@ -727,7 +730,7 @@ export default function ProviderDetailScreen() {
               <Text className="text-lg font-bold text-foreground">Reviews</Text>
               <TouchableOpacity className="flex-row items-center gap-1">
                 <Text className="text-primary font-medium">See All</Text>
-                <ChevronRight className="text-primary" size={16} />
+                <ChevronRight color={isDark ? '#fb923c' : '#ea580c'} size={16} />
               </TouchableOpacity>
             </View>
             <View className="gap-3">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Platform, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { 
@@ -111,6 +111,8 @@ const mockAppointments = [
 
 export default function AppointmentsOwnerScreen() {
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const [loading, setLoading] = useState(true);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
@@ -309,7 +311,7 @@ export default function AppointmentsOwnerScreen() {
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center gap-3">
             <TouchableOpacity onPress={() => router.back()}>
-              <ChevronLeft className="text-foreground" size={24} />
+              <ChevronLeft color={isDark ? '#f8fafc' : '#1e293b'} size={24} />
             </TouchableOpacity>
             <Text className="text-2xl font-bold text-foreground">My Appointments</Text>
           </View>
@@ -318,20 +320,20 @@ export default function AppointmentsOwnerScreen() {
               onPress={() => router.push('/owner-dashboard')}
               className="bg-primary/10 p-2 rounded-full"
             >
-              <Home className="text-primary" size={24} />
+              <Home color={isDark ? '#fb923c' : '#ea580c'} size={24} />
             </TouchableOpacity>
             <TouchableOpacity 
               onPress={() => router.push('/search-providers')}
               className="bg-primary/10 p-2 rounded-full"
             >
-              <Plus className="text-primary" size={24} />
+              <Plus color={isDark ? '#fb923c' : '#ea580c'} size={24} />
             </TouchableOpacity>
             <ThemeToggle />
             <TouchableOpacity 
               onPress={handleLogout}
               className="bg-destructive/10 p-2 rounded-full"
             >
-              <LogOut className="text-destructive" size={24} />
+              <LogOut color={isDark ? '#f87171' : '#dc2626'} size={24} />
             </TouchableOpacity>
           </View>
         </View>
@@ -367,10 +369,13 @@ export default function AppointmentsOwnerScreen() {
       </View>
 
       {/* Appointments List */}
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 32, gap: 16 }}>
+      <ScrollView 
+        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 32, gap: 16 }}
+        keyboardShouldPersistTaps="handled"
+      >
         {displayAppointments.length === 0 ? (
           <View className="items-center justify-center py-16">
-            <Calendar className="text-muted-foreground mb-4" size={64} />
+            <Calendar color={isDark ? '#94a3b8' : '#475569'} size={64} />
             <Text className="text-xl font-semibold text-foreground mb-2">
               No {activeTab} appointments
             </Text>
@@ -404,7 +409,7 @@ export default function AppointmentsOwnerScreen() {
               >
                 {/* Status Banner */}
                 <View className={`${statusConfig.bg} px-4 py-2 flex-row items-center gap-2`}>
-                  <StatusIcon className={statusConfig.color} size={16} />
+                  <StatusIcon color={statusConfig.color.includes('green') ? (isDark ? '#4ade80' : '#16a34a') : statusConfig.color.includes('yellow') ? (isDark ? '#facc15' : '#ca8a04') : statusConfig.color.includes('red') ? (isDark ? '#f87171' : '#dc2626') : (isDark ? '#94a3b8' : '#475569')} size={16} />
                   <Text className={`${statusConfig.color} font-semibold text-sm`}>
                     {statusConfig.label}
                   </Text>
@@ -418,7 +423,7 @@ export default function AppointmentsOwnerScreen() {
                         {appointment.provider?.companyName || 'Service Provider'}
                       </Text>
                       <View className="flex-row items-center gap-1">
-                        <Star className="text-yellow-500" size={14} fill="#EAB308" />
+                        <Star color="#EAB308" size={14} fill="#EAB308" />
                         <Text className="text-muted-foreground text-sm">
                           {/* Mock rating if not available */}
                           4.8
@@ -432,7 +437,7 @@ export default function AppointmentsOwnerScreen() {
 
                   {/* Service & Pet */}
                   <View className="flex-row items-center gap-2 mb-3">
-                    <PawPrint className="text-primary" size={16} />
+                    <PawPrint color={isDark ? '#fb923c' : '#ea580c'} size={16} />
                     <Text className="text-foreground font-medium">
                       {appointment.provider?.serviceType?.name || 'Service'} • {appointment.petName}
                     </Text>
@@ -441,11 +446,11 @@ export default function AppointmentsOwnerScreen() {
                   {/* Date & Time */}
                   <View className="flex-row items-center gap-4 mb-3">
                     <View className="flex-row items-center gap-2">
-                      <Calendar className="text-muted-foreground" size={16} />
+                      <Calendar color={isDark ? '#94a3b8' : '#475569'} size={16} />
                       <Text className="text-muted-foreground">{formatDate(appointment.appointmentDate)}</Text>
                     </View>
                     <View className="flex-row items-center gap-2">
-                      <Clock className="text-muted-foreground" size={16} />
+                      <Clock color={isDark ? '#94a3b8' : '#475569'} size={16} />
                       <Text className="text-muted-foreground">
                         {formatTime(appointment.startTime)} - {formatTime(appointment.endTime)}
                       </Text>
@@ -454,7 +459,7 @@ export default function AppointmentsOwnerScreen() {
 
                   {/* Location */}
                   <View className="flex-row items-start gap-2 mb-3">
-                    <MapPin className="text-muted-foreground mt-1" size={16} />
+                    <MapPin color={isDark ? '#94a3b8' : '#475569'} size={16} />
                     <Text className="text-muted-foreground flex-1">
                       {appointment.provider?.address}, {appointment.provider?.city}
                     </Text>
@@ -462,7 +467,7 @@ export default function AppointmentsOwnerScreen() {
 
                   {/* Contact */}
                   <View className="flex-row items-center gap-2 mb-4">
-                    <Phone className="text-muted-foreground" size={16} />
+                    <Phone color={isDark ? '#94a3b8' : '#475569'} size={16} />
                     <Text className="text-muted-foreground">
                       {appointment.provider?.user?.phoneNumber || 'N/A'}
                     </Text>
@@ -476,7 +481,7 @@ export default function AppointmentsOwnerScreen() {
                           onPress={() => handleRescheduleAppointment(appointment.id)}
                           className="flex-1 bg-primary py-3 rounded-xl flex-row items-center justify-center gap-2"
                         >
-                          <Edit className="text-primary-foreground" size={18} />
+                          <Edit color="#ffffff" size={18} />
                           <Text className="text-primary-foreground font-semibold">
                             Reschedule
                           </Text>
@@ -487,7 +492,7 @@ export default function AppointmentsOwnerScreen() {
                           onPress={() => handleCancelAppointment(appointment.id)}
                           className="flex-1 bg-red-50 py-3 rounded-xl flex-row items-center justify-center gap-2"
                         >
-                          <X className="text-red-600" size={18} />
+                          <X color={isDark ? '#ef4444' : '#dc2626'} size={18} />
                           <Text className="text-red-600 font-semibold">Cancel</Text>
                         </TouchableOpacity>
                       )}

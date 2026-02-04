@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Platform, TextInput } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Platform, TextInput, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Clock, Calendar as CalendarIcon, Plus, Trash2, LogOut, Home } from 'lucide-react-native';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { availabilityService, authService, Availability } from '@/services/petCareService';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Calendar } from 'react-native-calendars';
 import { format, parseISO } from 'date-fns';
 
 export default function ManageAvailabilityScreen() {
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
@@ -22,6 +25,37 @@ export default function ManageAvailabilityScreen() {
   
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
+
+  // Derived marked dates for calendar
+  const getMarkedDates = () => {
+    const marks: any = {
+      [selectedDate]: { 
+        selected: true, 
+        selectedColor: isDark ? '#fb923c' : '#2563eb',
+        textColor: '#ffffff'
+      }
+    };
+
+    availabilities.forEach(slot => {
+      try {
+        const dateStr = format(parseISO(slot.date.toString()), 'yyyy-MM-dd');
+        if (!marks[dateStr]) {
+          marks[dateStr] = {
+            marked: true,
+            dotColor: slot.isBooked ? '#ef4444' : '#22c55e'
+          };
+        } else {
+          marks[dateStr].marked = true;
+          // If already selected, we keep it selected but add the dot
+          marks[dateStr].dotColor = slot.isBooked ? '#ef4444' : '#22c55e';
+        }
+      } catch (e) {
+        console.error('Error parsing date for calendar mark:', e);
+      }
+    });
+
+    return marks;
+  };
 
   useEffect(() => {
     loadAvailability();
@@ -79,15 +113,25 @@ export default function ManageAvailabilityScreen() {
   };
 
   const onStartTimeChange = (event: any, selectedValue?: Date) => {
-    setShowStartTimePicker(Platform.OS === 'ios');
-    if (selectedValue) {
+    if (Platform.OS === 'android') {
+      setShowStartTimePicker(false);
+    } else {
+      setShowStartTimePicker(Platform.OS === 'ios');
+    }
+    
+    if (event.type === 'set' && selectedValue) {
       setStartTime(selectedValue);
     }
   };
 
   const onEndTimeChange = (event: any, selectedValue?: Date) => {
-    setShowEndTimePicker(Platform.OS === 'ios');
-    if (selectedValue) {
+    if (Platform.OS === 'android') {
+      setShowEndTimePicker(false);
+    } else {
+      setShowEndTimePicker(Platform.OS === 'ios');
+    }
+    
+    if (event.type === 'set' && selectedValue) {
       setEndTime(selectedValue);
     }
   };
@@ -167,12 +211,12 @@ export default function ManageAvailabilityScreen() {
       >
         {/* Header */}
         <View className="px-6 pt-4 pb-6 border-b border-border mb-4">
-          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center justify-between">
             <View className="flex-row items-center gap-3">
               <TouchableOpacity
                 onPress={() => router.back()}
               >
-                <ArrowLeft className="text-foreground" size={24} />
+                <ArrowLeft color={isDark ? '#f8fafc' : '#1e293b'} size={24} />
               </TouchableOpacity>
               <Text className="text-2xl font-bold text-foreground">Manage Availability</Text>
             </View>
@@ -181,14 +225,14 @@ export default function ManageAvailabilityScreen() {
                 onPress={() => router.push('/provider-dashboard')}
                 className="bg-primary/10 p-2 rounded-full"
               >
-                <Home className="text-primary" size={24} />
+                <Home color={isDark ? '#fb923c' : '#ea580c'} size={24} />
               </TouchableOpacity>
               <ThemeToggle />
               <TouchableOpacity 
                 onPress={handleLogout}
                 className="bg-destructive/10 p-2 rounded-full"
               >
-                <LogOut className="text-destructive" size={24} />
+                <LogOut color={isDark ? '#f87171' : '#dc2626'} size={24} />
               </TouchableOpacity>
             </View>
           </View>
@@ -203,19 +247,17 @@ export default function ManageAvailabilityScreen() {
               <View className="border border-border rounded-xl overflow-hidden mb-2">
                 <Calendar
                   onDayPress={(day: any) => setSelectedDate(day.dateString)}
-                  markedDates={{
-                    [selectedDate]: { selected: true, disableTouchEvent: true, selectedColor: '#2563eb' }
-                  }}
+                  markedDates={getMarkedDates()}
                   theme={{
-                    calendarBackground: 'transparent',
-                    textSectionTitleColor: '#6b7280',
-                    selectedDayBackgroundColor: '#2563eb',
+                    calendarBackground: isDark ? '#1e293b' : '#ffffff',
+                    textSectionTitleColor: isDark ? '#94a3b8' : '#6b7280',
+                    selectedDayBackgroundColor: isDark ? '#fb923c' : '#2563eb',
                     selectedDayTextColor: '#ffffff',
-                    todayTextColor: '#2563eb',
-                    dayTextColor: '#374151',
-                    textDisabledColor: '#d1d5db',
-                    monthTextColor: '#111827',
-                    arrowColor: '#2563eb',
+                    todayTextColor: isDark ? '#fb923c' : '#2563eb',
+                    dayTextColor: isDark ? '#f8fafc' : '#374151',
+                    textDisabledColor: isDark ? '#475569' : '#d1d5db',
+                    monthTextColor: isDark ? '#f8fafc' : '#111827',
+                    arrowColor: isDark ? '#fb923c' : '#2563eb',
                   }}
                 />
               </View>
@@ -253,7 +295,7 @@ export default function ManageAvailabilityScreen() {
                         <Text className="text-foreground font-medium">
                           {format(startTime, 'hh:mm a')}
                         </Text>
-                        <Clock size={16} className="text-muted-foreground" />
+                        <Clock size={16} color={isDark ? '#94a3b8' : '#64748b'} />
                       </View>
                     </TouchableOpacity>
                   )}
@@ -291,7 +333,7 @@ export default function ManageAvailabilityScreen() {
                         <Text className="text-foreground font-medium">
                           {format(endTime, 'hh:mm a')}
                         </Text>
-                        <Clock size={16} className="text-muted-foreground" />
+                        <Clock size={16} color={isDark ? '#94a3b8' : '#64748b'} />
                       </View>
                     </TouchableOpacity>
                   )}
@@ -303,7 +345,7 @@ export default function ManageAvailabilityScreen() {
                   value={startTime}
                   mode="time"
                   is24Hour={false}
-                  display="default"
+                  display={Platform.OS === 'android' ? 'spinner' : 'default'}
                   onChange={onStartTimeChange}
                 />
               )}
@@ -313,7 +355,7 @@ export default function ManageAvailabilityScreen() {
                   value={endTime}
                   mode="time"
                   is24Hour={false}
-                  display="default"
+                  display={Platform.OS === 'android' ? 'spinner' : 'default'}
                   onChange={onEndTimeChange}
                 />
               )}
@@ -327,7 +369,7 @@ export default function ManageAvailabilityScreen() {
                   <ActivityIndicator color="white" />
                 ) : (
                   <>
-                    <Plus className="text-primary-foreground" size={20} />
+                    <Plus color="#ffffff" size={20} />
                     <Text className="text-primary-foreground font-bold">Add Availability Slot</Text>
                   </>
                 )}
@@ -342,7 +384,7 @@ export default function ManageAvailabilityScreen() {
           
           {availabilities.length === 0 ? (
             <View className="bg-card border border-border rounded-2xl p-8 items-center">
-              <CalendarIcon className="text-muted-foreground mb-2" size={48} />
+              <CalendarIcon color={isDark ? '#475569' : '#94a3b8'} size={48} />
               <Text className="text-foreground font-semibold">No slots created yet</Text>
               <Text className="text-muted-foreground text-sm text-center mt-1">
                 Add your first availability slot above to start receiving bookings.
@@ -354,13 +396,13 @@ export default function ManageAvailabilityScreen() {
                 <View key={slot.id} className="bg-card border border-border rounded-2xl p-4 flex-row items-center justify-between">
                   <View>
                     <View className="flex-row items-center gap-2 mb-1">
-                      <CalendarIcon className="text-primary" size={16} />
+                      <CalendarIcon color={isDark ? '#fb923c' : '#2563eb'} size={16} />
                       <Text className="text-foreground font-semibold">
                         {format(parseISO(slot.date.toString()), 'PPP')}
                       </Text>
                     </View>
                     <View className="flex-row items-center gap-2">
-                      <Clock className="text-muted-foreground" size={16} />
+                      <Clock color={isDark ? '#94a3b8' : '#64748b'} size={16} />
                       <Text className="text-muted-foreground">
                         {format(parseISO(slot.startTime.toString()), 'hh:mm a')} - {format(parseISO(slot.endTime.toString()), 'hh:mm a')}
                       </Text>
@@ -369,15 +411,15 @@ export default function ManageAvailabilityScreen() {
                   
                   <View className="flex-row items-center gap-3">
                     {slot.isBooked ? (
-                      <View className="bg-green-100 px-3 py-1 rounded-full">
-                        <Text className="text-green-700 text-xs font-bold">Booked</Text>
+                      <View className="bg-green-100 dark:bg-green-900/30 px-3 py-1 rounded-full">
+                        <Text className="text-green-700 dark:text-green-400 text-xs font-bold">Booked</Text>
                       </View>
                     ) : (
                       <TouchableOpacity
                         onPress={() => handleDeleteSlot(slot.id!)}
-                        className="p-2 bg-red-100 rounded-full"
+                        className="p-2 bg-red-100 dark:bg-red-900/30 rounded-full"
                       >
-                        <Trash2 className="text-red-600" size={18} />
+                        <Trash2 color={isDark ? '#f87171' : '#dc2626'} size={18} />
                       </TouchableOpacity>
                     )}
                   </View>

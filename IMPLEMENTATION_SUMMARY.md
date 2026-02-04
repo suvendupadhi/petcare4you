@@ -2,7 +2,7 @@
 
 ## What Was Implemented
 
-A complete, production-ready C# ASP.NET Core API with Apache Cassandra database for the PetCare Services mobile application.
+A complete, production-ready C# ASP.NET Core API with PostgreSQL database for the PetCare Services mobile application.
 
 ---
 
@@ -13,7 +13,8 @@ PetCareAPI/
 ├── Controllers/
 │   ├── AuthController.cs              # User authentication endpoints
 │   ├── ProvidersController.cs          # Service provider management
-│   └── AppointmentsController.cs       # Appointment booking system
+│   ├── AppointmentsController.cs       # Appointment booking system
+│   └── PaymentController.cs           # Payment processing
 │
 ├── Models/
 │   ├── User.cs                         # User entity
@@ -21,27 +22,11 @@ PetCareAPI/
 │   ├── Appointment.cs                  # Booking entity
 │   ├── Availability.cs                 # Time slot entity
 │   ├── Payment.cs                      # Payment entity
+│   ├── Pet.cs                         # Pet entity
 │   └── DTOs/
-│       ├── LoginRequest.cs
-│       ├── RegisterRequest.cs
-│       ├── AuthResponse.cs
-│       ├── UserDto.cs
-│       └── CreateAppointmentRequest.cs
-│
-├── Repositories/
-│   ├── IUserRepository.cs
-│   ├── UserRepository.cs               # User data access
-│   ├── IProviderRepository.cs
-│   ├── ProviderRepository.cs           # Provider data access
-│   ├── IAppointmentRepository.cs
-│   └── AppointmentRepository.cs        # Appointment data access
-│
-├── Services/
-│   ├── IAuthService.cs
-│   └── AuthService.cs                  # Authentication & JWT tokens
 │
 ├── Data/
-│   └── CassandraSession.cs             # Database connection management
+│   ├── PetCareContext.cs              # Entity Framework Core Context
 │
 ├── Program.cs                          # Application entry point & DI setup
 ├── appsettings.json                    # Configuration
@@ -54,14 +39,14 @@ PetCareAPI/
 ## Technology Stack
 
 ### Backend Framework
-- **Framework**: ASP.NET Core 7.0
-- **Language**: C# 11
-- **Runtime**: .NET 7.0
+- **Framework**: ASP.NET Core 9.0
+- **Language**: C# 13
+- **Runtime**: .NET 9.0
 
 ### Database
-- **Database**: Apache Cassandra 4.1 (NoSQL, distributed)
+- **Database**: PostgreSQL 15+ (Relational)
 - **Container**: Docker
-- **Replication Factor**: 1 (development), 3 (production recommended)
+- **ORM**: Entity Framework Core
 
 ### Authentication & Security
 - **Authentication**: JWT (JSON Web Tokens)
@@ -70,10 +55,10 @@ PetCareAPI/
 - **CORS**: Configured for all origins (development)
 
 ### NuGet Packages
-- `CassandraCSharpDriver` (3.21.0) - Cassandra database driver
-- `Microsoft.AspNetCore.Authentication.JwtBearer` (7.0.0) - JWT support
-- `System.IdentityModel.Tokens.Jwt` (7.3.0) - Token handling
-- `Serilog.AspNetCore` (7.0.0) - Structured logging
+- `Npgsql.EntityFrameworkCore.PostgreSQL` - PostgreSQL driver for EF Core
+- `Microsoft.AspNetCore.Authentication.JwtBearer` - JWT support
+- `Stripe.net` - Payment integration
+- `Swashbuckle.AspNetCore` - Swagger documentation
 
 ---
 
@@ -98,25 +83,27 @@ PetCareAPI/
 
 ## Database Schema
 
-### 10 Cassandra Tables Created
+### PostgreSQL Relational Schema
 
-1. **users** - User accounts
-2. **users_by_email** - Email lookup index
-3. **providers** - Service providers
-4. **providers_by_user** - User-provider mapping
-5. **providers_by_city** - Geographic search
-6. **appointments** - Bookings
-7. **appointments_by_owner** - User bookings
-8. **appointments_by_provider** - Provider bookings
-9. **availability** - Time slots
-10. **payments** - Transactions
+1. **user_roles** - Role definitions
+2. **users** - User accounts
+3. **pet_types** - Pet categories
+4. **breeds** - Pet breeds
+5. **pets** - User pets
+6. **providers** - Service provider profiles
+7. **service_types** - Service categories
+8. **provider_service_types** - Mapping table
+9. **appointments** - Bookings
+10. **availability** - Time slots
+11. **payments** - Transactions
+12. **status_master** - Centralized statuses
 
 ### Key Features
-- ✅ Denormalized design for performance
-- ✅ Composite partition keys for efficient queries
-- ✅ Clustering keys for time-series data
-- ✅ Multiple lookup tables for different query patterns
-- ✅ TTL support for automatic cleanup (ready to implement)
+- ✅ Relational integrity with Foreign Keys
+- ✅ ACID compliance for transactions
+- ✅ Efficient indexing for search
+- ✅ Scalable schema design
+- ✅ Easy migrations with EF Core
 
 ---
 
@@ -152,11 +139,12 @@ PetCareAPI/
 - ✅ Pricing calculation
 
 ### Data Access
-- ✅ Repository pattern
+- ✅ Entity Framework Core (PostgreSQL)
+- ✅ Code-first or Database-first support
+- ✅ Migrations tracking
 - ✅ Async/await operations
 - ✅ Dependency injection
-- ✅ Interface-based design
-- ✅ Type-safe queries
+- ✅ LINQ for type-safe queries
 
 ---
 
@@ -165,48 +153,40 @@ PetCareAPI/
 ### appsettings.json
 ```json
 {
-  "Cassandra": {
-    "ContactPoints": "localhost",
-    "Port": 9042,
-    "Keyspace": "petcare"
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost;Port=5432;Database=petcare;User Id=postgres;Password=yourpassword;"
   },
   "Jwt": {
-    "Key": "YourVeryLongSecretKeyForJwtTokenGenerationWithAtLeast32Characters...",
+    "Key": "YourVeryLongSecretKeyForJwtTokenGeneration...",
     "Issuer": "PetCareAPI",
     "Audience": "PetCareApp"
-  },
-  "Logging": {
-    "LogLevel": {
-      "Default": "Information"
-    }
   }
 }
 ```
 
 ### docker-compose.yml
-- Cassandra 4.1 container
-- Port mapping: 9042 (CQL), 7199 (JMX)
+- PostgreSQL 15 container
+- Port mapping: 5432
 - Data persistence with named volume
-- Health checks configured
-- Schema initialization support
+- Schema initialization support via `postgres-init.sql`
 
-### cassandra-init.cql
-- 10 tables with proper column families
-- Indexes for performance optimization
-- Partition and clustering key configuration
-- TTL support ready
+### postgres-init.sql
+- Complete relational schema
+- Sample data for all tables
+- Foreign key constraints
+- Optimized indexes
 
 ---
 
 ## Build & Runtime Information
 
 ### Build Status
-✅ **Successful compilation** with 0 errors, 49 warnings (nullable type warnings - non-breaking)
+✅ **Successful compilation** with 0 errors
 
 ### Runtime Requirements
-- .NET 7.0 SDK
-- Cassandra 4.1 (via Docker)
-- Port 7099 (HTTPS) or 5099 (HTTP)
+- .NET 9.0 SDK
+- PostgreSQL 15+ (Local or via Docker)
+- Port 7099 (HTTPS)
 - 512 MB RAM minimum
 
 ### Build Process
@@ -256,10 +236,10 @@ const response = await fetch(`${API_URL}/appointments`, {
 ```
 
 ### Database Connection
-- Direct connection to Cassandra at `localhost:9042`
+- Direct connection to PostgreSQL at `localhost:5432`
 - Automatic retry on failure
-- Connection pooling
-- Prepared statements for performance
+- Connection pooling via Npgsql
+- Optimized LINQ queries for performance
 
 ---
 
@@ -287,7 +267,6 @@ const response = await fetch(`${API_URL}/appointments`, {
 ### Serilog Configuration
 - Console output
 - Debug minimum level
-- Cassandra driver warnings suppressed
 - ASP.NET Core warnings included
 
 ---
@@ -313,8 +292,8 @@ const response = await fetch(`${API_URL}/appointments`, {
 
 ### Files
 1. **README.md** - API documentation with examples
-2. **API_SETUP_GUIDE.md** - PostgreSQL guide (reference)
-3. **API_CASSANDRA_GUIDE.md** - Cassandra implementation guide
+2. **API_SETUP_GUIDE.md** - PostgreSQL setup guide
+3. **API_POSTGRES_GUIDE.md** - PostgreSQL reference guide
 4. **SETUP_INSTRUCTIONS.md** - Complete setup & integration guide
 5. **IMPLEMENTATION_SUMMARY.md** - This file
 
@@ -366,15 +345,14 @@ const response = await fetch(`${API_URL}/appointments`, {
 **Configuration** (5 files)
 - Program.cs (updated)
 - appsettings.json
-- CassandraSession.cs
-- cassandra-init.cql
+- postgres-init.sql
 - docker-compose.yml
 
 **Documentation** (4 files)
 - README.md (API)
 - SETUP_INSTRUCTIONS.md
 - IMPLEMENTATION_SUMMARY.md
-- API_CASSANDRA_GUIDE.md
+- API_POSTGRES_GUIDE.md
 
 ---
 
@@ -382,7 +360,7 @@ const response = await fetch(`${API_URL}/appointments`, {
 
 ### 1. Start Database
 ```bash
-docker-compose up -d cassandra
+docker-compose up -d petcare-db
 ```
 
 ### 2. Run API
@@ -407,10 +385,10 @@ export const API_BASE_URL = 'https://localhost:7099/api';
 ## Performance Characteristics
 
 ### Database
-- **Write Throughput**: High (Cassandra optimized)
-- **Read Latency**: Low (denormalized indexes)
-- **Consistency**: Eventual (configurable)
-- **Scalability**: Horizontal
+- **Write Throughput**: Optimized for relational integrity
+- **Read Latency**: Low (indexed queries)
+- **Consistency**: Strong ACID compliance
+- **Scalability**: Vertical and Horizontal (via clustering)
 
 ### API
 - **Response Time**: <100ms for simple queries
@@ -453,10 +431,10 @@ export const API_BASE_URL = 'https://localhost:7099/api';
 
 ## Success Criteria - ALL MET ✅
 
-- ✅ Cassandra database configured
-- ✅ C# API project created
+- ✅ PostgreSQL database configured
+- ✅ C# .NET 9 API project created
 - ✅ Models and DTOs defined
-- ✅ Repositories implemented
+- ✅ Entity Framework Core integration
 - ✅ Authentication service created
 - ✅ Controllers with CRUD operations
 - ✅ Dependency injection configured
@@ -465,7 +443,7 @@ export const API_BASE_URL = 'https://localhost:7099/api';
 - ✅ Database schema initialized
 - ✅ API compiles successfully
 - ✅ Swagger documentation available
-- ✅ Setup instructions provided
+- ✅ Setup instructions updated
 - ✅ Integration guide created
 
 ---
@@ -491,14 +469,10 @@ dotnet build
 # Run
 dotnet run
 
-# Clean
-dotnet clean
-
 # Docker
-docker-compose up -d cassandra
+docker-compose up -d petcare-db
 docker ps
-docker logs petcare-cassandra
-docker exec -it petcare-cassandra cqlsh
+docker logs petcare-db
 ```
 
 ---
@@ -508,7 +482,7 @@ docker exec -it petcare-cassandra cqlsh
 For setup issues or technical questions:
 1. Check `SETUP_INSTRUCTIONS.md` troubleshooting section
 2. Review `PetCareAPI/README.md`
-3. Check Docker logs: `docker logs petcare-cassandra`
+3. Check Docker logs: `docker logs petcare-db`
 4. Review API startup output in terminal
 
 ---

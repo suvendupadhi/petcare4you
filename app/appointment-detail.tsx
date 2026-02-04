@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Linking, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Linking, Platform, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { 
@@ -99,6 +99,8 @@ const mockAppointmentDetail = {
 
 export default function AppointmentDetailScreen() {
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const { id } = useLocalSearchParams();
   const [loading, setLoading] = useState(true);
   const [appointment, setAppointment] = useState<Appointment | null>(null);
@@ -317,7 +319,7 @@ export default function AppointmentDetailScreen() {
   if (!appointment) {
     return (
       <SafeAreaView className="flex-1 bg-background items-center justify-center">
-        <AlertCircle className="text-muted-foreground mb-4" size={48} />
+        <AlertCircle color={isDark ? '#94a3b8' : '#475569'} size={48} />
         <Text className="text-foreground text-lg font-semibold">Appointment not found</Text>
         <TouchableOpacity onPress={() => router.back()} className="mt-4">
           <Text className="text-primary">Go Back</Text>
@@ -340,7 +342,7 @@ export default function AppointmentDetailScreen() {
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center gap-3">
             <TouchableOpacity onPress={() => router.back()}>
-              <ChevronLeft className="text-foreground" size={24} />
+              <ChevronLeft color={isDark ? '#f8fafc' : '#1e293b'} size={24} />
             </TouchableOpacity>
             <Text className="text-xl font-bold text-foreground">Appointment Details</Text>
           </View>
@@ -349,11 +351,11 @@ export default function AppointmentDetailScreen() {
               onPress={() => router.push(user?.roleId === USER_ROLE.PROVIDER ? '/provider-dashboard' : '/owner-dashboard')}
               className="bg-primary/10 p-2 rounded-full"
             >
-              <Home className="text-primary" size={24} />
+              <Home color={isDark ? '#fb923c' : '#ea580c'} size={24} />
             </TouchableOpacity>
             <ThemeToggle />
             <TouchableOpacity onPress={handleLogout}>
-              <LogOut className="text-destructive" size={24} />
+              <LogOut color={isDark ? '#f87171' : '#dc2626'} size={24} />
             </TouchableOpacity>
           </View>
         </View>
@@ -365,7 +367,7 @@ export default function AppointmentDetailScreen() {
       >
         {/* Status Banner */}
         <View className={`${statusConfig.bg} mx-6 mt-6 p-4 rounded-xl flex-row items-center gap-3`}>
-          <StatusIcon className={statusConfig.color} size={24} />
+          <StatusIcon color={statusConfig.color.includes('green') ? (isDark ? '#4ade80' : '#16a34a') : statusConfig.color.includes('yellow') ? (isDark ? '#facc15' : '#ca8a04') : statusConfig.color.includes('red') ? (isDark ? '#f87171' : '#dc2626') : (isDark ? '#94a3b8' : '#475569')} size={24} />
           <View className="flex-1">
             <Text className={`${statusConfig.color} font-bold text-lg`}>
               {statusConfig.label}
@@ -379,7 +381,7 @@ export default function AppointmentDetailScreen() {
           
           <View className="flex-row items-center gap-3 mb-3">
             <View className="bg-primary/10 p-3 rounded-xl">
-              <Calendar className="text-primary" size={24} />
+              <Calendar color={isDark ? '#fb923c' : '#ea580c'} size={24} />
             </View>
             <View className="flex-1">
               <Text className="text-foreground font-semibold">
@@ -391,7 +393,7 @@ export default function AppointmentDetailScreen() {
 
           <View className="flex-row items-center gap-3">
             <View className="bg-primary/10 p-3 rounded-xl">
-              <Clock className="text-primary" size={24} />
+              <Clock color={isDark ? '#fb923c' : '#ea580c'} size={24} />
             </View>
             <View className="flex-1">
               <Text className="text-foreground font-semibold">
@@ -407,7 +409,7 @@ export default function AppointmentDetailScreen() {
           
           <View className="flex-row items-center gap-3 mb-3">
             <View className="bg-primary/10 p-3 rounded-xl">
-              <PawPrint className="text-primary" size={24} />
+              <PawPrint color={isDark ? '#fb923c' : '#ea580c'} size={24} />
             </View>
             <View className="flex-1">
               <Text className="text-foreground font-semibold">
@@ -462,14 +464,14 @@ export default function AppointmentDetailScreen() {
             
             <View className="flex-row items-center gap-3 mb-4">
               <View className="bg-primary/10 w-14 h-14 rounded-full items-center justify-center">
-                <User className="text-primary" size={24} />
+                <User color={isDark ? '#fb923c' : '#ea580c'} size={24} />
               </View>
               <View className="flex-1">
                 <Text className="text-foreground font-bold text-lg">
                   {appointment.provider.companyName}
                 </Text>
                 <View className="flex-row items-center gap-1 mt-1">
-                  <Star className="text-yellow-500" size={14} fill="#EAB308" />
+                  <Star color="#EAB308" size={14} fill="#EAB308" />
                   <Text className="text-muted-foreground text-sm">
                     4.8 (124 reviews)
                   </Text>
@@ -478,7 +480,7 @@ export default function AppointmentDetailScreen() {
             </View>
 
             <View className="flex-row items-center gap-3 p-3 bg-muted rounded-xl mb-3">
-              <MapPin className="text-primary" size={20} />
+              <MapPin color={isDark ? '#fb923c' : '#ea580c'} size={20} />
               <Text className="text-foreground font-medium flex-1">
                 {appointment.provider.address}, {appointment.provider.city}
               </Text>
@@ -490,7 +492,7 @@ export default function AppointmentDetailScreen() {
                 onPress={() => handleCall(appointment.provider?.user?.phoneNumber || '')}
                 className="flex-row items-center gap-3 p-3 bg-muted rounded-xl"
               >
-                <Phone className="text-primary" size={20} />
+                <Phone color={isDark ? '#fb923c' : '#ea580c'} size={20} />
                 <Text className="text-foreground font-medium flex-1">
                   {appointment.provider?.user?.phoneNumber || 'N/A'}
                 </Text>
@@ -501,7 +503,7 @@ export default function AppointmentDetailScreen() {
                 onPress={() => handleEmail(appointment.provider?.user?.email || '')}
                 className="flex-row items-center gap-3 p-3 bg-muted rounded-xl"
               >
-                <Mail className="text-primary" size={20} />
+                <Mail color={isDark ? '#fb923c' : '#ea580c'} size={20} />
                 <Text className="text-foreground font-medium flex-1">
                   {appointment.provider?.user?.email || 'N/A'}
                 </Text>
@@ -532,7 +534,7 @@ export default function AppointmentDetailScreen() {
           </View>
 
           <View className="mt-4 flex-row items-center gap-2 p-3 bg-muted rounded-xl">
-            <CreditCard className="text-muted-foreground" size={20} />
+            <CreditCard color={isDark ? '#94a3b8' : '#475569'} size={20} />
             <Text className="text-foreground">
               {isPaid ? 'Paid' : 'Payment Pending'} • {appointment.payment?.paymentMethod || 'Credit Card'}
             </Text>
@@ -541,7 +543,7 @@ export default function AppointmentDetailScreen() {
 
         {/* Booking Reference */}
         <View className="mx-6 mt-4 mb-4 bg-muted p-4 rounded-xl flex-row items-center gap-3">
-          <FileText className="text-muted-foreground" size={20} />
+          <FileText color={isDark ? '#94a3b8' : '#475569'} size={20} />
           <View className="flex-1">
             <Text className="text-muted-foreground text-sm">Booking Reference</Text>
             <Text className="text-foreground font-mono font-bold">#{appointment.id}</Text>
@@ -558,7 +560,7 @@ export default function AppointmentDetailScreen() {
                 onPress={handlePay}
                 className="flex-1 bg-green-600 py-4 rounded-xl flex-row items-center justify-center gap-2"
               >
-                <DollarSign className="text-white" size={20} />
+                <DollarSign color="#ffffff" size={20} />
                 <Text className="text-white font-bold">Pay Now</Text>
               </TouchableOpacity>
             )}
@@ -567,7 +569,7 @@ export default function AppointmentDetailScreen() {
                 onPress={handleReschedule}
                 className="flex-1 bg-primary py-4 rounded-xl flex-row items-center justify-center gap-2"
               >
-                <Edit className="text-primary-foreground" size={20} />
+                <Edit color="#ffffff" size={20} />
                 <Text className="text-primary-foreground font-bold">Reschedule</Text>
               </TouchableOpacity>
             )}
@@ -576,7 +578,7 @@ export default function AppointmentDetailScreen() {
                 onPress={handleCancelAppointment}
                 className="flex-1 bg-red-50 py-4 rounded-xl flex-row items-center justify-center gap-2"
               >
-                <X className="text-red-600" size={20} />
+                <X color={isDark ? '#f87171' : '#dc2626'} size={20} />
                 <Text className="text-red-600 font-bold">Cancel</Text>
               </TouchableOpacity>
             )}

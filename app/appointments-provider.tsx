@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Platform, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { 
@@ -23,6 +23,9 @@ import { APPOINTMENT_STATUS } from '@/constants/status';
 
 export default function AppointmentsProviderScreen() {
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  
   const [loading, setLoading] = useState(true);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
@@ -190,7 +193,7 @@ export default function AppointmentsProviderScreen() {
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center gap-3">
             <TouchableOpacity onPress={() => router.back()}>
-              <ChevronLeft className="text-foreground" size={24} />
+              <ChevronLeft color={isDark ? '#f8fafc' : '#1e293b'} size={24} />
             </TouchableOpacity>
             <Text className="text-2xl font-bold text-foreground">Client Bookings</Text>
           </View>
@@ -199,14 +202,14 @@ export default function AppointmentsProviderScreen() {
               onPress={() => router.push('/provider-dashboard')}
               className="bg-primary/10 p-2 rounded-full"
             >
-              <Home className="text-primary" size={24} />
+              <Home color={isDark ? '#fb923c' : '#ea580c'} size={24} />
             </TouchableOpacity>
             <ThemeToggle />
             <TouchableOpacity 
               onPress={handleLogout}
               className="bg-destructive/10 p-2 rounded-full"
             >
-              <LogOut className="text-destructive" size={24} />
+              <LogOut color={isDark ? '#f87171' : '#dc2626'} size={24} />
             </TouchableOpacity>
           </View>
         </View>
@@ -242,10 +245,13 @@ export default function AppointmentsProviderScreen() {
       </View>
 
       {/* Appointments List */}
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 32, gap: 16 }}>
+      <ScrollView 
+        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 32, gap: 16 }}
+        keyboardShouldPersistTaps="handled"
+      >
         {displayAppointments.length === 0 ? (
           <View className="items-center justify-center py-16">
-            <Calendar className="text-muted-foreground mb-4" size={64} />
+            <Calendar color={isDark ? '#94a3b8' : '#475569'} size={64} />
             <Text className="text-xl font-semibold text-foreground mb-2">
               No {activeTab} bookings
             </Text>
@@ -272,7 +278,7 @@ export default function AppointmentsProviderScreen() {
                 {/* Status Banner */}
                 <View className={`${statusConfig.bg} px-4 py-2 flex-row items-center justify-between`}>
                   <View className="flex-row items-center gap-2">
-                    <StatusIcon className={statusConfig.color} size={16} />
+                    <StatusIcon color={statusConfig.color.includes('green') ? (isDark ? '#4ade80' : '#16a34a') : statusConfig.color.includes('yellow') ? (isDark ? '#facc15' : '#ca8a04') : statusConfig.color.includes('red') ? (isDark ? '#f87171' : '#dc2626') : (isDark ? '#94a3b8' : '#475569')} size={16} />
                     <Text className={`${statusConfig.color} font-semibold text-sm`}>
                       {statusConfig.label}
                     </Text>
@@ -288,7 +294,7 @@ export default function AppointmentsProviderScreen() {
                         {appointment.owner?.firstName} {appointment.owner?.lastName}
                       </Text>
                       <View className="flex-row items-center gap-2">
-                        <PawPrint className="text-primary" size={14} />
+                        <PawPrint color={isDark ? '#fb923c' : '#ea580c'} size={14} />
                         <Text className="text-muted-foreground text-sm font-medium">
                           {appointment.petName} ({appointment.petType})
                         </Text>
@@ -304,11 +310,11 @@ export default function AppointmentsProviderScreen() {
                   {/* Date & Time */}
                   <View className="flex-row items-center gap-4 mb-3">
                     <View className="flex-row items-center gap-2">
-                      <Calendar className="text-muted-foreground" size={16} />
+                      <Calendar color={isDark ? '#94a3b8' : '#475569'} size={16} />
                       <Text className="text-muted-foreground font-medium">{formatDate(appointment.appointmentDate)}</Text>
                     </View>
                     <View className="bg-primary/5 border border-primary/20 px-3 py-1 rounded-lg flex-row items-center gap-2">
-                      <Clock className="text-primary" size={14} />
+                      <Clock color={isDark ? '#fb923c' : '#ea580c'} size={14} />
                       <Text className="text-primary font-bold text-xs">
                         {formatTime(appointment.startTime)} - {formatTime(appointment.endTime)}
                       </Text>
@@ -318,7 +324,7 @@ export default function AppointmentsProviderScreen() {
                   {/* Contact Info */}
                   <View className="flex-row items-center gap-4 mb-4">
                     <View className="flex-row items-center gap-2">
-                      <Mail className="text-muted-foreground" size={16} />
+                      <Mail color={isDark ? '#94a3b8' : '#475569'} size={16} />
                       <Text className="text-muted-foreground text-sm">{appointment.owner?.email || 'N/A'}</Text>
                     </View>
                   </View>
@@ -335,7 +341,7 @@ export default function AppointmentsProviderScreen() {
                             }}
                             className="flex-1 bg-primary py-3 rounded-xl flex-row items-center justify-center gap-2"
                           >
-                            <Check className="text-primary-foreground" size={18} />
+                            <Check color="#ffffff" size={18} />
                             <Text className="text-primary-foreground font-semibold">Confirm</Text>
                           </TouchableOpacity>
                           <TouchableOpacity
@@ -345,7 +351,7 @@ export default function AppointmentsProviderScreen() {
                             }}
                             className="flex-1 bg-muted py-3 rounded-xl flex-row items-center justify-center gap-2"
                           >
-                            <XCircle className="text-muted-foreground" size={18} />
+                            <XCircle color={isDark ? '#94a3b8' : '#475569'} size={18} />
                             <Text className="text-muted-foreground font-semibold">Decline</Text>
                           </TouchableOpacity>
                         </>
@@ -359,7 +365,7 @@ export default function AppointmentsProviderScreen() {
                             }}
                             className="flex-1 bg-green-600 py-3 rounded-xl flex-row items-center justify-center gap-2"
                           >
-                            <CheckCircle className="text-white" size={18} />
+                            <CheckCircle color="#ffffff" size={18} />
                             <Text className="text-white font-semibold">Complete</Text>
                           </TouchableOpacity>
                           <TouchableOpacity
@@ -369,7 +375,7 @@ export default function AppointmentsProviderScreen() {
                             }}
                             className="flex-1 bg-muted py-3 rounded-xl flex-row items-center justify-center gap-2"
                           >
-                            <XCircle className="text-muted-foreground" size={18} />
+                            <XCircle color={isDark ? '#94a3b8' : '#475569'} size={18} />
                             <Text className="text-muted-foreground font-semibold">Cancel</Text>
                           </TouchableOpacity>
                         </>
