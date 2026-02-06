@@ -189,6 +189,8 @@ export default function ProfileProviderScreen() {
     try {
       const data = await providerServicePricingService.getMyServices();
       setServices(data);
+      // Also reload profile data to sync Business Profile service list
+      loadProfileData();
     } catch (error) {
       console.error('Error loading services:', error);
     }
@@ -209,16 +211,29 @@ export default function ProfileProviderScreen() {
       const user = await userService.getCurrentUser();
       setUserData(user);
       if (user.provider) {
-        setProvider(user.provider);
+        const providerData = user.provider;
+        // Derive serviceTypes and serviceTypeIds if not directly present
+        const derivedServiceTypes = providerData.serviceTypes || 
+          providerData.providerServices?.map(ps => ps.serviceType).filter(st => st != null) || [];
+        const derivedServiceTypeIds = providerData.serviceTypeIds || 
+          providerData.providerServices?.map(ps => ps.serviceTypeId) || [];
+
+        const syncedProvider = {
+          ...providerData,
+          serviceTypes: derivedServiceTypes,
+          serviceTypeIds: derivedServiceTypeIds
+        };
+
+        setProvider(syncedProvider);
         setEditForm({
-          companyName: user.provider.companyName,
-          description: user.provider.description,
-          hourlyRate: user.provider.hourlyRate,
-          address: user.provider.address,
-          city: user.provider.city,
-          serviceTypeIds: user.provider.serviceTypeIds || [],
-          latitude: user.provider.latitude,
-          longitude: user.provider.longitude
+          companyName: providerData.companyName,
+          description: providerData.description,
+          hourlyRate: providerData.hourlyRate,
+          address: providerData.address,
+          city: providerData.city,
+          serviceTypeIds: derivedServiceTypeIds as number[],
+          latitude: providerData.latitude || 0,
+          longitude: providerData.longitude || 0
         });
       }
     } catch (error) {
@@ -240,6 +255,10 @@ export default function ProfileProviderScreen() {
       if (updatedUser.provider) {
         setProvider(updatedUser.provider);
       }
+      
+      // Also reload services to sync with Business Profile changes
+      const updatedServices = await providerServicePricingService.getMyServices();
+      setServices(updatedServices);
       
       setEditMode(false);
       if (Platform.OS === 'web') {

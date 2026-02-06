@@ -79,7 +79,15 @@ namespace PetCareAPI.Controllers
 
             existingService.Price = service.Price;
             existingService.Description = service.Description;
-            existingService.ServiceTypeId = service.ServiceTypeId;
+            
+            if (existingService.ServiceTypeId != service.ServiceTypeId)
+            {
+                var conflict = await _context.ProviderServices
+                    .AnyAsync(ps => ps.ProviderId == provider.Id && ps.ServiceTypeId == service.ServiceTypeId && ps.Id != id);
+                if (conflict) return BadRequest("You already have another entry for this service type.");
+                existingService.ServiceTypeId = service.ServiceTypeId;
+            }
+            
             existingService.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();

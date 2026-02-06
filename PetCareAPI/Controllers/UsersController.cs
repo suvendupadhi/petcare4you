@@ -25,6 +25,8 @@ namespace PetCareAPI.Controllers
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             var user = await _context.Users
                 .Include(u => u.Provider)
+                    .ThenInclude(p => p!.ProviderServices)
+                        .ThenInclude(ps => ps.ServiceType)
                 .FirstOrDefaultAsync(u => u.Id == userId);
 
             if (user == null)

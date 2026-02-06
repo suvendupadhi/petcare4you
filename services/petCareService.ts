@@ -52,6 +52,7 @@ export interface Provider {
   latitude: number;
   longitude: number;
   user?: User;
+  providerServices?: ProviderService[];
 }
 
 export interface ServiceType {
