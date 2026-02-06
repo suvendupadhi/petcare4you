@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Platform, Modal, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { 
@@ -16,10 +16,13 @@ import {
   MapPin,
   Phone,
   User as UserIcon,
-  LogOut
+  LogOut,
+  X,
+  Trash2
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { authService, appointmentService, Appointment, userService, User, Provider } from '@/services/petCareService';
+import { api } from '@/services/api';
 import { APPOINTMENT_STATUS, getStatusLabel } from '@/constants/status';
 import { useColorScheme } from 'react-native';
 
@@ -34,10 +37,72 @@ export default function ProviderDashboard() {
   const [todayAppointments, setTodayAppointments] = useState<Appointment[]>([]);
   const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([]);
   const [revenue, setRevenue] = useState({ today: 0, week: 0, month: 0 });
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 30000); // Polling every 30s
+    return () => clearInterval(interval);
   }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      const [notifs, count] = await Promise.all([
+        api.getNotifications(),
+        api.getUnreadCount()
+      ]);
+      setNotifications(notifs);
+      setUnreadCount(count);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      await api.markNotificationsAsRead();
+      setUnreadCount(0);
+      setNotifications(notifications.map(n => ({ ...n, isRead: true })));
+    } catch (error) {
+      console.error('Error marking all as read:', error);
+    }
+  };
+
+  const handleMarkAsRead = async (id: number) => {
+    try {
+      const notification = notifications.find(n => n.id === id);
+      await api.markNotificationAsRead(id);
+      setNotifications(notifications.map(n => n.id === id ? { ...n, isRead: true } : n));
+      setUnreadCount(prev => Math.max(0, prev - 1));
+
+      // Navigate to appointment if reference_id exists
+      if (notification?.referenceId) {
+        setShowNotifications(false);
+        router.push({
+          pathname: '/appointment-detail',
+          params: { id: notification.referenceId }
+        });
+      }
+    } catch (error) {
+      console.error('Error marking as read:', error);
+    }
+  };
+
+  const handleDeleteNotification = async (id: number) => {
+    try {
+      await api.deleteNotification(id);
+      setNotifications(notifications.filter(n => n.id !== id));
+      const wasUnread = !notifications.find(n => n.id === id)?.isRead;
+      if (wasUnread) {
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      }
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+    }
+  };
 
   const handleLogout = () => {
     if (Platform.OS === 'web') {
@@ -140,17 +205,85 @@ export default function ProviderDashboard() {
             <TouchableOpacity onPress={() => router.push('/profile-provider')}>
               <UserIcon color={isDark ? '#f8fafc' : '#1e293b'} size={24} />
             </TouchableOpacity>
+            <TouchableOpacity 
+              className="relative"
+              onPress={() => setShowNotifications(true)}
+            >
+              <Bell color={isDark ? '#f8fafc' : '#1e293b'} size={24} />
+              {unreadCount > 0 && (
+                <View className="absolute -top-1 -right-1 bg-red-500 w-4 h-4 rounded-full items-center justify-center">
+                  <Text className="text-white text-[10px] font-bold">{unreadCount > 9 ? '9+' : unreadCount}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
             <TouchableOpacity onPress={handleLogout}>
               <LogOut color={isDark ? '#f87171' : '#dc2626'} size={24} />
             </TouchableOpacity>
-            <TouchableOpacity className="relative">
-              <Bell color={isDark ? '#f8fafc' : '#1e293b'} size={24} />
-              <View className="absolute -top-1 -right-1 bg-red-500 w-4 h-4 rounded-full items-center justify-center">
-                <Text className="text-white text-xs font-bold">3</Text>
-              </View>
-            </TouchableOpacity>
           </View>
         </View>
+
+        {/* Notifications Modal */}
+        <Modal
+          visible={showNotifications}
+          animationType="slide"
+          transparent={true}
+          onRequestClose={() => setShowNotifications(false)}
+        >
+          <View className="flex-1 bg-black/50 justify-end">
+            <View className="bg-background rounded-t-[32px] h-[80%]">
+              <View className="p-6 border-b border-border flex-row justify-between items-center">
+                <View>
+                  <Text className="text-foreground text-xl font-bold">Notifications</Text>
+                  {unreadCount > 0 && (
+                    <Text className="text-muted-foreground text-sm">{unreadCount} unread messages</Text>
+                  )}
+                </View>
+                <View className="flex-row items-center gap-4">
+                  {unreadCount > 0 && (
+                    <TouchableOpacity onPress={handleMarkAllAsRead}>
+                      <Text className="text-primary font-semibold text-sm">Mark all read</Text>
+                    </TouchableOpacity>
+                  )}
+                  <TouchableOpacity 
+                    onPress={() => setShowNotifications(false)}
+                    className="bg-secondary p-2 rounded-full"
+                  >
+                    <X color={isDark ? '#f8fafc' : '#1e293b'} size={20} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <FlatList
+                data={notifications}
+                keyExtractor={(item) => item.id.toString()}
+                contentContainerStyle={{ padding: 24 }}
+                ListEmptyComponent={
+                  <View className="flex-1 items-center justify-center py-20">
+                    <Bell color={isDark ? '#1e293b' : '#f1f5f9'} size={64} />
+                    <Text className="text-muted-foreground text-lg mt-4">No notifications yet</Text>
+                  </View>
+                }
+                renderItem={({ item }) => (
+                  <TouchableOpacity 
+                    className={`p-4 rounded-2xl mb-3 border ${item.isRead ? 'bg-card border-border' : 'bg-primary/5 border-primary/20'}`}
+                    onPress={() => handleMarkAsRead(item.id)}
+                  >
+                    <View className="flex-row justify-between items-start mb-1">
+                      <Text className={`font-bold ${item.isRead ? 'text-foreground' : 'text-primary'}`}>{item.title}</Text>
+                      <TouchableOpacity onPress={() => handleDeleteNotification(item.id)}>
+                        <Trash2 color="#ef4444" size={16} />
+                      </TouchableOpacity>
+                    </View>
+                    <Text className="text-muted-foreground text-sm mb-2">{item.message}</Text>
+                    <Text className="text-muted-foreground text-[10px]">
+                      {new Date(item.createdAt).toLocaleString()}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
+          </View>
+        </Modal>
 
         {/* Revenue Summary Cards */}
         <View className="px-6 mb-6">

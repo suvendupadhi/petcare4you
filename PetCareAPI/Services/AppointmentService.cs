@@ -93,6 +93,24 @@ namespace PetCareAPI.Services
             availability.IsBooked = true;
 
             _context.Appointments.Add(appointment);
+            
+            // Create notification for provider
+            var provider = await _context.Providers.FindAsync(appointment.ProviderId);
+            if (provider != null)
+            {
+                var notification = new Notification
+                {
+                    UserId = provider.UserId,
+                    Title = "New Booking Request",
+                    Message = $"You have a new booking request for {appointment.PetName} on {appointment.AppointmentDate:MMM dd, yyyy}.",
+                    Type = "Booking",
+                    ReferenceId = appointment.Id.ToString(),
+                    IsRead = false,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.Notifications.Add(notification);
+            }
+
             await _context.SaveChangesAsync();
 
             return appointment;
@@ -100,11 +118,65 @@ namespace PetCareAPI.Services
 
         public async Task<bool> UpdateStatusAsync(int appointmentId, int status)
         {
-            var appointment = await _context.Appointments.FindAsync(appointmentId);
+            var appointment = await _context.Appointments
+                .Include(a => a.Provider)
+                .Include(a => a.Owner)
+                .FirstOrDefaultAsync(a => a.Id == appointmentId);
+            
             if (appointment == null) return false;
 
+            int oldStatus = appointment.Status;
             appointment.Status = status;
             appointment.UpdatedAt = DateTime.UtcNow;
+
+            // Create notification for owner/provider based on status change
+            string statusName = status switch
+            {
+                StatusConstants.Appointment.Confirmed => "Confirmed",
+                StatusConstants.Appointment.Completed => "Completed",
+                StatusConstants.Appointment.Cancelled => "Cancelled",
+                _ => "Updated"
+            };
+
+            var notification = new Notification
+            {
+                UserId = appointment.OwnerId, // Notify owner
+                Title = $"Booking {statusName}",
+                Message = $"Your booking for {appointment.PetName} on {appointment.AppointmentDate:MMM dd, yyyy} has been {statusName.ToLower()}.",
+                Type = "StatusChange",
+                ReferenceId = appointment.Id.ToString(),
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.Notifications.Add(notification);
+
+            // If cancelled, also notify provider and unbook slot
+            if (status == StatusConstants.Appointment.Cancelled)
+            {
+                if (appointment.Provider != null)
+                {
+                    var providerNotification = new Notification
+                    {
+                        UserId = appointment.Provider.UserId,
+                        Title = "Booking Cancelled",
+                        Message = $"The booking for {appointment.PetName} on {appointment.AppointmentDate:MMM dd, yyyy} has been cancelled.",
+                        Type = "Cancellation",
+                        ReferenceId = appointment.Id.ToString(),
+                        IsRead = false,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    _context.Notifications.Add(providerNotification);
+                }
+
+                var availability = await _context.Availabilities
+                    .FirstOrDefaultAsync(a => a.ProviderId == appointment.ProviderId && 
+                                             a.StartTime == appointment.StartTime);
+                if (availability != null)
+                {
+                    availability.IsBooked = false;
+                }
+            }
+
             await _context.SaveChangesAsync();
 
             return true;

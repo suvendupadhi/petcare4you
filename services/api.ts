@@ -27,11 +27,11 @@ const BASE_URL = getBaseUrl();
 
 // Debugging: Print to console and show alert on device
 console.log('API Base URL:', BASE_URL);
-if (Platform.OS !== 'web') {
-  Alert.alert('API Config', `Base URL: ${BASE_URL}`);
-} else {
-  console.info('%c API Config ', 'background: #222; color: #bada55', BASE_URL);
-}
+// if (Platform.OS !== 'web') {
+//   Alert.alert('API Config', `Base URL: ${BASE_URL}`);
+// } else {
+//   console.info('%c API Config ', 'background: #222; color: #bada55', BASE_URL);
+// }
 
 const TOKEN_KEY = 'auth_token';
 
@@ -101,4 +101,11 @@ export const api = {
   patch: (endpoint: string, body: any, options?: RequestInit) => 
     request(endpoint, { ...options, method: 'PATCH', body: JSON.stringify(body) }),
   delete: (endpoint: string, options?: RequestInit) => request(endpoint, { ...options, method: 'DELETE' }),
+  
+  // Notifications
+  getNotifications: () => request('/Notifications', { method: 'GET' }),
+  getUnreadCount: () => request('/Notifications/unread-count', { method: 'GET' }),
+  markNotificationsAsRead: () => request('/Notifications/mark-as-read', { method: 'PUT' }),
+  markNotificationAsRead: (id: number) => request(`/Notifications/${id}/mark-as-read`, { method: 'PUT' }),
+  deleteNotification: (id: number) => request(`/Notifications/${id}`, { method: 'DELETE' }),
 };

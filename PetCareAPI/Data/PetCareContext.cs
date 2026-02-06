@@ -23,6 +23,7 @@ namespace PetCareAPI.Data
         public DbSet<Breed> Breeds { get; set; } = null!;
         public DbSet<Pet> Pets { get; set; } = null!;
         public DbSet<ProviderPhoto> ProviderPhotos { get; set; } = null!;
+        public DbSet<Notification> Notifications { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
