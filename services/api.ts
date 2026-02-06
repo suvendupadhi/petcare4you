@@ -1,14 +1,37 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Platform } from 'react-native';
-
+import { Platform, Alert } from 'react-native';
+import Constants from 'expo-constants';
 // Use 10.0.2.2 for Android emulator to access localhost on host machine
 const getBaseUrl = () => {
-  if (Platform.OS === 'android') return 'http://10.0.2.2:5088/api';
-  if (Platform.OS === 'web') return 'http://localhost:5088/api';
-  return 'http://192.168.1.5:5088/api'; // Change to your local IP for physical devices
+  // if (Platform.OS === 'android') return 'http://10.0.2.2:5088/api';
+  // if (Platform.OS === 'web') return 'http://localhost:5088/api';
+  // return 'http://192.168.1.5:5088/api'; // Change to your local IP for physical devices
+
+  // Web
+  if (Platform.OS === 'web') {
+    return 'http://localhost:5088/api';
+  }
+
+  // Expo Go (iOS + Android) — DEV ONLY
+  if (__DEV__) {
+    const host = Constants.expoConfig?.hostUri?.split(':')[0];
+    return `http://${host}:5088/api`;
+  }
+
+  // Production (App Store / Play Store)
+  return 'https://api.yourdomain.com/api';
+
 };
 
 const BASE_URL = getBaseUrl();
+
+// Debugging: Print to console and show alert on device
+console.log('API Base URL:', BASE_URL);
+if (Platform.OS !== 'web') {
+  Alert.alert('API Config', `Base URL: ${BASE_URL}`);
+} else {
+  console.info('%c API Config ', 'background: #222; color: #bada55', BASE_URL);
+}
 
 const TOKEN_KEY = 'auth_token';
 
