@@ -196,7 +196,24 @@ namespace PetCareAPI.Services
             if (appointment.AppointmentDate != updatedAppointment.AppointmentDate || 
                 appointment.StartTime != updatedAppointment.StartTime)
             {
-                // 1. Unbook old slot
+                // 1. Check if the provider has explicitly opened this slot for the new day/time
+                var newAvailability = await _context.Availabilities
+                    .FirstOrDefaultAsync(a => a.ProviderId == updatedAppointment.ProviderId && 
+                                             a.StartTime == updatedAppointment.StartTime);
+
+                if (newAvailability == null)
+                {
+                    // Slot not found - provider hasn't opened this booking slot
+                    return null;
+                }
+
+                if (newAvailability.IsBooked)
+                {
+                    // Slot exists but is already booked
+                    return null;
+                }
+
+                // 2. Unbook old slot
                 var oldAvailability = await _context.Availabilities
                     .FirstOrDefaultAsync(a => a.ProviderId == appointment.ProviderId && 
                                              a.StartTime == appointment.StartTime);
@@ -205,17 +222,7 @@ namespace PetCareAPI.Services
                     oldAvailability.IsBooked = false;
                 }
 
-                // 2. Book new slot
-                var newAvailability = await _context.Availabilities
-                    .FirstOrDefaultAsync(a => a.ProviderId == updatedAppointment.ProviderId && 
-                                             a.StartTime == updatedAppointment.StartTime &&
-                                             !a.IsBooked);
-                
-                if (newAvailability == null)
-                {
-                    // New slot not available, abort
-                    return null;
-                }
+                // 3. Book new slot
                 newAvailability.IsBooked = true;
 
                 appointment.AppointmentDate = updatedAppointment.AppointmentDate;

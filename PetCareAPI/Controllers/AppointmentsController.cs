@@ -62,7 +62,7 @@ namespace PetCareAPI.Controllers
             var result = await _appointmentService.UpdateAppointmentAsync(id, appointment);
             if (result == null)
             {
-                return BadRequest("The selected time slot is no longer available or appointment not found.");
+                return BadRequest("The selected time slot is not available, hasn't been opened by the provider, or appointment not found.");
             }
 
             return Ok(result);
