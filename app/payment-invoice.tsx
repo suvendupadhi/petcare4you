@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   Text,
   Platform,
+  useColorScheme,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -33,6 +34,8 @@ import { PAYMENT_STATUS, getStatusLabel, USER_ROLE } from "@/constants/status";
 
 export default function PaymentInvoiceScreen() {
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const { processPayment } = usePaymentGateway();
   const [loading, setLoading] = useState(true);
   const [invoices, setInvoices] = useState<Payment[]>([]);
@@ -238,7 +241,7 @@ export default function PaymentInvoiceScreen() {
         <View className="p-6 flex-row items-center justify-between border-b border-border">
           <View className="flex-row items-center gap-3">
             <TouchableOpacity onPress={() => router.back()}>
-              <ArrowLeft className="text-foreground" size={24} />
+              <ArrowLeft color={isDark ? "#f8fafc" : "#1e293b"} size={24} />
             </TouchableOpacity>
             <View>
               <Text className="text-2xl font-bold text-foreground">
@@ -254,23 +257,23 @@ export default function PaymentInvoiceScreen() {
               onPress={() => router.push(user?.roleId === USER_ROLE.PROVIDER ? '/provider-dashboard' : '/owner-dashboard')}
               className="bg-primary/10 p-2 rounded-full"
             >
-              <Home className="text-primary" size={24} />
+              <Home color={isDark ? "#fb923c" : "#ea580c"} size={24} />
             </TouchableOpacity>
             <ThemeToggle />
             <TouchableOpacity 
               onPress={handleLogout}
               className="bg-destructive/10 p-2 rounded-full"
             >
-              <LogOut className="text-destructive" size={24} />
+              <LogOut color={isDark ? "#f87171" : "#dc2626"} size={24} />
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Stats Cards */}
-        <View className="px-6 mb-6">
+        <View className="px-6 mt-6 mb-6">
           <View className="flex-row gap-3">
             <View className="flex-1 bg-card rounded-2xl p-4 border border-border">
-              <DollarSign className="text-green-600 mb-2" size={24} />
+              <DollarSign color={isDark ? "#4ade80" : "#16a34a"} size={24} className="mb-2" />
               <Text className="text-2xl font-bold text-foreground">
                 ${stats.totalRevenue.toFixed(2)}
               </Text>
@@ -279,7 +282,7 @@ export default function PaymentInvoiceScreen() {
               </Text>
             </View>
             <View className="flex-1 bg-card rounded-2xl p-4 border border-border">
-              <Clock className="text-yellow-600 mb-2" size={24} />
+              <Clock color={isDark ? "#fbbf24" : "#d97706"} size={24} className="mb-2" />
               <Text className="text-2xl font-bold text-foreground">
                 ${stats.pendingPayments.toFixed(2)}
               </Text>
@@ -288,7 +291,7 @@ export default function PaymentInvoiceScreen() {
           </View>
           <View className="flex-row gap-3 mt-3">
             <View className="flex-1 bg-card rounded-2xl p-4 border border-border">
-              <CheckCircle className="text-blue-600 mb-2" size={24} />
+              <CheckCircle color={isDark ? "#60a5fa" : "#2563eb"} size={24} className="mb-2" />
               <Text className="text-2xl font-bold text-foreground">
                 ${stats.paidThisMonth.toFixed(2)}
               </Text>
@@ -297,7 +300,7 @@ export default function PaymentInvoiceScreen() {
               </Text>
             </View>
             <View className="flex-1 bg-card rounded-2xl p-4 border border-border">
-              <CreditCard className="text-purple-600 mb-2" size={24} />
+              <CreditCard color={isDark ? "#c084fc" : "#9333ea"} size={24} className="mb-2" />
               <Text className="text-2xl font-bold text-foreground">
                 {stats.transactionCount}
               </Text>
