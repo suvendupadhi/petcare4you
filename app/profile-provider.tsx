@@ -36,17 +36,11 @@ import {
   providerServicePricingService,
   ProviderService,
   availabilityService,
-  Availability
+  Availability,
+  providerPhotoService,
+  ProviderPhoto
 } from '@/services/petCareService';
 import { format, parseISO } from 'date-fns';
-
-// Photo gallery state
-const mockPhotos = [
-  'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=400',
-  'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=400',
-  'https://images.unsplash.com/photo-1560807707-8cc77767d783?w=400',
-  'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=400',
-];
 
 export default function ProfileProviderScreen() {
   const colorScheme = useColorScheme();
@@ -59,7 +53,14 @@ export default function ProfileProviderScreen() {
   const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
   const [services, setServices] = useState<ProviderService[]>([]);
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
-  const [photos, setPhotos] = useState(mockPhotos);
+  const [photos, setPhotos] = useState<ProviderPhoto[]>([]);
+
+  // Photo state
+  const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const [photoForm, setPhotoForm] = useState({
+    url: '',
+    description: ''
+  });
 
   // Service Edit state
   const [showServiceModal, setShowServiceModal] = useState(false);
@@ -95,7 +96,38 @@ export default function ProfileProviderScreen() {
     loadServiceTypes();
     loadServices();
     loadAvailability();
+    loadPhotos();
   }, []);
+
+  const loadPhotos = async () => {
+    try {
+      const data = await providerPhotoService.getMyPhotos();
+      setPhotos(data);
+    } catch (error) {
+      console.error('Error loading photos:', error);
+    }
+  };
+
+  const handleSavePhoto = async () => {
+    try {
+      if (!photoForm.url.trim()) {
+        Alert.alert('Error', 'Please enter a photo URL');
+        return;
+      }
+      await providerPhotoService.addPhoto(photoForm);
+      setShowPhotoModal(false);
+      setPhotoForm({ url: '', description: '' });
+      loadPhotos();
+      if (Platform.OS === 'web') {
+        window.alert('Success: Photo added to gallery');
+      } else {
+        Alert.alert('Success', 'Photo added to gallery');
+      }
+    } catch (error) {
+      console.error('Error adding photo:', error);
+      Alert.alert('Error', 'Failed to add photo');
+    }
+  };
 
   const loadAvailability = async () => {
     try {
@@ -312,18 +344,24 @@ export default function ProfileProviderScreen() {
   };
 
   const handleAddPhoto = () => {
-    // TODO: Open image picker
-    if (Platform.OS === 'web') {
-      window.alert('Open image picker to add business photos');
-    } else {
-      Alert.alert('Add Photo', 'Open image picker to add business photos');
-    }
+    setPhotoForm({ url: '', description: '' });
+    setShowPhotoModal(true);
   };
 
-  const handleDeletePhoto = (photoUrl: string) => {
+  const handleDeletePhoto = (photoId: number) => {
+    const performDelete = async () => {
+      try {
+        await providerPhotoService.deletePhoto(photoId);
+        loadPhotos();
+      } catch (error) {
+        console.error('Error deleting photo:', error);
+        Alert.alert('Error', 'Failed to delete photo');
+      }
+    };
+
     if (Platform.OS === 'web') {
       if (window.confirm('Remove this photo from your gallery?')) {
-        setPhotos(photos.filter(p => p !== photoUrl));
+        performDelete();
       }
     } else {
       Alert.alert(
@@ -331,14 +369,7 @@ export default function ProfileProviderScreen() {
         'Remove this photo from your gallery?',
         [
           { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Delete',
-            style: 'destructive',
-            onPress: () => {
-              // TODO: API call to delete photo
-              setPhotos(photos.filter(p => p !== photoUrl));
-            },
-          },
+          { text: 'Delete', style: 'destructive', onPress: performDelete },
         ]
       );
     }
@@ -661,20 +692,32 @@ export default function ProfileProviderScreen() {
                   </View>
 
                   <View className="flex-row flex-wrap gap-3">
-                    {photos.map((photo, index) => (
-                      <View key={index} className="basis-[48%] relative">
-                        <Image
-                          source={{ uri: photo }}
-                          className="w-full h-40 rounded-xl"
-                        />
-                        <TouchableOpacity 
-                          onPress={() => handleDeletePhoto(photo)}
-                          className="absolute top-2 right-2 bg-destructive rounded-full p-1.5"
-                        >
-                          <Trash2 color="#ffffff" size={14} />
-                        </TouchableOpacity>
+                    {photos.length > 0 ? (
+                      photos.map((photo) => (
+                        <View key={photo.id} className="basis-[48%] relative">
+                          <Image
+                            source={{ uri: photo.url }}
+                            className="w-full h-40 rounded-xl"
+                          />
+                          <TouchableOpacity 
+                            onPress={() => handleDeletePhoto(photo.id)}
+                            className="absolute top-2 right-2 bg-destructive/80 rounded-full p-1.5"
+                          >
+                            <Trash2 color="#ffffff" size={14} />
+                          </TouchableOpacity>
+                          {photo.description && (
+                            <View className="absolute bottom-0 left-0 right-0 bg-black/40 p-2 rounded-b-xl">
+                              <Text className="text-white text-[10px]" numberOfLines={1}>{photo.description}</Text>
+                            </View>
+                          )}
+                        </View>
+                      ))
+                    ) : (
+                      <View className="w-full py-8 items-center border-2 border-dashed border-border rounded-xl">
+                        <Camera color={isDark ? '#475569' : '#94a3b8'} size={32} />
+                        <Text className="text-muted-foreground mt-2">No photos in gallery yet</Text>
                       </View>
-                    ))}
+                    )}
                   </View>
                 </View>
 
@@ -947,6 +990,56 @@ export default function ProfileProviderScreen() {
               >
                 <Plus color="#ffffff" size={20} />
                 <Text className="text-primary-foreground font-bold text-lg ml-2">Add Time Slot</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={{ height: Platform.OS === 'ios' ? 40 : 20 }} />
+          </View>
+        </View>
+      </Modal>
+
+      {/* Photo Add Modal */}
+      <Modal
+        visible={showPhotoModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowPhotoModal(false)}
+      >
+        <View className="flex-1 justify-end bg-black/50">
+          <View className="bg-background rounded-t-3xl p-6">
+            <View className="flex-row items-center justify-between mb-6">
+              <Text className="text-xl font-bold text-foreground">Add Gallery Photo</Text>
+              <TouchableOpacity onPress={() => setShowPhotoModal(false)}>
+                <X color={isDark ? '#94a3b8' : '#475569'} size={24} />
+              </TouchableOpacity>
+            </View>
+
+            <View className="gap-4">
+              <View>
+                <Text className="text-sm font-medium text-muted-foreground mb-2">Photo URL</Text>
+                <TextInput
+                  value={photoForm.url}
+                  onChangeText={(text) => setPhotoForm({ ...photoForm, url: text })}
+                  className="bg-muted text-foreground p-4 rounded-xl border border-border"
+                  placeholder="https://example.com/photo.jpg"
+                />
+              </View>
+
+              <View>
+                <Text className="text-sm font-medium text-muted-foreground mb-2">Description (Optional)</Text>
+                <TextInput
+                  value={photoForm.description}
+                  onChangeText={(text) => setPhotoForm({ ...photoForm, description: text })}
+                  className="bg-muted text-foreground p-4 rounded-xl border border-border"
+                  placeholder="Happy dog playing"
+                />
+              </View>
+
+              <TouchableOpacity 
+                onPress={handleSavePhoto}
+                className="bg-primary p-4 rounded-xl flex-row items-center justify-center mt-2"
+              >
+                <Plus color="#ffffff" size={20} />
+                <Text className="text-primary-foreground font-bold text-lg ml-2">Add to Gallery</Text>
               </TouchableOpacity>
             </View>
             <View style={{ height: Platform.OS === 'ios' ? 40 : 20 }} />

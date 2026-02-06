@@ -18,7 +18,21 @@ import {
   LogOut
 } from 'lucide-react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { providerService, appointmentService, availabilityService, petService, authService, Provider, Availability, Appointment, Pet, PetType, Breed } from '@/services/petCareService';
+import { 
+  providerService, 
+  appointmentService, 
+  availabilityService, 
+  petService, 
+  authService, 
+  providerPhotoService,
+  Provider, 
+  Availability, 
+  Appointment, 
+  Pet, 
+  PetType, 
+  Breed,
+  ProviderPhoto
+} from '@/services/petCareService';
 import { APPOINTMENT_STATUS } from '@/constants/status';
 import { Calendar } from 'react-native-calendars';
 import { format } from 'date-fns';
@@ -36,6 +50,7 @@ export default function ProviderDetailScreen() {
   const [myPets, setMyPets] = useState<Pet[]>([]);
   const [petTypes, setPetTypes] = useState<PetType[]>([]);
   const [breeds, setBreeds] = useState<Breed[]>([]);
+  const [photos, setPhotos] = useState<ProviderPhoto[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedTime, setSelectedTime] = useState<string>('');
@@ -79,16 +94,18 @@ export default function ProviderDetailScreen() {
   const loadProviderData = async () => {
     try {
       setLoading(true);
-      const [providerData, availabilityData, petsData, typesData] = await Promise.all([
+      const [providerData, availabilityData, petsData, typesData, photoData] = await Promise.all([
         providerService.getProvider(Number(id)),
         availabilityService.getProviderAvailability(Number(id)),
         petService.getMyPets(),
-        petService.getPetTypes()
+        petService.getPetTypes(),
+        providerPhotoService.getProviderPhotos(Number(id))
       ]);
       setProvider(providerData);
       setAvailabilities(availabilityData);
       setMyPets(petsData);
       setPetTypes(typesData);
+      setPhotos(photoData);
 
       if (petsData.length > 0) {
         setSelectedPetId(petsData[0].id);
@@ -141,13 +158,6 @@ export default function ProviderDetailScreen() {
     }
   };
 
-  // Mock data for things not yet in backend
-  const photos = [
-    'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800',
-    'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=800',
-    'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=800',
-  ];
-
   const reviews = [
     {
       id: '1',
@@ -167,14 +177,14 @@ export default function ProviderDetailScreen() {
 
   const availableDates = availabilities.reduce((acc: any, curr) => {
     const dateStr = curr.date.split('T')[0];
-    if (!acc[dateStr]) {
+    if (!curr.isBooked && !acc[dateStr]) {
       acc[dateStr] = { marked: true, dotColor: '#2563eb' };
     }
     return acc;
   }, {});
 
   const timeSlots = availabilities
-    .filter(a => a.date.split('T')[0] === selectedDate)
+    .filter(a => a.date.split('T')[0] === selectedDate && !a.isBooked)
     .map(a => ({
       id: a.id?.toString() || a.startTime,
       time: a.startTime.split('T')[1].substring(0, 5),
@@ -365,14 +375,22 @@ export default function ProviderDetailScreen() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 0 }}
         >
-          {photos.map((photo, index) => (
+          {photos.length > 0 ? (
+            photos.map((photo) => (
+              <Image
+                key={photo.id}
+                source={{ uri: photo.url }}
+                style={{ width, height: 250 }}
+                resizeMode="cover"
+              />
+            ))
+          ) : (
             <Image
-              key={index}
-              source={{ uri: photo }}
+              source={{ uri: 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800' }}
               style={{ width, height: 250 }}
               resizeMode="cover"
             />
-          ))}
+          )}
         </ScrollView>
 
         {/* Business Info */}

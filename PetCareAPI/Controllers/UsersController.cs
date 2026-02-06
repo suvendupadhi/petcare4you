@@ -74,7 +74,10 @@ namespace PetCareAPI.Controllers
 
             user.FirstName = userUpdate.FirstName;
             user.LastName = userUpdate.LastName;
-            // email should probably be handled separately for security
+            user.PhoneNumber = userUpdate.PhoneNumber;
+            user.Address = userUpdate.Address;
+            user.ProfileImageUrl = userUpdate.ProfileImageUrl;
+            user.UpdatedAt = DateTime.UtcNow;
             
             await _context.SaveChangesAsync();
 

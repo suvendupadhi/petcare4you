@@ -22,7 +22,8 @@ namespace PetCareAPI.Services
 
         public async Task<AuthResponseDto?> LoginAsync(LoginDto loginDto)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == loginDto.Email);
+            var email = loginDto.Email.ToLower().Trim();
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email);
             if (user == null || loginDto.Password != user.PasswordHash)
                 return null;
 
@@ -37,12 +38,13 @@ namespace PetCareAPI.Services
 
         public async Task<bool> RegisterAsync(RegisterDto registerDto)
         {
-            if (await _context.Users.AnyAsync(u => u.Email == registerDto.Email))
+            var email = registerDto.Email.ToLower().Trim();
+            if (await _context.Users.AnyAsync(u => u.Email.ToLower() == email))
                 return false;
 
             var user = new User
             {
-                Email = registerDto.Email,
+                Email = email,
                 PasswordHash = registerDto.Password,
                 FirstName = registerDto.FirstName,
                 LastName = registerDto.LastName,

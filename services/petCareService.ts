@@ -6,6 +6,8 @@ export interface User {
   phoneNumber?: string;
   firstName: string;
   lastName: string;
+  address?: string;
+  profileImageUrl?: string;
   roleId: number;
   provider?: Provider;
 }
@@ -81,12 +83,14 @@ export interface Appointment {
 export const authService = {
   login: async (credentials: any) => {
     const response = await api.post('/auth/login', credentials);
-    if (response.token) {
-      await setToken(response.token);
+    const token = response.token || response.Token;
+    if (token) {
+      await setToken(token);
     }
     // Normalize response
     return {
       ...response,
+      token: token,
       roleId: response.roleId || response.RoleId,
       userId: response.userId || response.UserId
     };
@@ -289,5 +293,28 @@ export const userService = {
   },
   updateProfile: async (userData: any): Promise<void> => {
     return await api.put('/users/me', userData);
+  }
+};
+
+export interface ProviderPhoto {
+  id: number;
+  providerId: number;
+  url: string;
+  description?: string;
+  createdAt: string;
+}
+
+export const providerPhotoService = {
+  getProviderPhotos: async (providerId: number): Promise<ProviderPhoto[]> => {
+    return await api.get(`/providerPhotos/provider/${providerId}`);
+  },
+  getMyPhotos: async (): Promise<ProviderPhoto[]> => {
+    return await api.get('/providerPhotos/my');
+  },
+  addPhoto: async (photoData: { url: string; description?: string }): Promise<ProviderPhoto> => {
+    return await api.post('/providerPhotos', photoData);
+  },
+  deletePhoto: async (id: number): Promise<void> => {
+    return await api.delete(`/providerPhotos/${id}`);
   }
 };

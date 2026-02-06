@@ -22,6 +22,7 @@ namespace PetCareAPI.Data
         public DbSet<PetType> PetTypes { get; set; } = null!;
         public DbSet<Breed> Breeds { get; set; } = null!;
         public DbSet<Pet> Pets { get; set; } = null!;
+        public DbSet<ProviderPhoto> ProviderPhotos { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -74,6 +75,12 @@ namespace PetCareAPI.Data
                 .HasOne(p => p.User)
                 .WithOne(u => u.Provider)
                 .HasForeignKey<Provider>(p => p.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ProviderPhoto>()
+                .HasOne(pp => pp.Provider)
+                .WithMany(p => p.Photos)
+                .HasForeignKey(pp => pp.ProviderId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // ProviderService Configuration

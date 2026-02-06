@@ -2,8 +2,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
 // Use 10.0.2.2 for Android emulator to access localhost on host machine
-//const BASE_URL = Platform.OS === 'android' ? 'http://10.0.2.2:5088/api' : 'http://localhost:5088/api';
-const BASE_URL = Platform.OS === 'android' ? 'http://10.0.2.2:5088/api' : 'http://192.168.1.4:5088/api';
+const getBaseUrl = () => {
+  if (Platform.OS === 'android') return 'http://10.0.2.2:5088/api';
+  if (Platform.OS === 'web') return 'http://localhost:5088/api';
+  return 'http://192.168.1.5:5088/api'; // Change to your local IP for physical devices
+};
+
+const BASE_URL = getBaseUrl();
 
 const TOKEN_KEY = 'auth_token';
 
@@ -37,6 +42,12 @@ async function request(endpoint: string, options: RequestInit = {}) {
   };
 
   const response = await fetch(`${BASE_URL}${endpoint}`, config);
+
+  if (response.status === 401) {
+    await clearToken();
+    // In a real app, you might want to redirect to login
+    // router.replace('/') but we don't have router here
+  }
 
   const contentType = response.headers.get('content-type');
   let data;

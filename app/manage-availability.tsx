@@ -345,7 +345,7 @@ export default function ManageAvailabilityScreen() {
                   value={startTime}
                   mode="time"
                   is24Hour={false}
-                  display={Platform.OS === 'android' ? 'spinner' : 'default'}
+                  display="spinner"
                   onChange={onStartTimeChange}
                 />
               )}
@@ -355,7 +355,7 @@ export default function ManageAvailabilityScreen() {
                   value={endTime}
                   mode="time"
                   is24Hour={false}
-                  display={Platform.OS === 'android' ? 'spinner' : 'default'}
+                  display="spinner"
                   onChange={onEndTimeChange}
                 />
               )}

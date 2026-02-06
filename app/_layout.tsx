@@ -28,9 +28,7 @@ export default function RootLayout() {
     <StripeWrapper>
       <ThemeProvider>
         <SafeAreaProvider>
-          <DismissKeyboard>
-            <Stack screenOptions={{ headerShown: false }} />
-          </DismissKeyboard>
+          <Stack screenOptions={{ headerShown: false }} />
         </SafeAreaProvider>
       </ThemeProvider>
     </StripeWrapper>

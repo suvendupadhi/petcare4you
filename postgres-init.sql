@@ -96,6 +96,15 @@ CREATE TABLE IF NOT EXISTS providers (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 11. ProviderPhotos Table
+CREATE TABLE IF NOT EXISTS provider_photos (
+    id SERIAL PRIMARY KEY,
+    provider_id INTEGER NOT NULL REFERENCES providers(id) ON DELETE CASCADE,
+    url VARCHAR(500) NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- 9. ProviderServiceTypes (Join Table)
 CREATE TABLE IF NOT EXISTS provider_service_types (
     provider_id INTEGER REFERENCES providers(id) ON DELETE CASCADE,
