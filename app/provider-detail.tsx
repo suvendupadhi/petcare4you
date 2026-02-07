@@ -35,6 +35,7 @@ import {
   Breed,
   ProviderPhoto
 } from '@/services/petCareService';
+import { getImageUrl } from '@/services/api';
 import { APPOINTMENT_STATUS } from '@/constants/status';
 import { Calendar } from 'react-native-calendars';
 import { format } from 'date-fns';
@@ -413,7 +414,7 @@ export default function ProviderDetailScreen() {
             photos.map((photo) => (
               <Image
                 key={photo.id}
-                source={{ uri: photo.url }}
+                source={{ uri: getImageUrl(photo.url) || '' }}
                 style={{ width, height: 250 }}
                 resizeMode="cover"
               />

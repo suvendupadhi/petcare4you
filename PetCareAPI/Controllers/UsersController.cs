@@ -13,10 +13,12 @@ namespace PetCareAPI.Controllers
     public class UsersController : ControllerBase
     {
         private readonly PetCareContext _context;
+        private readonly IWebHostEnvironment _environment;
 
-        public UsersController(PetCareContext context)
+        public UsersController(PetCareContext context, IWebHostEnvironment environment)
         {
             _context = context;
+            _environment = environment;
         }
 
         [HttpGet("me")]
@@ -99,15 +101,31 @@ namespace PetCareAPI.Controllers
             if (file == null || file.Length == 0)
                 return BadRequest("No file uploaded");
 
-            // In a real app, we would save the file to a cloud storage or a local folder
-            // For this demo, we'll just use a placeholder URL or the filename
-            // Since we don't have a static file server configured, we'll return a sample image
-            user.ProfileImageUrl = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400";
-            user.UpdatedAt = DateTime.UtcNow;
+            try
+            {
+                var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads");
+                if (!Directory.Exists(uploadsFolder))
+                    Directory.CreateDirectory(uploadsFolder);
 
-            await _context.SaveChangesAsync();
+                var fileName = $"user_{user.Id}_{DateTime.Now.Ticks}{Path.GetExtension(file.FileName)}";
+                var filePath = Path.Combine(uploadsFolder, fileName);
 
-            return Ok(new { url = user.ProfileImageUrl });
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                user.ProfileImageUrl = $"/uploads/{fileName}";
+                user.UpdatedAt = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new { url = user.ProfileImageUrl });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
     }
 }

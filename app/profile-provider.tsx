@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator, TextInput, Platform, Modal, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
 import { 
   ArrowLeft, 
   Building2, 
@@ -40,6 +41,7 @@ import {
   providerPhotoService,
   ProviderPhoto
 } from '@/services/petCareService';
+import { getImageUrl } from '@/services/api';
 import { format, parseISO } from 'date-fns';
 
 export default function ProfileProviderScreen() {
@@ -292,6 +294,51 @@ export default function ProfileProviderScreen() {
     setEditMode(false);
   };
 
+  const handlePickImage = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const selectedImage = result.assets[0];
+        
+        // Prepare form data
+        const formData = new FormData();
+        const uri = Platform.OS === 'ios' ? selectedImage.uri.replace('file://', '') : selectedImage.uri;
+        
+        // @ts-ignore
+        formData.append('file', {
+          uri: uri,
+          type: 'image/jpeg',
+          name: 'profile-photo.jpg',
+        });
+
+        const response = await providerService.updateProviderPhoto(formData);
+        
+        // Update local state
+        if (provider) {
+          setProvider({
+            ...provider,
+            profileImageUrl: response.url
+          });
+        }
+        
+        if (Platform.OS === 'web') {
+          window.alert('Success: Profile photo updated');
+        } else {
+          Alert.alert('Success', 'Profile photo updated');
+        }
+      }
+    } catch (error) {
+      console.error('Error picking/uploading image:', error);
+      Alert.alert('Error', 'Failed to update profile photo');
+    }
+  };
+
   const handleEditService = (service: ProviderService) => {
     setEditingService(service);
     setServiceForm({
@@ -462,10 +509,18 @@ export default function ProfileProviderScreen() {
                 <View className="bg-card rounded-2xl p-6 border border-border">
                   <View className="flex-row items-center justify-between mb-4">
                     <View className="flex-row items-center flex-1">
-                      <Image
-                        source={{ uri: 'https://images.unsplash.com/photo-1522276498395-f4f68f7f8454?w=400' }}
-                        className="w-20 h-20 rounded-xl"
-                      />
+                      <View className="relative">
+                        <Image
+                          source={{ uri: getImageUrl(provider?.profileImageUrl) || 'https://images.unsplash.com/photo-1522276498395-f4f68f7f8454?w=400' }}
+                          className="w-20 h-20 rounded-xl"
+                        />
+                        <TouchableOpacity 
+                          onPress={handlePickImage}
+                          className="absolute -bottom-1 -right-1 bg-primary p-1.5 rounded-full border-2 border-card"
+                        >
+                          <Camera color="#ffffff" size={14} />
+                        </TouchableOpacity>
+                      </View>
                       <View className="flex-1 ml-4">
                         {editMode ? (
                           <TextInput
@@ -715,7 +770,7 @@ export default function ProfileProviderScreen() {
                       photos.map((photo) => (
                         <View key={photo.id} className="basis-[48%] relative">
                           <Image
-                            source={{ uri: photo.url }}
+                            source={{ uri: getImageUrl(photo.url) || '' }}
                             className="w-full h-40 rounded-xl"
                           />
                           <TouchableOpacity 

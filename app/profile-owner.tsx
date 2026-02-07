@@ -27,6 +27,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { authService, userService, User as UserType, petService, Pet, PetType, Breed, savedProviderService, SavedProvider } from '@/services/petCareService';
+import { getImageUrl } from '@/services/api';
 
 export default function ProfileOwnerScreen() {
   const colorScheme = useColorScheme();
@@ -372,7 +373,7 @@ export default function ProfileOwnerScreen() {
           <View className="bg-card rounded-2xl p-6 border border-border">
             <View className="flex-row items-center">
               <Image
-                source={{ uri: userData?.profileImageUrl || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400' }}
+                source={{ uri: getImageUrl(userData?.profileImageUrl) || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400' }}
                 className="w-20 h-20 rounded-full"
               />
               <View className="flex-1 ml-4">
@@ -429,7 +430,7 @@ export default function ProfileOwnerScreen() {
                 <View key={pet.id} className="bg-card rounded-xl p-4 border border-border">
                   <View className="flex-row items-center">
                     <Image
-                      source={{ uri: pet.profileImageUrl || 'https://images.unsplash.com/photo-1633722715463-d30f4f325e24?w=400' }}
+                      source={{ uri: getImageUrl(pet.profileImageUrl) || 'https://images.unsplash.com/photo-1633722715463-d30f4f325e24?w=400' }}
                       className="w-16 h-16 rounded-full"
                     />
                     <View className="flex-1 ml-4">
@@ -481,7 +482,7 @@ export default function ProfileOwnerScreen() {
                 >
                   <View className="flex-row items-center p-4">
                     <Image
-                      source={{ uri: saved.provider?.user?.profileImageUrl || 'https://images.unsplash.com/photo-1516733725897-1aa73b87c8e8?w=400' }}
+                      source={{ uri: getImageUrl(saved.provider?.profileImageUrl) || 'https://images.unsplash.com/photo-1516733725897-1aa73b87c8e8?w=400' }}
                       className="w-16 h-16 rounded-lg"
                     />
                     <View className="flex-1 ml-4">
@@ -592,7 +593,7 @@ export default function ProfileOwnerScreen() {
                   disabled={uploading}
                 >
                   <Image
-                    source={{ uri: userData?.profileImageUrl || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400' }}
+                    source={{ uri: getImageUrl(userData?.profileImageUrl) || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400' }}
                     className="w-24 h-24 rounded-full"
                   />
                   <View className="absolute bottom-0 right-0 bg-primary p-2 rounded-full">
@@ -703,7 +704,7 @@ export default function ProfileOwnerScreen() {
                   onPress={() => pickImage('pet')}
                 >
                   <Image
-                    source={{ uri: petForm.profileImageUrl || 'https://images.unsplash.com/photo-1633722715463-d30f4f325e24?w=400' }}
+                    source={{ uri: getImageUrl(petForm.profileImageUrl) || 'https://images.unsplash.com/photo-1633722715463-d30f4f325e24?w=400' }}
                     className="w-24 h-24 rounded-full"
                   />
                   <View className="absolute bottom-0 right-0 bg-primary p-2 rounded-full">
