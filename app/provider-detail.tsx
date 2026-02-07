@@ -15,7 +15,8 @@ import {
   Home as HomeIcon,
   Check,
   ChevronRight,
-  LogOut
+  LogOut,
+  Heart
 } from 'lucide-react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { 
@@ -25,6 +26,7 @@ import {
   petService, 
   authService, 
   providerPhotoService,
+  savedProviderService,
   Provider, 
   Availability, 
   Appointment, 
@@ -63,12 +65,38 @@ export default function ProviderDetailScreen() {
   const [description, setDescription] = useState<string>('');
   const [showBooking, setShowBooking] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
     if (id) {
       loadProviderData();
+      checkIfSaved();
     }
   }, [id]);
+
+  const checkIfSaved = async () => {
+    try {
+      const saved = await savedProviderService.isProviderSaved(Number(id));
+      setIsSaved(saved);
+    } catch (error) {
+      console.error('Error checking if provider is saved:', error);
+    }
+  };
+
+  const toggleSaveProvider = async () => {
+    try {
+      if (isSaved) {
+        await savedProviderService.unsaveProvider(Number(id));
+        setIsSaved(false);
+      } else {
+        await savedProviderService.saveProvider(Number(id));
+        setIsSaved(true);
+      }
+    } catch (error) {
+      console.error('Error toggling save provider:', error);
+      Alert.alert('Error', 'Failed to update saved providers');
+    }
+  };
 
   useEffect(() => {
     if (rescheduleId) {
@@ -352,6 +380,12 @@ export default function ProviderDetailScreen() {
             <Text className="text-lg font-semibold text-foreground">Provider Details</Text>
           </View>
           <View className="flex-row items-center gap-4">
+            <TouchableOpacity 
+              onPress={toggleSaveProvider}
+              className="bg-primary/10 p-2 rounded-full"
+            >
+              <Heart color={isSaved ? '#ef4444' : (isDark ? '#94a3b8' : '#475569')} fill={isSaved ? '#ef4444' : 'transparent'} size={24} />
+            </TouchableOpacity>
             <TouchableOpacity 
               onPress={() => router.push('/owner-dashboard')}
               className="bg-primary/10 p-2 rounded-full"

@@ -53,7 +53,7 @@ namespace PetCareAPI.Controllers
                 return BadRequest("The selected time slot is no longer available.");
             }
 
-            return CreatedAtAction(nameof(GetOwnerAppointments), new { id = result.Id }, result);
+            return CreatedAtAction(nameof(GetAppointment), new { id = result.Id }, result);
         }
 
         [HttpPut("{id}")]

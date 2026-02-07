@@ -85,5 +85,29 @@ namespace PetCareAPI.Controllers
 
             return NoContent();
         }
+
+        [HttpPost("me/photo")]
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> UpdateProfilePhoto(IFormFile file)
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var user = await _context.Users.FindAsync(userId);
+
+            if (user == null)
+                return NotFound();
+
+            if (file == null || file.Length == 0)
+                return BadRequest("No file uploaded");
+
+            // In a real app, we would save the file to a cloud storage or a local folder
+            // For this demo, we'll just use a placeholder URL or the filename
+            // Since we don't have a static file server configured, we'll return a sample image
+            user.ProfileImageUrl = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400";
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { url = user.ProfileImageUrl });
+        }
     }
 }

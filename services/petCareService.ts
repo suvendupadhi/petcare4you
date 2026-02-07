@@ -294,6 +294,31 @@ export const userService = {
   },
   updateProfile: async (userData: any): Promise<void> => {
     return await api.put('/users/me', userData);
+  },
+  updateProfilePhoto: async (formData: FormData): Promise<any> => {
+    return await api.post('/users/me/photo', formData);
+  }
+};
+
+export interface SavedProvider {
+  id: number;
+  ownerId: number;
+  providerId: number;
+  provider?: Provider;
+}
+
+export const savedProviderService = {
+  getSavedProviders: async (): Promise<SavedProvider[]> => {
+    return await api.get('/savedProviders');
+  },
+  saveProvider: async (providerId: number): Promise<SavedProvider> => {
+    return await api.post('/savedProviders', { providerId });
+  },
+  unsaveProvider: async (providerId: number): Promise<void> => {
+    return await api.delete(`/savedProviders/provider/${providerId}`);
+  },
+  isProviderSaved: async (providerId: number): Promise<boolean> => {
+    return await api.get(`/savedProviders/isSaved/${providerId}`);
   }
 };
 

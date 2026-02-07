@@ -270,11 +270,11 @@ export default function PaymentInvoiceScreen() {
         </View>
 
         {/* Stats Cards */}
-        <View className="px-6 mt-8 mb-6">
+        <View className="px-6 mt-8 mb-6 pt-4">
           <View className="flex-row gap-3">
             <View className="flex-1 bg-card rounded-2xl p-5 border border-border shadow-sm">
-              <View className="bg-green-500/10 w-10 h-10 rounded-xl items-center justify-center mb-3">
-                <DollarSign color={isDark ? "#4ade80" : "#16a34a"} size={22} />
+              <View className="bg-primary/10 w-10 h-10 rounded-xl items-center justify-center mb-3">
+                <DollarSign color={isDark ? '#fb923c' : '#ea580c'} size={22} />
               </View>
               <Text className="text-2xl font-bold text-foreground">
                 ${stats.totalRevenue.toFixed(2)}
@@ -284,8 +284,8 @@ export default function PaymentInvoiceScreen() {
               </Text>
             </View>
             <View className="flex-1 bg-card rounded-2xl p-5 border border-border shadow-sm">
-              <View className="bg-amber-500/10 w-10 h-10 rounded-xl items-center justify-center mb-3">
-                <Clock color={isDark ? "#fbbf24" : "#d97706"} size={22} />
+              <View className="bg-primary/10 w-10 h-10 rounded-xl items-center justify-center mb-3">
+                <Clock color={isDark ? '#fb923c' : '#ea580c'} size={22} />
               </View>
               <Text className="text-2xl font-bold text-foreground">
                 ${stats.pendingPayments.toFixed(2)}
@@ -295,8 +295,8 @@ export default function PaymentInvoiceScreen() {
           </View>
           <View className="flex-row gap-3 mt-3">
             <View className="flex-1 bg-card rounded-2xl p-5 border border-border shadow-sm">
-              <View className="bg-blue-500/10 w-10 h-10 rounded-xl items-center justify-center mb-3">
-                <CheckCircle color={isDark ? "#60a5fa" : "#2563eb"} size={22} />
+              <View className="bg-primary/10 w-10 h-10 rounded-xl items-center justify-center mb-3">
+                <CheckCircle color={isDark ? '#fb923c' : '#ea580c'} size={22} />
               </View>
               <Text className="text-2xl font-bold text-foreground">
                 ${stats.paidThisMonth.toFixed(2)}
@@ -306,8 +306,8 @@ export default function PaymentInvoiceScreen() {
               </Text>
             </View>
             <View className="flex-1 bg-card rounded-2xl p-5 border border-border shadow-sm">
-              <View className="bg-purple-500/10 w-10 h-10 rounded-xl items-center justify-center mb-3">
-                <CreditCard color={isDark ? "#c084fc" : "#9333ea"} size={22} />
+              <View className="bg-primary/10 w-10 h-10 rounded-xl items-center justify-center mb-3">
+                <CreditCard color={isDark ? '#fb923c' : '#ea580c'} size={22} />
               </View>
               <Text className="text-2xl font-bold text-foreground">
                 {stats.transactionCount}

@@ -55,7 +55,7 @@ namespace PetCareAPI.Controllers
             _context.ProviderPhotos.Add(photo);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetProviderPhotos), new { providerId = provider.Id }, photo);
+            return Ok(photo);
         }
 
         [HttpDelete("{id}")]

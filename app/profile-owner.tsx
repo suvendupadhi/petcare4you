@@ -24,8 +24,9 @@ import {
   Save,
   Phone
 } from 'lucide-react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { authService, userService, User as UserType, petService, Pet, PetType, Breed } from '@/services/petCareService';
+import { authService, userService, User as UserType, petService, Pet, PetType, Breed, savedProviderService, SavedProvider } from '@/services/petCareService';
 
 export default function ProfileOwnerScreen() {
   const colorScheme = useColorScheme();
@@ -36,6 +37,7 @@ export default function ProfileOwnerScreen() {
   const [pets, setPets] = useState<Pet[]>([]);
   const [petTypes, setPetTypes] = useState<PetType[]>([]);
   const [breeds, setBreeds] = useState<Breed[]>([]);
+  const [uploading, setUploading] = useState(false);
   
   // Profile Edit State
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -60,13 +62,63 @@ export default function ProfileOwnerScreen() {
     profileImageUrl: ''
   });
 
-  const [savedProviders, setSavedProviders] = useState([]);
+  const [savedProviders, setSavedProviders] = useState<SavedProvider[]>([]);
 
   useEffect(() => {
     loadProfileData();
     loadPets();
     loadPetTypes();
+    loadSavedProviders();
   }, []);
+
+  const loadSavedProviders = async () => {
+    try {
+      const data = await savedProviderService.getSavedProviders();
+      setSavedProviders(data);
+    } catch (error) {
+      console.error('Error loading saved providers:', error);
+    }
+  };
+
+  const pickImage = async (type: 'profile' | 'pet') => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      const selectedImage = result.assets[0];
+      
+      if (type === 'profile') {
+        try {
+          setUploading(true);
+          const formData = new FormData();
+          formData.append('file', {
+            uri: Platform.OS === 'ios' ? selectedImage.uri.replace('file://', '') : selectedImage.uri,
+            type: 'image/jpeg',
+            name: 'profile.jpg',
+          } as any);
+
+          const response = await userService.updateProfilePhoto(formData);
+          setUserData(prev => prev ? { ...prev, profileImageUrl: response.url } : null);
+          if (Platform.OS === 'web') {
+            window.alert('Success: Profile photo updated');
+          } else {
+            Alert.alert('Success', 'Profile photo updated');
+          }
+        } catch (error) {
+          console.error('Error uploading profile photo:', error);
+          Alert.alert('Error', 'Failed to upload profile photo');
+        } finally {
+          setUploading(false);
+        }
+      } else {
+        setPetForm(prev => ({ ...prev, profileImageUrl: selectedImage.uri }));
+      }
+    }
+  };
 
   const loadPetTypes = async () => {
     try {
@@ -226,10 +278,20 @@ export default function ProfileOwnerScreen() {
     }
   };
 
-  const handleRemoveSavedProvider = (providerId: string, providerName: string) => {
+  const handleRemoveSavedProvider = (providerId: number, providerName: string) => {
+    const performRemove = async () => {
+      try {
+        await savedProviderService.unsaveProvider(providerId);
+        loadSavedProviders();
+      } catch (error) {
+        console.error('Error removing saved provider:', error);
+        Alert.alert('Error', 'Failed to remove saved provider');
+      }
+    };
+
     if (Platform.OS === 'web') {
       if (window.confirm(`Remove ${providerName} from saved providers?`)) {
-        setSavedProviders(savedProviders.filter(p => p.id !== providerId));
+        performRemove();
       }
     } else {
       Alert.alert(
@@ -240,10 +302,7 @@ export default function ProfileOwnerScreen() {
           {
             text: 'Remove',
             style: 'destructive',
-            onPress: () => {
-              // TODO: API call to remove saved provider
-              setSavedProviders(savedProviders.filter(p => p.id !== providerId));
-            },
+            onPress: performRemove,
           },
         ]
       );
@@ -414,26 +473,28 @@ export default function ProfileOwnerScreen() {
             </View>
           ) : (
             <View className="gap-3">
-              {savedProviders.map((provider: any) => (
+              {savedProviders.map((saved: SavedProvider) => (
                 <TouchableOpacity
-                  key={provider.id}
-                  onPress={() => router.push('/provider-detail')}
+                  key={saved.id}
+                  onPress={() => router.push({ pathname: '/provider-detail', params: { id: saved.providerId } })}
                   className="bg-card rounded-xl border border-border overflow-hidden"
                 >
                   <View className="flex-row items-center p-4">
                     <Image
-                      source={{ uri: provider.photo }}
+                      source={{ uri: saved.provider?.user?.profileImageUrl || 'https://images.unsplash.com/photo-1516733725897-1aa73b87c8e8?w=400' }}
                       className="w-16 h-16 rounded-lg"
                     />
                     <View className="flex-1 ml-4">
-                      <Text className="text-base font-bold text-foreground">{provider.name}</Text>
+                      <Text className="text-base font-bold text-foreground">{saved.provider?.companyName || saved.provider?.user?.firstName + ' ' + saved.provider?.user?.lastName}</Text>
                       <View className="flex-row items-center mt-1">
                         <Star color="#EAB308" size={14} fill="#EAB308" />
-                        <Text className="text-sm text-foreground font-semibold ml-1">{provider.rating}</Text>
+                        <Text className="text-sm text-foreground font-semibold ml-1">4.8</Text>
                       </View>
-                      <Text className="text-sm text-muted-foreground mt-1">{provider.services}</Text>
+                      <Text className="text-sm text-muted-foreground mt-1" numberOfLines={1}>
+                        {saved.provider?.providerServices?.map(ps => ps.serviceType?.name).join(', ') || 'Various Services'}
+                      </Text>
                     </View>
-                    <TouchableOpacity onPress={() => handleRemoveSavedProvider(provider.id, provider.name)}>
+                    <TouchableOpacity onPress={() => handleRemoveSavedProvider(saved.providerId, saved.provider?.companyName || 'Provider')}>
                       <Heart color="#f87171" size={20} fill="#f87171" />
                     </TouchableOpacity>
                   </View>
@@ -525,13 +586,21 @@ export default function ProfileOwnerScreen() {
 
             <ScrollView showsVerticalScrollIndicator={false}>
               <View className="items-center mb-6">
-                <TouchableOpacity className="relative">
+                <TouchableOpacity 
+                  className="relative"
+                  onPress={() => pickImage('profile')}
+                  disabled={uploading}
+                >
                   <Image
-                    source={{ uri: profileForm.profileImageUrl || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400' }}
+                    source={{ uri: userData?.profileImageUrl || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400' }}
                     className="w-24 h-24 rounded-full"
                   />
                   <View className="absolute bottom-0 right-0 bg-primary p-2 rounded-full">
-                    <Camera color="white" size={16} />
+                    {uploading ? (
+                      <ActivityIndicator size="small" color="white" />
+                    ) : (
+                      <Camera color="white" size={16} />
+                    )}
                   </View>
                 </TouchableOpacity>
               </View>
@@ -629,7 +698,10 @@ export default function ProfileOwnerScreen() {
 
             <ScrollView showsVerticalScrollIndicator={false}>
               <View className="items-center mb-6">
-                <TouchableOpacity className="relative">
+                <TouchableOpacity 
+                  className="relative"
+                  onPress={() => pickImage('pet')}
+                >
                   <Image
                     source={{ uri: petForm.profileImageUrl || 'https://images.unsplash.com/photo-1633722715463-d30f4f325e24?w=400' }}
                     className="w-24 h-24 rounded-full"

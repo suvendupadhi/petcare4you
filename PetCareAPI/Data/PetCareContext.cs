@@ -24,6 +24,7 @@ namespace PetCareAPI.Data
         public DbSet<Pet> Pets { get; set; } = null!;
         public DbSet<ProviderPhoto> ProviderPhotos { get; set; } = null!;
         public DbSet<Notification> Notifications { get; set; } = null!;
+        public DbSet<SavedProvider> SavedProviders { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -132,6 +133,23 @@ namespace PetCareAPI.Data
                 .WithMany(u => u.Payments)
                 .HasForeignKey(p => p.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // SavedProvider Configuration
+            modelBuilder.Entity<SavedProvider>()
+                .HasOne(sp => sp.User)
+                .WithMany()
+                .HasForeignKey(sp => sp.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<SavedProvider>()
+                .HasOne(sp => sp.Provider)
+                .WithMany()
+                .HasForeignKey(sp => sp.ProviderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<SavedProvider>()
+                .HasIndex(sp => new { sp.UserId, sp.ProviderId })
+                .IsUnique();
 
             // Force all table and column names to snake_case for PostgreSQL compatibility
             foreach (var entity in modelBuilder.Model.GetEntityTypes())

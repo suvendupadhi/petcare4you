@@ -57,7 +57,7 @@ namespace PetCareAPI.Controllers
             _context.ProviderServices.Add(service);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetMyServices), new { id = service.Id }, service);
+            return Ok(service);
         }
 
         // PUT: api/ProviderServices/{id}

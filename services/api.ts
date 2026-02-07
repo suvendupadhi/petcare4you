@@ -51,9 +51,13 @@ async function request(endpoint: string, options: RequestInit = {}) {
   const token = await getToken();
   
   const headers: HeadersInit = {
-    'Content-Type': 'application/json',
     ...(options.headers || {}),
   };
+
+  // Only set Content-Type to application/json if it's not FormData
+  if (!(options.body instanceof FormData) && !headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
@@ -95,11 +99,11 @@ async function request(endpoint: string, options: RequestInit = {}) {
 export const api = {
   get: (endpoint: string, options?: RequestInit) => request(endpoint, { ...options, method: 'GET' }),
   post: (endpoint: string, body: any, options?: RequestInit) => 
-    request(endpoint, { ...options, method: 'POST', body: JSON.stringify(body) }),
+    request(endpoint, { ...options, method: 'POST', body: body instanceof FormData ? body : JSON.stringify(body) }),
   put: (endpoint: string, body: any, options?: RequestInit) => 
-    request(endpoint, { ...options, method: 'PUT', body: JSON.stringify(body) }),
+    request(endpoint, { ...options, method: 'PUT', body: body instanceof FormData ? body : JSON.stringify(body) }),
   patch: (endpoint: string, body: any, options?: RequestInit) => 
-    request(endpoint, { ...options, method: 'PATCH', body: JSON.stringify(body) }),
+    request(endpoint, { ...options, method: 'PATCH', body: body instanceof FormData ? body : JSON.stringify(body) }),
   delete: (endpoint: string, options?: RequestInit) => request(endpoint, { ...options, method: 'DELETE' }),
   
   // Notifications
@@ -108,4 +112,13 @@ export const api = {
   markNotificationsAsRead: () => request('/Notifications/mark-as-read', { method: 'PUT' }),
   markNotificationAsRead: (id: number) => request(`/Notifications/${id}/mark-as-read`, { method: 'PUT' }),
   deleteNotification: (id: number) => request(`/Notifications/${id}`, { method: 'DELETE' }),
+
+  // User Profile Photo
+  updateProfilePhoto: (url: string) => request('/Users/me/photo', { method: 'POST', body: JSON.stringify({ url }) }),
+
+  // Saved Providers
+  getSavedProviders: () => request('/SavedProviders', { method: 'GET' }),
+  saveProvider: (providerId: number) => request('/SavedProviders', { method: 'POST', body: JSON.stringify({ providerId }) }),
+  unsaveProvider: (providerId: number) => request(`/SavedProviders/provider/${providerId}`, { method: 'DELETE' }),
+  isProviderSaved: (providerId: number) => request(`/SavedProviders/isSaved/${providerId}`, { method: 'GET' }),
 };
