@@ -51,6 +51,7 @@ export interface Provider {
   city: string;
   latitude: number;
   longitude: number;
+  profileImageUrl?: string;
   user?: User;
   providerServices?: ProviderService[];
 }
@@ -151,6 +152,9 @@ export const providerService = {
   updateProvider: async (id: number, providerData: any): Promise<void> => {
     console.log(`petCareService: updateProvider called for id ${id}`, providerData);
     return await api.put(`/providers/${id}`, providerData);
+  },
+  updateProviderPhoto: async (formData: FormData): Promise<any> => {
+    return await api.updateProviderPhoto(formData);
   }
 };
 

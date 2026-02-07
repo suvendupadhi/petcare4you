@@ -13,10 +13,12 @@ namespace PetCareAPI.Controllers
     public class ProvidersController : ControllerBase
     {
         private readonly PetCareContext _context;
+        private readonly IWebHostEnvironment _environment;
 
-        public ProvidersController(PetCareContext context)
+        public ProvidersController(PetCareContext context, IWebHostEnvironment environment)
         {
             _context = context;
+            _environment = environment;
         }
 
         [HttpGet]
@@ -153,6 +155,47 @@ namespace PetCareAPI.Controllers
 
             await _context.SaveChangesAsync();
             return NoContent();
+        }
+
+        [HttpPost("me/photo")]
+        [Authorize]
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> UpdateProviderPhoto(IFormFile file)
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var provider = await _context.Providers.FirstOrDefaultAsync(p => p.UserId == userId);
+
+            if (provider == null)
+                return NotFound("Provider profile not found");
+
+            if (file == null || file.Length == 0)
+                return BadRequest("No file uploaded");
+
+            try
+            {
+                var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads");
+                if (!Directory.Exists(uploadsFolder))
+                    Directory.CreateDirectory(uploadsFolder);
+
+                var fileName = $"provider_{provider.Id}_{DateTime.Now.Ticks}{Path.GetExtension(file.FileName)}";
+                var filePath = Path.Combine(uploadsFolder, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                provider.ProfileImageUrl = $"/uploads/{fileName}";
+                provider.UpdatedAt = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new { url = provider.ProfileImageUrl });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
     }
 }

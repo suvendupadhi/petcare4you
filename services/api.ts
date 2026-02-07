@@ -24,6 +24,13 @@ const getBaseUrl = () => {
 };
 
 const BASE_URL = getBaseUrl();
+export const ROOT_URL = BASE_URL.replace('/api', '');
+
+export const getImageUrl = (path?: string) => {
+  if (!path) return null;
+  if (path.startsWith('http')) return path;
+  return `${ROOT_URL}${path.startsWith('/') ? '' : '/'}${path}`;
+};
 
 // Debugging: Print to console and show alert on device
 console.log('API Base URL:', BASE_URL);
@@ -114,7 +121,10 @@ export const api = {
   deleteNotification: (id: number) => request(`/Notifications/${id}`, { method: 'DELETE' }),
 
   // User Profile Photo
-  updateProfilePhoto: (url: string) => request('/Users/me/photo', { method: 'POST', body: JSON.stringify({ url }) }),
+  updateProfilePhoto: (formData: FormData) => request('/Users/me/photo', { method: 'POST', body: formData }),
+
+  // Provider Profile Photo
+  updateProviderPhoto: (formData: FormData) => request('/Providers/me/photo', { method: 'POST', body: formData }),
 
   // Saved Providers
   getSavedProviders: () => request('/SavedProviders', { method: 'GET' }),
