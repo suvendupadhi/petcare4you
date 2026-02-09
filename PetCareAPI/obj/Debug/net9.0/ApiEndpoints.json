@@ -412,6 +412,26 @@
     ]
   },
   {
+    "ContainingType": "PetCareAPI.Controllers.PaymentsController",
+    "Method": "GetRevenueSummary",
+    "RelativePath": "api/Payments/revenue-summary",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "PetCareAPI.Models.DTOs.RevenueSummaryDto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
     "ContainingType": "PetCareAPI.Controllers.PetsController",
     "Method": "GetMyPets",
     "RelativePath": "api/Pets",

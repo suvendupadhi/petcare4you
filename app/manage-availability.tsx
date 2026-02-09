@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Platform, TextInput, useColorScheme } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Platform, TextInput, useColorScheme, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Clock, Calendar as CalendarIcon, Plus, Trash2, LogOut, Home } from 'lucide-react-native';
@@ -79,6 +79,7 @@ export default function ManageAvailabilityScreen() {
   };
 
   const handleAddSlot = async () => {
+    Keyboard.dismiss();
     setSaving(true);
     try {
       const [year, month, day] = selectedDate.split('-').map(Number);
@@ -214,7 +215,10 @@ export default function ManageAvailabilityScreen() {
             <View className="flex-row items-center justify-between">
             <View className="flex-row items-center gap-3">
               <TouchableOpacity
-                onPress={() => router.back()}
+                onPress={() => {
+                  Keyboard.dismiss();
+                  router.back();
+                }}
               >
                 <ArrowLeft color={isDark ? '#f8fafc' : '#1e293b'} size={24} />
               </TouchableOpacity>

@@ -224,6 +224,17 @@ export interface Payment {
   appointment?: Appointment;
 }
 
+export interface RevenueSummary {
+  totalRevenue: number;
+  pendingRevenue: number;
+  monthlyRevenue: number;
+  weeklyRevenue: number;
+  growthRate: number;
+  totalAppointments: number;
+  completedAppointments: number;
+  averageRevenuePerAppointment: number;
+}
+
 export interface StatusMaster {
   id: number;
   statusName: string;
@@ -245,6 +256,9 @@ export const paymentService = {
   },
   getOwnerPayments: async (): Promise<Payment[]> => {
     return await api.get('/payments/owner');
+  },
+  getRevenueSummary: async (): Promise<RevenueSummary> => {
+    return await api.get('/payments/revenue-summary');
   },
   createPayment: async (paymentData: any): Promise<Payment> => {
     return await api.post('/payments', paymentData);

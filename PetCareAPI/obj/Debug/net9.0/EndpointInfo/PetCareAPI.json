@@ -654,6 +654,35 @@
         }
       }
     },
+    "/api/Payments/revenue-summary": {
+      "get": {
+        "tags": [
+          "Payments"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevenueSummaryDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevenueSummaryDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevenueSummaryDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Payments/owner": {
       "get": {
         "tags": [
@@ -2608,6 +2637,44 @@
           "roleId": {
             "type": "integer",
             "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RevenueSummaryDto": {
+        "type": "object",
+        "properties": {
+          "totalRevenue": {
+            "type": "number",
+            "format": "double"
+          },
+          "pendingRevenue": {
+            "type": "number",
+            "format": "double"
+          },
+          "monthlyRevenue": {
+            "type": "number",
+            "format": "double"
+          },
+          "weeklyRevenue": {
+            "type": "number",
+            "format": "double"
+          },
+          "growthRate": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalAppointments": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "completedAppointments": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "averageRevenuePerAppointment": {
+            "type": "number",
+            "format": "double"
           }
         },
         "additionalProperties": false

@@ -23,20 +23,40 @@ namespace PetCareAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Notification>>> GetUserNotifications()
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            return await _context.Notifications
-                .Where(n => n.UserId == userId)
-                .OrderByDescending(n => n.CreatedAt)
-                .ToListAsync();
+            try
+            {
+                var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(userIdStr)) return Unauthorized("User ID claim not found");
+                
+                var userId = int.Parse(userIdStr);
+                return await _context.Notifications
+                    .Where(n => n.UserId == userId)
+                    .OrderByDescending(n => n.CreatedAt)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
 
         // GET: api/Notifications/unread-count
         [HttpGet("unread-count")]
         public async Task<ActionResult<int>> GetUnreadCount()
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            return await _context.Notifications
-                .CountAsync(n => n.UserId == userId && !n.IsRead);
+            try
+            {
+                var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(userIdStr)) return Unauthorized("User ID claim not found");
+
+                var userId = int.Parse(userIdStr);
+                return await _context.Notifications
+                    .CountAsync(n => n.UserId == userId && !n.IsRead);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
 
         // PUT: api/Notifications/mark-as-read

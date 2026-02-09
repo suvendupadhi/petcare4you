@@ -163,7 +163,7 @@ export default function OwnerDashboardScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {/* Header */}
-        <View className="px-6 pt-6 pb-4">
+        <View className="px-6 pt-10 pb-4">
           <View className="flex-row items-center justify-between mb-6">
             <View>
               <Text className="text-muted-foreground text-sm">Welcome back,</Text>

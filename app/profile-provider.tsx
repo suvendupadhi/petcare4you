@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator, TextInput, Platform, Modal, useColorScheme } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator, TextInput, Platform, Modal, useColorScheme, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
@@ -111,6 +111,7 @@ export default function ProfileProviderScreen() {
   };
 
   const handleSavePhoto = async () => {
+    Keyboard.dismiss();
     try {
       if (!photoForm.url.trim()) {
         Alert.alert('Error', 'Please enter a photo URL');
@@ -141,6 +142,7 @@ export default function ProfileProviderScreen() {
   };
 
   const handleAddAvailability = async () => {
+    Keyboard.dismiss();
     try {
       if (!provider) return;
       
@@ -246,6 +248,7 @@ export default function ProfileProviderScreen() {
   };
 
   const handleSaveProfile = async () => {
+    Keyboard.dismiss();
     if (!provider) return;
     try {
       console.log('Saving profile with data:', editForm);
@@ -279,6 +282,7 @@ export default function ProfileProviderScreen() {
   };
 
   const handleCancelEdit = () => {
+    Keyboard.dismiss();
     if (provider) {
       setEditForm({
         companyName: provider.companyName,
@@ -340,6 +344,7 @@ export default function ProfileProviderScreen() {
   };
 
   const handleEditService = (service: ProviderService) => {
+    Keyboard.dismiss();
     setEditingService(service);
     setServiceForm({
       serviceTypeId: service.serviceTypeId,
@@ -350,6 +355,7 @@ export default function ProfileProviderScreen() {
   };
 
   const handleAddService = () => {
+    Keyboard.dismiss();
     setEditingService(null);
     setServiceForm({
       serviceTypeId: serviceTypes.length > 0 ? serviceTypes[0].id : 0,
@@ -360,6 +366,7 @@ export default function ProfileProviderScreen() {
   };
 
   const handleSaveService = async () => {
+    Keyboard.dismiss();
     try {
       if (editingService && editingService.id) {
         await providerServicePricingService.updateService(editingService.id, {
@@ -410,6 +417,7 @@ export default function ProfileProviderScreen() {
   };
 
   const handleAddPhoto = () => {
+    Keyboard.dismiss();
     setPhotoForm({ url: '', description: '' });
     setShowPhotoModal(true);
   };
@@ -872,7 +880,10 @@ export default function ProfileProviderScreen() {
               <Text className="text-xl font-bold text-foreground">
                 {editingService ? 'Edit Service' : 'Add Service'}
               </Text>
-              <TouchableOpacity onPress={() => setShowServiceModal(false)}>
+              <TouchableOpacity onPress={() => {
+                Keyboard.dismiss();
+                setShowServiceModal(false);
+              }}>
                 <X color={isDark ? '#94a3b8' : '#475569'} size={24} />
               </TouchableOpacity>
             </View>
@@ -970,7 +981,10 @@ export default function ProfileProviderScreen() {
           <View className="bg-background rounded-t-3xl p-6">
             <View className="flex-row items-center justify-between mb-6">
               <Text className="text-xl font-bold text-foreground">Add Availability Slot</Text>
-              <TouchableOpacity onPress={() => setShowAvailabilityModal(false)}>
+              <TouchableOpacity onPress={() => {
+                Keyboard.dismiss();
+                setShowAvailabilityModal(false);
+              }}>
                 <X color={isDark ? '#94a3b8' : '#475569'} size={24} />
               </TouchableOpacity>
             </View>
@@ -1082,7 +1096,10 @@ export default function ProfileProviderScreen() {
           <View className="bg-background rounded-t-3xl p-6">
             <View className="flex-row items-center justify-between mb-6">
               <Text className="text-xl font-bold text-foreground">Add Gallery Photo</Text>
-              <TouchableOpacity onPress={() => setShowPhotoModal(false)}>
+              <TouchableOpacity onPress={() => {
+                Keyboard.dismiss();
+                setShowPhotoModal(false);
+              }}>
                 <X color={isDark ? '#94a3b8' : '#475569'} size={24} />
               </TouchableOpacity>
             </View>

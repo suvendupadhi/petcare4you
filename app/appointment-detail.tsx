@@ -107,8 +107,12 @@ export default function AppointmentDetailScreen() {
   const [user, setUser] = useState<UserType | null>(null);
 
   useEffect(() => {
-    if (id) {
+    const appointmentId = Array.isArray(id) ? id[0] : id;
+    if (appointmentId && !isNaN(Number(appointmentId))) {
       loadAppointmentDetails();
+    } else if (id) {
+      setLoading(false);
+      console.error('Invalid appointment ID:', id);
     }
   }, [id]);
 
@@ -142,7 +146,11 @@ export default function AppointmentDetailScreen() {
 
   const loadAppointmentDetails = async () => {
     try {
-      const data = await appointmentService.getAppointment(Number(id));
+      const appointmentId = Array.isArray(id) ? id[0] : id;
+      if (!appointmentId || isNaN(Number(appointmentId))) {
+        throw new Error('Invalid appointment ID');
+      }
+      const data = await appointmentService.getAppointment(Number(appointmentId));
       setAppointment(data);
     } catch (error) {
       console.error('Error loading appointment details:', error);

@@ -29,7 +29,7 @@ import {
 import { useRouter } from "expo-router";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { usePaymentGateway } from "@/hooks/usePaymentGateway";
-import { paymentService, Payment, userService, User, stripeService, authService } from "@/services/petCareService";
+import { paymentService, Payment, userService, User, stripeService, authService, RevenueSummary } from "@/services/petCareService";
 import { PAYMENT_STATUS, getStatusLabel, USER_ROLE } from "@/constants/status";
 
 export default function PaymentInvoiceScreen() {
@@ -65,21 +65,32 @@ export default function PaymentInvoiceScreen() {
         ? await paymentService.getProviderPayments()
         : await paymentService.getOwnerPayments();
 
-      const totalRevenue = data
-        .filter(p => p.status === PAYMENT_STATUS.COMPLETED)
-        .reduce((sum, p) => sum + p.amount, 0);
-        
-      const pendingPayments = data
-        .filter(p => p.status === PAYMENT_STATUS.PENDING)
-        .reduce((sum, p) => sum + p.amount, 0);
-
       setInvoices(data);
-      setStats({
-        totalRevenue,
-        pendingPayments,
-        paidThisMonth: totalRevenue, // Simplification
-        transactionCount: data.length
-      });
+
+      if (currentUser.roleId === USER_ROLE.PROVIDER && currentUser.provider) {
+        const revenue = await paymentService.getRevenueSummary();
+        setStats({
+          totalRevenue: revenue.totalRevenue,
+          pendingPayments: revenue.pendingRevenue,
+          paidThisMonth: revenue.monthlyRevenue,
+          transactionCount: revenue.totalAppointments
+        });
+      } else {
+        const totalRevenue = data
+          .filter(p => p.status === PAYMENT_STATUS.COMPLETED)
+          .reduce((sum, p) => sum + p.amount, 0);
+          
+        const pendingPayments = data
+          .filter(p => p.status === PAYMENT_STATUS.PENDING)
+          .reduce((sum, p) => sum + p.amount, 0);
+
+        setStats({
+          totalRevenue,
+          pendingPayments,
+          paidThisMonth: totalRevenue, // Simplification
+          transactionCount: data.length
+        });
+      }
     } catch (error) {
       console.error('Error loading payment data:', error);
       if (Platform.OS === 'web') {
@@ -270,7 +281,7 @@ export default function PaymentInvoiceScreen() {
         </View>
 
         {/* Stats Cards */}
-        <View className="px-6 mt-8 mb-6 pt-4">
+        <View className="px-6 mt-10 mb-6 pt-2">
           <View className="flex-row gap-3">
             <View className="flex-1 bg-card rounded-2xl p-5 border border-border shadow-sm">
               <View className="bg-primary/10 w-10 h-10 rounded-xl items-center justify-center mb-3">
@@ -284,8 +295,8 @@ export default function PaymentInvoiceScreen() {
               </Text>
             </View>
             <View className="flex-1 bg-card rounded-2xl p-5 border border-border shadow-sm">
-              <View className="bg-primary/10 w-10 h-10 rounded-xl items-center justify-center mb-3">
-                <Clock color={isDark ? '#fb923c' : '#ea580c'} size={22} />
+              <View className="bg-yellow-500/10 w-10 h-10 rounded-xl items-center justify-center mb-3">
+                <Clock color="#eab308" size={22} />
               </View>
               <Text className="text-2xl font-bold text-foreground">
                 ${stats.pendingPayments.toFixed(2)}
@@ -295,8 +306,8 @@ export default function PaymentInvoiceScreen() {
           </View>
           <View className="flex-row gap-3 mt-3">
             <View className="flex-1 bg-card rounded-2xl p-5 border border-border shadow-sm">
-              <View className="bg-primary/10 w-10 h-10 rounded-xl items-center justify-center mb-3">
-                <CheckCircle color={isDark ? '#fb923c' : '#ea580c'} size={22} />
+              <View className="bg-green-500/10 w-10 h-10 rounded-xl items-center justify-center mb-3">
+                <CheckCircle color="#16a34a" size={22} />
               </View>
               <Text className="text-2xl font-bold text-foreground">
                 ${stats.paidThisMonth.toFixed(2)}
@@ -306,8 +317,8 @@ export default function PaymentInvoiceScreen() {
               </Text>
             </View>
             <View className="flex-1 bg-card rounded-2xl p-5 border border-border shadow-sm">
-              <View className="bg-primary/10 w-10 h-10 rounded-xl items-center justify-center mb-3">
-                <CreditCard color={isDark ? '#fb923c' : '#ea580c'} size={22} />
+              <View className="bg-blue-500/10 w-10 h-10 rounded-xl items-center justify-center mb-3">
+                <CreditCard color="#2563eb" size={22} />
               </View>
               <Text className="text-2xl font-bold text-foreground">
                 {stats.transactionCount}

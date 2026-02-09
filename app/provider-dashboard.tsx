@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Platform, Modal, FlatList } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Platform, Modal, FlatList, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { 
@@ -21,7 +21,7 @@ import {
   Trash2
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
-import { authService, appointmentService, Appointment, userService, User, Provider } from '@/services/petCareService';
+import { authService, appointmentService, Appointment, userService, User, Provider, paymentService, RevenueSummary } from '@/services/petCareService';
 import { api } from '@/services/api';
 import { APPOINTMENT_STATUS, getStatusLabel } from '@/constants/status';
 import { useColorScheme } from 'react-native';
@@ -36,7 +36,7 @@ export default function ProviderDashboard() {
   const [provider, setProvider] = useState<Provider | null>(null);
   const [todayAppointments, setTodayAppointments] = useState<Appointment[]>([]);
   const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([]);
-  const [revenue, setRevenue] = useState({ today: 0, week: 0, month: 0 });
+  const [revenue, setRevenue] = useState<RevenueSummary | null>(null);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -50,14 +50,42 @@ export default function ProviderDashboard() {
 
   const fetchNotifications = async () => {
     try {
-      const [notifs, count] = await Promise.all([
+      // Use Promise.allSettled to prevent one failure from blocking both
+      const results = await Promise.allSettled([
         api.getNotifications(),
         api.getUnreadCount()
       ]);
-      setNotifications(notifs);
+      
+      let notifs = [];
+      let count = unreadCount;
+
+      if (results[0].status === 'fulfilled') {
+        notifs = results[0].value || [];
+      } else {
+        console.error('Error fetching notifications list:', results[0].reason);
+      }
+
+      if (results[1].status === 'fulfilled') {
+        count = results[1].value || 0;
+      } else {
+        console.error('Error fetching unread count:', results[1].reason);
+      }
+      
+      // Normalize notifications to handle potential PascalCase from API
+      const normalizedNotifs = notifs.map((n: any) => ({
+        id: n.id ?? n.Id,
+        title: n.title ?? n.Title,
+        message: n.message ?? n.Message,
+        type: n.type ?? n.Type,
+        referenceId: n.referenceId ?? n.ReferenceId,
+        isRead: n.isRead ?? n.IsRead,
+        createdAt: n.createdAt ?? n.CreatedAt,
+      }));
+
+      setNotifications(normalizedNotifs);
       setUnreadCount(count);
     } catch (error) {
-      console.error('Error fetching notifications:', error);
+      console.error('Error in fetchNotifications:', error);
     }
   };
 
@@ -138,6 +166,8 @@ export default function ProviderDashboard() {
       setUser(currentUser);
       if (currentUser.provider) {
         setProvider(currentUser.provider);
+        const revenueData = await paymentService.getRevenueSummary();
+        setRevenue(revenueData);
       }
       
       const today = new Date().toISOString().split('T')[0];
@@ -149,21 +179,6 @@ export default function ProviderDashboard() {
       
       setTodayAppointments(todayApps);
       setUpcomingAppointments(upcomingApps);
-      
-      // Calculate simple revenue
-      const todayRevenue = todayApps
-        .filter(a => a.status === APPOINTMENT_STATUS.CONFIRMED || a.status === APPOINTMENT_STATUS.COMPLETED)
-        .reduce((sum, a) => sum + (a.totalPrice || 0), 0);
-        
-      const totalRevenue = appointments
-        .filter(a => a.status === APPOINTMENT_STATUS.CONFIRMED || a.status === APPOINTMENT_STATUS.COMPLETED)
-        .reduce((sum, a) => sum + (a.totalPrice || 0), 0);
-
-      setRevenue({
-        today: todayRevenue,
-        week: totalRevenue, // Simplification
-        month: totalRevenue // Simplification
-      });
     } catch (error) {
       console.error('Error loading dashboard:', error);
     } finally {
@@ -195,7 +210,7 @@ export default function ProviderDashboard() {
         keyboardShouldPersistTaps="handled"
       >
         {/* Header */}
-        <View className="p-6 flex-row justify-between items-center">
+        <View className="px-6 pt-10 pb-6 flex-row justify-between items-center">
           <View>
             <Text className="text-muted-foreground text-sm">Welcome back,</Text>
             <Text className="text-foreground text-2xl font-bold mt-1">{user?.firstName || 'Provider'}</Text>
@@ -207,7 +222,10 @@ export default function ProviderDashboard() {
             </TouchableOpacity>
             <TouchableOpacity 
               className="relative"
-              onPress={() => setShowNotifications(true)}
+              onPress={() => {
+                Keyboard.dismiss();
+                setShowNotifications(true);
+              }}
             >
               <Bell color={isDark ? '#f8fafc' : '#1e293b'} size={24} />
               {unreadCount > 0 && (
@@ -255,7 +273,7 @@ export default function ProviderDashboard() {
 
               <FlatList
                 data={notifications}
-                keyExtractor={(item) => item.id.toString()}
+                keyExtractor={(item) => (item.id || item.Id || Math.random().toString()).toString()}
                 contentContainerStyle={{ padding: 24 }}
                 ListEmptyComponent={
                   <View className="flex-1 items-center justify-center py-20">
@@ -288,32 +306,45 @@ export default function ProviderDashboard() {
         {/* Revenue Summary Cards */}
         <View className="px-6 mb-6">
           <Text className="text-foreground text-lg font-semibold mb-3">Revenue Summary</Text>
-          <View className="flex-row gap-3">
-            <View className="flex-1 bg-card border border-border rounded-2xl p-4">
-              <View className="flex-row items-center justify-between mb-2">
-                <DollarSign color={isDark ? '#fb923c' : '#2563eb'} size={20} />
-                <TrendingUp color="#16a34a" size={16} />
+          <View className="gap-3">
+            <View className="flex-row gap-3">
+              <View className="flex-1 bg-card border border-border rounded-2xl p-4">
+                <View className="flex-row items-center justify-between mb-2">
+                  <DollarSign color={isDark ? '#fb923c' : '#2563eb'} size={20} />
+                  <TrendingUp color="#16a34a" size={16} />
+                </View>
+                <Text className="text-foreground text-2xl font-bold">${revenue?.weeklyRevenue || 0}</Text>
+                <Text className="text-muted-foreground text-xs mt-1">This Week</Text>
               </View>
-              <Text className="text-foreground text-2xl font-bold">${revenue.today}</Text>
-              <Text className="text-muted-foreground text-xs mt-1">Today</Text>
+
+              <View className="flex-1 bg-card border border-border rounded-2xl p-4">
+                <View className="flex-row items-center justify-between mb-2">
+                  <DollarSign color={isDark ? '#fb923c' : '#2563eb'} size={20} />
+                  <TrendingUp color="#16a34a" size={16} />
+                </View>
+                <Text className="text-foreground text-2xl font-bold">${revenue?.monthlyRevenue || 0}</Text>
+                <Text className="text-muted-foreground text-xs mt-1">This Month</Text>
+              </View>
             </View>
 
-            <View className="flex-1 bg-card border border-border rounded-2xl p-4">
-              <View className="flex-row items-center justify-between mb-2">
-                <DollarSign color={isDark ? '#fb923c' : '#2563eb'} size={20} />
-                <TrendingUp color="#16a34a" size={16} />
+            <View className="flex-row gap-3">
+              <View className="flex-1 bg-card border border-border rounded-2xl p-4">
+                <View className="flex-row items-center justify-between mb-2">
+                  <DollarSign color={isDark ? '#fb923c' : '#2563eb'} size={20} />
+                  <TrendingUp color="#16a34a" size={16} />
+                </View>
+                <Text className="text-foreground text-2xl font-bold">${revenue?.totalRevenue || 0}</Text>
+                <Text className="text-muted-foreground text-xs mt-1">Total Earnings</Text>
               </View>
-              <Text className="text-foreground text-2xl font-bold">${revenue.week}</Text>
-              <Text className="text-muted-foreground text-xs mt-1">This Week</Text>
-            </View>
 
-            <View className="flex-1 bg-card border border-border rounded-2xl p-4">
-              <View className="flex-row items-center justify-between mb-2">
-                <DollarSign color={isDark ? '#fb923c' : '#2563eb'} size={20} />
-                <TrendingUp color="#16a34a" size={16} />
+              <View className="flex-1 bg-card border border-border rounded-2xl p-4">
+                <View className="flex-row items-center justify-between mb-2">
+                  <Clock color={isDark ? '#fb923c' : '#2563eb'} size={20} />
+                  <AlertCircle color="#eab308" size={16} />
+                </View>
+                <Text className="text-foreground text-2xl font-bold">${revenue?.pendingRevenue || 0}</Text>
+                <Text className="text-muted-foreground text-xs mt-1">Pending</Text>
               </View>
-              <Text className="text-foreground text-2xl font-bold">${revenue.month}</Text>
-              <Text className="text-muted-foreground text-xs mt-1">This Month</Text>
             </View>
           </View>
         </View>
@@ -474,22 +505,32 @@ export default function ProviderDashboard() {
 
         {/* Business Stats */}
         <View className="px-6 mb-6">
-          <Text className="text-foreground text-lg font-semibold mb-3">Business Stats</Text>
+          <Text className="text-foreground text-lg font-semibold mb-3">Business Performance</Text>
           <View className="bg-card border border-border rounded-2xl p-4">
-            <View className="flex-row items-center justify-between mb-3">
+            <View className="flex-row items-center justify-between mb-4">
               <View className="items-center flex-1">
-                <Text className="text-foreground text-2xl font-bold">24</Text>
-                <Text className="text-muted-foreground text-xs mt-1">This Week</Text>
+                <Text className="text-foreground text-xl font-bold">{revenue?.totalAppointments || 0}</Text>
+                <Text className="text-muted-foreground text-[10px] mt-1">Total Bookings</Text>
               </View>
-              <View className="w-px h-12 bg-border" />
+              <View className="w-px h-8 bg-border" />
               <View className="items-center flex-1">
-                <Text className="text-foreground text-2xl font-bold">156</Text>
-                <Text className="text-muted-foreground text-xs mt-1">Total Clients</Text>
+                <Text className="text-foreground text-xl font-bold">{revenue?.completedAppointments || 0}</Text>
+                <Text className="text-muted-foreground text-[10px] mt-1">Completed</Text>
               </View>
-              <View className="w-px h-12 bg-border" />
+              <View className="w-px h-8 bg-border" />
               <View className="items-center flex-1">
-                <Text className="text-foreground text-2xl font-bold">4.8</Text>
-                <Text className="text-muted-foreground text-xs mt-1">Rating</Text>
+                <View className="flex-row items-center gap-1">
+                  <Text className={`text-xl font-bold ${(revenue?.growthRate || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {(revenue?.growthRate || 0).toFixed(1)}%
+                  </Text>
+                </View>
+                <Text className="text-muted-foreground text-[10px] mt-1">Growth</Text>
+              </View>
+            </View>
+            <View className="pt-4 border-t border-border">
+              <View className="flex-row justify-between items-center">
+                <Text className="text-muted-foreground text-sm">Avg. Revenue per Booking</Text>
+                <Text className="text-foreground font-bold">${(revenue?.averageRevenuePerAppointment || 0).toFixed(2)}</Text>
               </View>
             </View>
           </View>

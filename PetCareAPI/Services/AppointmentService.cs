@@ -43,13 +43,24 @@ namespace PetCareAPI.Services
             var provider = await _context.Providers.FirstOrDefaultAsync(p => p.UserId == userId);
             if (provider == null) return Enumerable.Empty<Appointment>();
 
-            return await _context.Appointments
+            //return await _context.Appointments
+            //    .Include(a => a.Owner)
+            //    .Include(a => a.Pet)
+            //        .ThenInclude(p => p!.PetType)
+            //    .Where(a => a.ProviderId == provider.Id)
+            //    .OrderByDescending(a => a.AppointmentDate)
+            //    .ToListAsync();
+
+            var appointments = await _context.Appointments
                 .Include(a => a.Owner)
                 .Include(a => a.Pet)
                     .ThenInclude(p => p!.PetType)
-                .Where(a => a.ProviderId == provider.Id)
+                .Where(a => a.Provider!.UserId == userId)
                 .OrderByDescending(a => a.AppointmentDate)
+                .Take(50) // or pass as parameter
                 .ToListAsync();
+
+            return appointments;
         }
 
         public async Task<Appointment?> CreateAppointmentAsync(int userId, Appointment appointment)
@@ -93,6 +104,7 @@ namespace PetCareAPI.Services
             availability.IsBooked = true;
 
             _context.Appointments.Add(appointment);
+            await _context.SaveChangesAsync();
             
             // Create notification for provider
             var provider = await _context.Providers.FindAsync(appointment.ProviderId);
@@ -109,9 +121,8 @@ namespace PetCareAPI.Services
                     CreatedAt = DateTime.UtcNow
                 };
                 _context.Notifications.Add(notification);
+                await _context.SaveChangesAsync();
             }
-
-            await _context.SaveChangesAsync();
 
             return appointment;
         }

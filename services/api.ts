@@ -93,6 +93,7 @@ async function request(endpoint: string, options: RequestInit = {}) {
   }
 
   if (!response.ok) {
+    console.error(`API Error [${response.status}] ${endpoint}:`, data);
     throw new Error(data?.message || response.statusText || 'API request failed');
   }
 
@@ -131,4 +132,7 @@ export const api = {
   saveProvider: (providerId: number) => request('/SavedProviders', { method: 'POST', body: JSON.stringify({ providerId }) }),
   unsaveProvider: (providerId: number) => request(`/SavedProviders/provider/${providerId}`, { method: 'DELETE' }),
   isProviderSaved: (providerId: number) => request(`/SavedProviders/isSaved/${providerId}`, { method: 'GET' }),
+  
+  // Revenue
+  getRevenueSummary: () => request('/Payments/revenue-summary', { method: 'GET' }),
 };
