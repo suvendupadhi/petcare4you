@@ -298,6 +298,37 @@ export default function ProfileProviderScreen() {
     setEditMode(false);
   };
 
+  const sortedServiceTypes = [...serviceTypes].sort((a, b) => {
+    // Priority 1: Currently selected in the form
+    const aIsCurrent = serviceForm.serviceTypeId === a.id;
+    const bIsCurrent = serviceForm.serviceTypeId === b.id;
+    if (aIsCurrent && !bIsCurrent) return -1;
+    if (!aIsCurrent && bIsCurrent) return 1;
+
+    // Priority 2: Already has a pricing entry in 'services'
+    const aInServices = services.some(s => s.serviceTypeId === a.id);
+    const bInServices = services.some(s => s.serviceTypeId === b.id);
+    if (aInServices && !bInServices) return -1;
+    if (!aInServices && bInServices) return 1;
+
+    // Priority 3: Selected in Business Profile
+    const aInProfile = (editForm.serviceTypeIds || []).includes(a.id);
+    const bInProfile = (editForm.serviceTypeIds || []).includes(b.id);
+    if (aInProfile && !bInProfile) return -1;
+    if (!aInProfile && bInProfile) return 1;
+
+    // Priority 4: Alphabetical
+    return a.name.localeCompare(b.name);
+  });
+
+  const sortedServiceTypesForProfile = [...serviceTypes].sort((a, b) => {
+    const aSelected = editForm.serviceTypeIds.includes(a.id);
+    const bSelected = editForm.serviceTypeIds.includes(b.id);
+    if (aSelected && !bSelected) return -1;
+    if (!aSelected && bSelected) return 1;
+    return a.name.localeCompare(b.name);
+  });
+
   const handlePickImage = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -560,7 +591,7 @@ export default function ProfileProviderScreen() {
                       <View>
                         <Text className="text-sm text-muted-foreground mb-2">Service Types</Text>
                         <MultiSelect
-                          options={serviceTypes}
+                          options={sortedServiceTypesForProfile}
                           selectedValues={editForm.serviceTypeIds}
                           onValueChange={(ids) => setEditForm(prev => ({ ...prev, serviceTypeIds: ids }))}
                           placeholder="Select services"
@@ -668,10 +699,12 @@ export default function ProfileProviderScreen() {
                       <DollarSign color={isDark ? '#fb923c' : '#ea580c'} size={20} />
                       <Text className="text-lg font-bold text-foreground ml-2">Services & Pricing</Text>
                     </View>
+                    {/* Commented out to suspend add functionality besides availability
                     <TouchableOpacity onPress={handleAddService} className="flex-row items-center">
                       <Plus color={isDark ? '#fb923c' : '#ea580c'} size={18} />
                       <Text className="text-primary font-semibold ml-1">Add</Text>
                     </TouchableOpacity>
+                    */}
                   </View>
 
                   <View className="gap-3">
@@ -716,10 +749,10 @@ export default function ProfileProviderScreen() {
                       <Clock color={isDark ? '#fb923c' : '#ea580c'} size={20} />
                       <Text className="text-lg font-bold text-foreground ml-2">Business Hours / Availability</Text>
                     </View>
-                    <TouchableOpacity onPress={() => setShowAvailabilityModal(true)} className="flex-row items-center">
+                    {/* <TouchableOpacity onPress={() => setShowAvailabilityModal(true)} className="flex-row items-center">
                       <Plus color={isDark ? '#fb923c' : '#ea580c'} size={18} />
                       <Text className="text-primary font-semibold ml-1">Add</Text>
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
                   </View>
 
                   <View className="bg-card rounded-xl p-4 border border-border gap-3">
@@ -906,14 +939,14 @@ export default function ProfileProviderScreen() {
                       }}
                     >
                       <option value={0}>Select a service</option>
-                      {serviceTypes.map(st => (
+                      {sortedServiceTypes.map(st => (
                         <option key={st.id} value={st.id}>{st.name}</option>
                       ))}
                     </select>
                   ) : (
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} className="p-2">
                       <View className="flex-row gap-2">
-                        {serviceTypes.map(st => (
+                        {sortedServiceTypes.map(st => (
                           <TouchableOpacity
                             key={st.id}
                             onPress={() => setServiceForm({ ...serviceForm, serviceTypeId: st.id })}

@@ -3,24 +3,30 @@ import { Platform, Alert } from 'react-native';
 import Constants from 'expo-constants';
 // Use 10.0.2.2 for Android emulator to access localhost on host machine
 const getBaseUrl = () => {
-  // if (Platform.OS === 'android') return 'http://10.0.2.2:5088/api';
-  // if (Platform.OS === 'web') return 'http://localhost:5088/api';
-  // return 'http://192.168.1.5:5088/api'; // Change to your local IP for physical devices
+  // Use environment variables if available (common for web hosting like Vercel/Netlify)
+  // process.env.EXPO_PUBLIC_API_URL is the standard for Expo
+  const envUrl = process.env.EXPO_PUBLIC_API_URL;
+  if (envUrl) return envUrl;
 
-  // Web
+  // Web fallback
   if (Platform.OS === 'web') {
+    // If we're on web and no env var, assume it's same host or localhost
+    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+      return `${window.location.protocol}//${window.location.host}/api`;
+    }
     return 'http://localhost:5088/api';
   }
 
   // Expo Go (iOS + Android) — DEV ONLY
   if (__DEV__) {
     const host = Constants.expoConfig?.hostUri?.split(':')[0];
-    return `http://${host}:5088/api`;
+    if (host) {
+      return `http://${host}:5088/api`;
+    }
   }
 
-  // Production (App Store / Play Store)
-  return 'https://api.yourdomain.com/api';
-
+  // Production (App Store / Play Store) fallback
+  return 'https://petcareapi.azurewebsites.net/api'; // Updated with a more realistic placeholder for hosting
 };
 
 const BASE_URL = getBaseUrl();

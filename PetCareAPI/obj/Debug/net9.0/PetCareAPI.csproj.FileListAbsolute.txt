@@ -1,5 +1,6 @@
 d:\W\Asnet123\petcare\PetCareAPI\bin\Debug\net9.0\appsettings.Development.json
 d:\W\Asnet123\petcare\PetCareAPI\bin\Debug\net9.0\appsettings.json
+d:\W\Asnet123\petcare\PetCareAPI\bin\Debug\net9.0\PetCareAPI.staticwebassets.runtime.json
 d:\W\Asnet123\petcare\PetCareAPI\bin\Debug\net9.0\PetCareAPI.staticwebassets.endpoints.json
 d:\W\Asnet123\petcare\PetCareAPI\bin\Debug\net9.0\PetCareAPI.exe
 d:\W\Asnet123\petcare\PetCareAPI\bin\Debug\net9.0\PetCareAPI.deps.json
@@ -133,6 +134,4 @@ d:\W\Asnet123\petcare\PetCareAPI\obj\Debug\net9.0\refint\PetCareAPI.dll
 d:\W\Asnet123\petcare\PetCareAPI\obj\Debug\net9.0\PetCareAPI.pdb
 d:\W\Asnet123\petcare\PetCareAPI\obj\Debug\net9.0\PetCareAPI.genruntimeconfig.cache
 d:\W\Asnet123\petcare\PetCareAPI\obj\Debug\net9.0\ref\PetCareAPI.dll
-D:\W\Asnet123\petcare\PetCareAPI\bin\Debug\net9.0\PetCareAPI.staticwebassets.runtime.json
 D:\W\Asnet123\petcare\PetCareAPI\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt
-D:\W\Asnet123\petcare\PetCareAPI\bin\Debug\net9.0\PetCareAPI.staticwebassets.runtime.json
