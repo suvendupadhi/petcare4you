@@ -400,10 +400,15 @@ export default function ProfileProviderScreen() {
     Keyboard.dismiss();
     try {
       if (editingService && editingService.id) {
-        await providerServicePricingService.updateService(editingService.id, {
-          ...editingService,
-          ...serviceForm
-        });
+        // Send only the necessary fields to the API, avoiding navigation properties
+        const updateData = {
+          id: editingService.id,
+          providerId: editingService.providerId,
+          serviceTypeId: serviceForm.serviceTypeId,
+          price: serviceForm.price,
+          description: serviceForm.description
+        };
+        await providerServicePricingService.updateService(editingService.id, updateData as ProviderService);
       } else {
         await providerServicePricingService.createService(serviceForm as ProviderService);
       }
@@ -416,7 +421,11 @@ export default function ProfileProviderScreen() {
       }
     } catch (error) {
       console.error('Error saving service:', error);
-      Alert.alert('Error', 'Failed to save service');
+      if (Platform.OS === 'web') {
+        window.alert('Error: Failed to save service');
+      } else {
+        Alert.alert('Error', 'Failed to save service');
+      }
     }
   };
 

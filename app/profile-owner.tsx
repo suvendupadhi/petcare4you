@@ -125,6 +125,10 @@ export default function ProfileOwnerScreen() {
     try {
       const types = await petService.getPetTypes();
       setPetTypes(types);
+      const dogType = types.find(t => t.name === 'Dog');
+      if (dogType && !editingPet) {
+        setPetForm(prev => ({ ...prev, petTypeId: dogType.id }));
+      }
     } catch (error) {
       console.error('Error loading pet types:', error);
     }
@@ -211,9 +215,10 @@ export default function ProfileOwnerScreen() {
 
   const handleAddPet = () => {
     setEditingPet(null);
+    const dogType = petTypes.find(t => t.name === 'Dog');
     setPetForm({
       name: '',
-      petTypeId: petTypes.length > 0 ? petTypes[0].id : 0,
+      petTypeId: dogType ? dogType.id : (petTypes.length > 0 ? petTypes[0].id : 0),
       breedId: undefined,
       age: 0,
       weight: 0,

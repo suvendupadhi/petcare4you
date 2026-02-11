@@ -134,6 +134,10 @@ export default function ProviderDetailScreen() {
       setAvailabilities(availabilityData);
       setMyPets(petsData);
       setPetTypes(typesData);
+      const dogType = typesData.find(t => t.name === 'Dog');
+      if (dogType) {
+        setSelectedPetTypeId(dogType.id);
+      }
       setPhotos(photoData);
 
       if (petsData.length > 0) {

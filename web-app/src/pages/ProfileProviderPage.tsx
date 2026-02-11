@@ -72,13 +72,19 @@ export default function ProfileProviderPage() {
       if (userData.provider) {
         const p = userData.provider;
         setProvider(p);
+        
+        // Extract existing service type IDs from providerServices if serviceTypeIds is not populated
+        const existingServiceIds = p.serviceTypeIds && p.serviceTypeIds.length > 0 
+          ? p.serviceTypeIds 
+          : (p.providerServices?.map(ps => ps.serviceTypeId) || []);
+
         setEditForm({
           companyName: p.companyName,
           description: p.description,
           hourlyRate: p.hourlyRate,
           address: p.address,
           city: p.city,
-          serviceTypeIds: p.serviceTypeIds || []
+          serviceTypeIds: existingServiceIds
         });
       }
     } catch (error) {
@@ -103,7 +109,15 @@ export default function ProfileProviderPage() {
   const handleAddService = async () => {
     try {
       if (editingService?.id) {
-        await providerServicePricingService.updateService(editingService.id, serviceForm as ProviderService);
+        // Send only the necessary fields to the API, avoiding navigation properties
+        const updateData = {
+          id: editingService.id,
+          providerId: editingService.providerId,
+          serviceTypeId: serviceForm.serviceTypeId,
+          price: serviceForm.price,
+          description: serviceForm.description
+        };
+        await providerServicePricingService.updateService(editingService.id, updateData as ProviderService);
       } else {
         await providerServicePricingService.createService(serviceForm as ProviderService);
       }
@@ -111,6 +125,7 @@ export default function ProfileProviderPage() {
       loadData();
       alert('Service saved successfully!');
     } catch (error) {
+      console.error('Error saving service:', error);
       alert('Failed to save service');
     }
   };
@@ -204,7 +219,7 @@ export default function ProfileProviderPage() {
                       />
                       
                       <div className="space-y-2">
-                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Service Specialties (Selected First)</label>
+                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Service Specialties</label>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                           {sortedServiceTypes.map(type => (
                             <label key={type.id} className={`flex items-center gap-2 p-2 rounded-lg border transition-colors cursor-pointer ${

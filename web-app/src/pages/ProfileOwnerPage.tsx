@@ -52,7 +52,14 @@ export default function ProfileOwnerPage() {
 
   useEffect(() => {
     loadData();
-    petService.getPetTypes().then(setPetTypes).catch(console.error);
+    petService.getPetTypes().then(types => {
+      setPetTypes(types);
+      const dogType = types.find(t => t.name === 'Dog');
+      if (dogType) {
+        setPetForm(prev => ({ ...prev, petTypeId: dogType.id }));
+        handlePetTypeChange(dogType.id);
+      }
+    }).catch(console.error);
   }, []);
 
   const loadData = async () => {
@@ -102,7 +109,16 @@ export default function ProfileOwnerPage() {
       await petService.createPet(petForm);
       setShowPetModal(false);
       loadData();
-      setPetForm({ name: '', petTypeId: 0, breedId: 0, age: 0, weight: 0, medicalNotes: '' });
+      const dogType = petTypes.find(t => t.name === 'Dog');
+      setPetForm({ 
+        name: '', 
+        petTypeId: dogType ? dogType.id : 0, 
+        breedId: 0, 
+        age: 0, 
+        weight: 0, 
+        medicalNotes: '' 
+      });
+      if (dogType) handlePetTypeChange(dogType.id);
       alert('Pet added successfully!');
     } catch (error) {
       alert('Failed to add pet');

@@ -94,7 +94,7 @@ namespace PetCareAPI.Controllers
         [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<PetType>>> GetPetTypes()
         {
-            return await _context.PetTypes.ToListAsync();
+            return await _context.PetTypes.Where(pt => pt.IsActive).ToListAsync();
         }
 
         [HttpGet("breeds/{typeId}")]

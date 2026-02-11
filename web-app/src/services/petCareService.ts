@@ -15,6 +15,7 @@ export interface User {
 export interface PetType {
   id: number;
   name: string;
+  isActive?: boolean;
 }
 
 export interface Breed {
@@ -272,6 +273,26 @@ export const userService = {
   },
   updateProfile: async (userData: any): Promise<void> => {
     await api.put('/Users/me', userData);
+  }
+};
+
+export const notificationService = {
+  getNotifications: async (): Promise<any[]> => {
+    const response = await api.get('/Notifications');
+    return response.data;
+  },
+  getUnreadCount: async (): Promise<number> => {
+    const response = await api.get('/Notifications/unread-count');
+    return response.data;
+  },
+  markAsRead: async (id: number): Promise<void> => {
+    await api.put(`/Notifications/${id}/mark-as-read`);
+  },
+  markAllAsRead: async (): Promise<void> => {
+    await api.put('/Notifications/mark-as-read');
+  },
+  deleteNotification: async (id: number): Promise<void> => {
+    await api.delete(`/Notifications/${id}`);
   }
 };
 

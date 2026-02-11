@@ -15,6 +15,7 @@ export interface User {
 export interface PetType {
   id: number;
   name: string;
+  isActive?: boolean;
 }
 
 export interface Breed {

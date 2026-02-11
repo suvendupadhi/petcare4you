@@ -12,7 +12,7 @@ import {
   Search,
   CreditCard
 } from 'lucide-react';
-import { authService } from '../services/petCareService';
+import { authService, notificationService } from '../services/petCareService';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -23,6 +23,22 @@ export default function Layout({ children, userType: propUserType }: LayoutProps
   const navigate = useNavigate();
   const location = useLocation();
   const userType = propUserType || (localStorage.getItem('user_type') as 'owner' | 'provider') || 'owner';
+  const [unreadCount, setUnreadCount] = React.useState(0);
+
+  React.useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const count = await notificationService.getUnreadCount();
+        setUnreadCount(count);
+      } catch (error) {
+        console.error('Error fetching unread count:', error);
+      }
+    };
+
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleLogout = () => {
     authService.logout();
@@ -42,7 +58,6 @@ export default function Layout({ children, userType: propUserType }: LayoutProps
   ];
 
   const commonItems = [
-    { icon: Bell, label: 'Notifications', path: '/notifications' },
     { icon: Settings, label: 'Settings', path: '/settings' },
   ];
 
@@ -106,13 +121,26 @@ export default function Layout({ children, userType: propUserType }: LayoutProps
       <main className="flex-1 overflow-y-auto">
         <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 sticky top-0 z-10">
           <h2 className="text-lg font-semibold text-slate-800">
-            {menuItems.find(i => i.path === location.pathname)?.label || 
+            {location.pathname === '/notifications' ? 'Notifications' : 
+             menuItems.find(i => i.path === location.pathname)?.label || 
              commonItems.find(i => i.path === location.pathname)?.label || 
              'PetCare'}
           </h2>
           <div className="flex items-center gap-4">
-            <button className="p-2 text-slate-400 hover:text-slate-600 transition-colors">
+            <button 
+              onClick={() => navigate('/notifications')}
+              className={`p-2 transition-colors relative ${
+                location.pathname === '/notifications'
+                  ? 'text-orange-600'
+                  : 'text-slate-400 hover:text-slate-600'
+              }`}
+            >
               <Bell size={20} />
+              {unreadCount > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
             </button>
             <div className="w-8 h-8 rounded-full bg-slate-200 border border-slate-300" />
           </div>
