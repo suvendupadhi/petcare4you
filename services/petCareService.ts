@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api, setToken, clearToken } from './api';
 
 export interface User {
@@ -48,6 +49,8 @@ export interface Provider {
   serviceTypes?: ServiceType[];
   serviceTypeIds?: number[];
   hourlyRate: number;
+  rating: number;
+  reviewCount: number;
   address: string;
   city: string;
   latitude: number;
@@ -268,13 +271,13 @@ export const paymentService = {
 
 export const stripeService = {
   onboard: async () => {
-    return await api.post('/stripe/onboard');
+    return await api.post('/stripe/onboard', {});
   },
   getAccountStatus: async () => {
     return await api.get('/stripe/account-status');
   },
   createPaymentIntent: async (paymentId: number) => {
-    return await api.post(`/stripe/create-payment-intent/${paymentId}`);
+    return await api.post(`/stripe/create-payment-intent/${paymentId}`, {});
   }
 };
 
@@ -349,6 +352,17 @@ export interface ProviderPhoto {
   createdAt: string;
 }
 
+export interface Review {
+  id: number;
+  appointmentId: number;
+  ownerId: number;
+  providerId: number;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  owner?: User;
+}
+
 export const providerPhotoService = {
   getProviderPhotos: async (providerId: number): Promise<ProviderPhoto[]> => {
     return await api.get(`/providerPhotos/provider/${providerId}`);
@@ -361,5 +375,48 @@ export const providerPhotoService = {
   },
   deletePhoto: async (id: number): Promise<void> => {
     return await api.delete(`/providerPhotos/${id}`);
+  }
+};
+
+export const reviewService = {
+  getProviderReviews: async (providerId: number): Promise<Review[]> => {
+    return await api.get(`/reviews/provider/${providerId}`);
+  },
+  createReview: async (reviewData: { appointmentId: number; providerId: number; rating: number; comment: string }): Promise<Review> => {
+    return await api.post('/reviews', reviewData);
+  }
+};
+
+const RECENT_PROVIDERS_KEY = 'recent_providers';
+
+export const recentProviderService = {
+  getRecentProviders: async (): Promise<Provider[]> => {
+    try {
+      const stored = await AsyncStorage.getItem(RECENT_PROVIDERS_KEY);
+      const ids: number[] = stored ? JSON.parse(stored) : [];
+      if (ids.length === 0) return [];
+      
+      const providers = await Promise.all(
+        ids.map(id => providerService.getProvider(id).catch(() => null))
+      );
+      return providers.filter(p => p !== null) as Provider[];
+    } catch (error) {
+      console.error('Error getting recent providers:', error);
+      return [];
+    }
+  },
+  addRecentProvider: async (providerId: number): Promise<void> => {
+    try {
+      const stored = await AsyncStorage.getItem(RECENT_PROVIDERS_KEY);
+      let ids: number[] = stored ? JSON.parse(stored) : [];
+      
+      ids = ids.filter(id => id !== providerId);
+      ids.unshift(providerId);
+      ids = ids.slice(0, 10);
+      
+      await AsyncStorage.setItem(RECENT_PROVIDERS_KEY, JSON.stringify(ids));
+    } catch (error) {
+      console.error('Error adding recent provider:', error);
+    }
   }
 };

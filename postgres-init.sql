@@ -131,6 +131,17 @@ CREATE TABLE IF NOT EXISTS appointments (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 12. Reviews Table
+CREATE TABLE IF NOT EXISTS reviews (
+    id SERIAL PRIMARY KEY,
+    appointment_id INTEGER UNIQUE NOT NULL REFERENCES appointments(id) ON DELETE CASCADE,
+    owner_id INTEGER NOT NULL REFERENCES users(id),
+    provider_id INTEGER NOT NULL REFERENCES providers(id) ON DELETE CASCADE,
+    rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+    comment TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- 7. Availability Table
 CREATE TABLE IF NOT EXISTS availability (
     id SERIAL PRIMARY KEY,

@@ -617,6 +617,8 @@ export default function ProfileProviderScreen() {
                           keyboardType="numeric"
                         />
                       </View>
+                      {/* City and Address are captured during registration and cannot be edited here */}
+                      {/* 
                       <View>
                         <Text className="text-sm text-muted-foreground mb-1">Address</Text>
                         <TextInput
@@ -635,6 +637,7 @@ export default function ProfileProviderScreen() {
                           placeholder="City"
                         />
                       </View>
+                      */}
                       <View>
                         <Text className="text-sm text-muted-foreground mb-1">Description</Text>
                         <TextInput
@@ -802,7 +805,7 @@ export default function ProfileProviderScreen() {
                   </View>
                 </View>
 
-                {/* Photo Gallery */}
+                {/* Photo Gallery - Commented out
                 <View className="mb-6">
                   <View className="flex-row items-center justify-between mb-4">
                     <View className="flex-row items-center">
@@ -844,6 +847,7 @@ export default function ProfileProviderScreen() {
                     )}
                   </View>
                 </View>
+                */}
 
                 {/* Settings Section */}
                 <View className="mb-6">
@@ -1127,7 +1131,7 @@ export default function ProfileProviderScreen() {
         </View>
       </Modal>
 
-      {/* Photo Add Modal */}
+      {/* Photo Add Modal - Commented out
       <Modal
         visible={showPhotoModal}
         transparent
@@ -1179,6 +1183,7 @@ export default function ProfileProviderScreen() {
           </View>
         </View>
       </Modal>
+      */}
     </SafeAreaView>
   );
 }

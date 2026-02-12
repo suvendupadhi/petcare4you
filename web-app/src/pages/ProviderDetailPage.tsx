@@ -11,7 +11,8 @@ import {
   Calendar as CalendarIcon,
   MessageSquare,
   Building2,
-  Image as ImageIcon
+  Image as ImageIcon,
+  PawPrint
 } from 'lucide-react';
 import Layout from '../components/Layout';
 import { 
@@ -19,10 +20,14 @@ import {
   availabilityService, 
   petService,
   appointmentService,
+  recentProviderService,
+  reviewService,
   Provider, 
   Availability,
   Pet,
-  ServiceType
+  ServiceType,
+  Review,
+  Appointment
 } from '../services/petCareService';
 
 export default function ProviderDetailPage() {
@@ -38,20 +43,47 @@ export default function ProviderDetailPage() {
   const [selectedPet, setSelectedPet] = useState<number | null>(null);
   const [description, setDescription] = useState('');
   const [bookingLoading, setBookingLoading] = useState(false);
+  
+  // Review state
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [userRating, setUserRating] = useState(5);
+  const [userComment, setUserComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [canReview, setCanReview] = useState(false);
+  const [completedAppointmentId, setCompletedAppointmentId] = useState<number | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
       if (!id) return;
       try {
-        const [providerData, availabilityData, petsData] = await Promise.all([
+        const [providerData, availabilityData, petsData, reviewsData, appointmentsData] = await Promise.all([
           providerService.getProvider(parseInt(id)),
           availabilityService.getProviderAvailability(parseInt(id)),
-          petService.getMyPets()
+          petService.getMyPets(),
+          reviewService.getProviderReviews(parseInt(id)),
+          appointmentService.getOwnerAppointments().catch(() => [])
         ]);
         setProvider(providerData);
         setAvailabilities(availabilityData.filter(a => !a.isBooked));
         setPets(petsData);
+        setReviews(reviewsData);
+
         if (petsData.length > 0) setSelectedPet(petsData[0].id);
+        recentProviderService.addRecentProvider(parseInt(id));
+
+        // Check if user has a completed appointment with this provider that hasn't been reviewed
+        const completedApt = appointmentsData.find(apt => 
+          apt.providerId === parseInt(id) && 
+          apt.status === 3 // Completed
+        );
+        
+        if (completedApt) {
+          const alreadyReviewed = reviewsData.some(r => r.appointmentId === completedApt.id);
+          if (!alreadyReviewed) {
+            setCanReview(true);
+            setCompletedAppointmentId(completedApt.id);
+          }
+        }
       } catch (error) {
         console.error('Error loading provider details:', error);
       } finally {
@@ -84,6 +116,36 @@ export default function ProviderDetailPage() {
       alert(error.response?.data?.message || 'Failed to create booking');
     } finally {
       setBookingLoading(false);
+    }
+  };
+
+  const handleReviewSubmit = async () => {
+    if (!completedAppointmentId || !provider) return;
+    
+    setSubmittingReview(true);
+    try {
+      await reviewService.createReview({
+        appointmentId: completedAppointmentId,
+        providerId: provider.id,
+        rating: userRating,
+        comment: userComment
+      });
+      
+      alert('Review submitted successfully!');
+      setCanReview(false);
+      setUserComment('');
+      // Reload provider and reviews
+      const [providerData, reviewsData] = await Promise.all([
+        providerService.getProvider(provider.id),
+        reviewService.getProviderReviews(provider.id)
+      ]);
+      setProvider(providerData);
+      setReviews(reviewsData);
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      alert('Failed to submit review');
+    } finally {
+      setSubmittingReview(false);
     }
   };
 
@@ -129,9 +191,9 @@ export default function ProviderDetailPage() {
                     <div className="flex flex-col items-end">
                       <div className="flex items-center gap-1 bg-yellow-50 text-yellow-700 px-2 py-1 rounded-lg text-sm font-bold">
                         <Star size={16} fill="currentColor" />
-                        4.8
+                        {provider.rating.toFixed(1)}
                       </div>
-                      <span className="text-xs text-slate-400 mt-1 font-bold">120+ Reviews</span>
+                      <span className="text-xs text-slate-400 mt-1 font-bold">{provider.reviewCount} Reviews</span>
                     </div>
                   </div>
 
@@ -166,9 +228,74 @@ export default function ProviderDetailPage() {
                   ))}
                 </div>
               </div>
+
+              {/* Reviews Section */}
+              <div className="mt-8 pt-8 border-t border-slate-100 space-y-6">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-bold text-slate-800">Reviews ({reviews.length})</h2>
+                </div>
+
+                {canReview && (
+                  <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100 space-y-4">
+                    <h3 className="font-bold text-slate-800">Rate your experience</h3>
+                    <div className="flex gap-2">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          onClick={() => setUserRating(star)}
+                          className="text-yellow-500 transition-transform hover:scale-110"
+                        >
+                          <Star size={32} fill={star <= userRating ? "currentColor" : "none"} />
+                        </button>
+                      ))}
+                    </div>
+                    <textarea
+                      value={userComment}
+                      onChange={(e) => setUserComment(e.target.value)}
+                      placeholder="Tell others about your experience..."
+                      className="w-full p-4 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 h-32"
+                    />
+                    <button
+                      onClick={handleReviewSubmit}
+                      disabled={submittingReview || !userComment.trim()}
+                      className="px-6 py-3 bg-orange-600 text-white rounded-xl font-bold shadow-md hover:bg-orange-700 transition-all disabled:opacity-50"
+                    >
+                      {submittingReview ? 'Submitting...' : 'Submit Review'}
+                    </button>
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  {reviews.length > 0 ? reviews.map((review) => (
+                    <div key={review.id} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 font-bold">
+                            {review.owner?.firstName?.[0] || 'U'}
+                          </div>
+                          <div>
+                            <div className="font-bold text-slate-900">{review.owner?.firstName} {review.owner?.lastName}</div>
+                            <div className="text-xs text-slate-400">{new Date(review.createdAt).toLocaleDateString()}</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 bg-yellow-50 text-yellow-700 px-2 py-1 rounded-lg text-xs font-bold">
+                          <Star size={14} fill="currentColor" />
+                          {review.rating}
+                        </div>
+                      </div>
+                      <p className="text-slate-600 text-sm leading-relaxed">{review.comment}</p>
+                    </div>
+                  )) : (
+                    <div className="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-slate-400">
+                      <MessageSquare size={48} className="mx-auto mb-3 opacity-20" />
+                      <p className="font-medium">No reviews yet. Be the first to leave one!</p>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
-            {/* Gallery Placeholder */}
+            {/* Gallery Placeholder - Commented out
             <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm space-y-4">
               <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
                 <ImageIcon size={24} className="text-slate-400" />
@@ -182,6 +309,7 @@ export default function ProviderDetailPage() {
                 ))}
               </div>
             </div>
+            */}
           </div>
 
           {/* Right Column: Booking Widget */}

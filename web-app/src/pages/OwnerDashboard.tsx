@@ -2,26 +2,29 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Calendar, PawPrint, Star, MapPin, Clock } from 'lucide-react';
 import Layout from '../components/Layout';
-import { petService, providerService, appointmentService, Pet, Provider, Appointment } from '../services/petCareService';
+import { petService, providerService, appointmentService, recentProviderService, Pet, Provider, Appointment } from '../services/petCareService';
 
 export default function OwnerDashboard() {
   const navigate = useNavigate();
   const [pets, setPets] = useState<Pet[]>([]);
   const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([]);
   const [featuredProviders, setFeaturedProviders] = useState<Provider[]>([]);
+  const [recentProviders, setRecentProviders] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [petsData, appointmentsData, providersData] = await Promise.all([
+        const [petsData, appointmentsData, providersData, recentData] = await Promise.all([
           petService.getMyPets(),
           appointmentService.getOwnerAppointments(),
-          providerService.getProviders()
+          providerService.getProviders(),
+          recentProviderService.getRecentProviders()
         ]);
         setPets(petsData);
         setUpcomingAppointments(appointmentsData.filter(a => a.status === 1 || a.status === 2).slice(0, 3));
         setFeaturedProviders(providersData.slice(0, 4));
+        setRecentProviders(recentData.length > 0 ? recentData.slice(0, 4) : providersData.slice(0, 4));
       } catch (error) {
         console.error('Error loading dashboard data:', error);
       } finally {
@@ -104,6 +107,47 @@ export default function OwnerDashboard() {
               )}
             </div>
 
+            {/* Recent Providers */}
+            <div className="pt-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold text-slate-800">Recent Providers</h2>
+                <button onClick={() => navigate('/search-providers')} className="text-sm text-orange-600 font-bold hover:underline">Explore More</button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {recentProviders.map(provider => (
+                  <div 
+                    key={provider.id} 
+                    onClick={() => navigate(`/provider-detail/${provider.id}`)}
+                    className="bg-white p-4 rounded-xl border border-slate-100 hover:border-orange-200 transition-all cursor-pointer shadow-sm group"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 bg-slate-100 rounded-xl overflow-hidden">
+                        {provider.profileImageUrl ? (
+                          <img src={provider.profileImageUrl} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-slate-300"><Building2 size={32} /></div>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-bold text-slate-900 group-hover:text-orange-600 transition-colors">{provider.companyName}</h3>
+                        <div className="flex items-center gap-1 text-sm text-slate-500 mt-1">
+                          <MapPin size={14} />
+                          <span>{provider.city}</span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-2">
+                          <div className="flex items-center gap-1 bg-yellow-50 text-yellow-700 px-1.5 py-0.5 rounded text-xs font-bold">
+                            <Star size={12} fill="currentColor" />
+                            {provider.rating.toFixed(1)}
+                          </div>
+                          <span className="text-sm font-bold text-orange-600">${provider.hourlyRate}/hr</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {/* Featured Providers */}
             <div className="pt-4 space-y-4">
               <div className="flex items-center justify-between">
@@ -130,7 +174,7 @@ export default function OwnerDashboard() {
                         <div className="flex items-center gap-2 mt-2">
                           <div className="flex items-center gap-1 bg-yellow-50 text-yellow-700 px-1.5 py-0.5 rounded text-xs font-bold">
                             <Star size={12} fill="currentColor" />
-                            4.8
+                            {provider.rating.toFixed(1)}
                           </div>
                           <span className="text-sm font-bold text-orange-600">${provider.hourlyRate}/hr</span>
                         </div>

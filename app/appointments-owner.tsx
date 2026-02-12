@@ -425,8 +425,7 @@ export default function AppointmentsOwnerScreen() {
                       <View className="flex-row items-center gap-1">
                         <Star color="#EAB308" size={14} fill="#EAB308" />
                         <Text className="text-muted-foreground text-sm">
-                          {/* Mock rating if not available */}
-                          4.8
+                          {appointment.provider?.rating?.toFixed(1) || '0.0'}
                         </Text>
                       </View>
                     </View>

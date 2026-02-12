@@ -148,7 +148,7 @@ export default function SearchProvidersPage() {
                           <h3 className="text-lg font-bold text-slate-900 truncate group-hover:text-orange-600 transition-colors">{provider.companyName}</h3>
                           <div className="flex items-center gap-1 bg-yellow-50 text-yellow-700 px-1.5 py-0.5 rounded text-xs font-bold">
                             <Star size={12} fill="currentColor" />
-                            4.8
+                            {provider.rating.toFixed(1)}
                           </div>
                         </div>
                         <div className="flex items-center gap-1 text-sm text-slate-500 mt-1">

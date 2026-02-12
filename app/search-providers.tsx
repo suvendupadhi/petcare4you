@@ -137,8 +137,8 @@ export default function SearchProvidersScreen() {
           <View className="flex-row items-center gap-2">
             <View className="flex-row items-center gap-1">
               <Star color="#EAB308" size={16} fill="#EAB308" />
-              <Text className="text-foreground font-semibold">4.8</Text>
-              <Text className="text-muted-foreground text-sm">(124)</Text>
+              <Text className="text-foreground font-semibold">{item.rating.toFixed(1)}</Text>
+              <Text className="text-muted-foreground text-sm">({item.reviewCount})</Text>
             </View>
             <View className="bg-green-500/10 px-2 py-0.5 rounded">
               <Text className="text-green-600 text-xs font-medium">Licensed</Text>

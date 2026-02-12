@@ -114,5 +114,40 @@ namespace PetCareAPI.Controllers
 
             return NoContent();
         }
+
+        //[HttpGet("recent")]
+        //[Authorize]
+        //public async Task<ActionResult<IEnumerable<Provider>>> GetRecentProviders()
+        //{
+        //    // Get current user ID from JWT claims
+        //    var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
+
+        //    // 1. Get IDs of providers from recent appointments
+        //    var providerIds = await _context.Appointments
+        //        .Where(a => a.OwnerId == userId)
+        //        .OrderByDescending(a => a.AppointmentDate)
+        //        .Select(a => a.ProviderId)
+        //        .Distinct()
+        //        .Take(5) // Limit to top 5 recent
+        //        .ToListAsync();
+
+        //    if (!providerIds.Any()) return Ok(new List<Provider>());
+
+        //    // 2. Fetch full provider details
+        //    var providers = await _context.Providers
+        //        .Include(p => p.ProviderServices)
+        //            .ThenInclude(ps => ps.ServiceType)
+        //        .Where(p => providerIds.Contains(p.Id))
+        //        .ToListAsync();
+
+        //    // 3. Sort to maintain the "recent" order
+        //    var orderedProviders = providerIds
+        //        .Select(id => providers.FirstOrDefault(p => p.Id == id))
+        //        .Where(p => p != null)
+        //        .ToList();
+
+        //    return Ok(orderedProviders);
+        //}
+
     }
 }

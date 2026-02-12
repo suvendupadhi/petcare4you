@@ -19,7 +19,7 @@ import {
   Trash2
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
-import { authService, appointmentService, providerService, userService, Appointment, Provider, User as UserType } from '@/services/petCareService';
+import { authService, appointmentService, providerService, recentProviderService, userService, Appointment, Provider, User as UserType } from '@/services/petCareService';
 import { api } from '@/services/api';
 import { getStatusLabel } from '@/constants/status';
 import { useColorScheme } from 'react-native';
@@ -103,13 +103,14 @@ export default function OwnerDashboardScreen() {
 
   const loadDashboardData = async () => {
     try {
-      const [appointmentsData, providersData, userData] = await Promise.all([
+      const [appointmentsData, providersData, userData, recentData] = await Promise.all([
         appointmentService.getOwnerAppointments(),
         providerService.getProviders(),
-        userService.getCurrentUser()
+        userService.getCurrentUser(),
+        recentProviderService.getRecentProviders()
       ]);
       setAppointments(appointmentsData);
-      setRecentProviders(providersData.slice(0, 3));
+      setRecentProviders(recentData.length > 0 ? recentData.slice(0, 3) : providersData.slice(0, 3));
       setUser(userData);
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
@@ -423,10 +424,10 @@ export default function OwnerDashboardScreen() {
                     <View className="flex-row items-center gap-1">
                       <Star color={isDark ? '#fb923c' : '#ea580c'} size={14} fill={isDark ? '#fb923c' : '#EA580C'} />
                       <Text className="text-foreground font-semibold text-sm">
-                        4.8
+                        {provider.rating.toFixed(1)}
                       </Text>
                       <Text className="text-muted-foreground text-sm">
-                        (124 reviews)
+                        ({provider.reviewCount} reviews)
                       </Text>
                     </View>
                   </View>

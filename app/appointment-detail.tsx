@@ -481,7 +481,7 @@ export default function AppointmentDetailScreen() {
                 <View className="flex-row items-center gap-1 mt-1">
                   <Star color="#EAB308" size={14} fill="#EAB308" />
                   <Text className="text-muted-foreground text-sm">
-                    4.8 (124 reviews)
+                    {appointment.provider.rating?.toFixed(1) || '0.0'} ({appointment.provider.reviewCount || 0} reviews)
                   </Text>
                 </View>
               </View>

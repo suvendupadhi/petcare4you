@@ -27,13 +27,16 @@ import {
   authService, 
   providerPhotoService,
   savedProviderService,
+  recentProviderService,
+  reviewService,
   Provider, 
   Availability, 
   Appointment, 
   Pet, 
   PetType, 
   Breed,
-  ProviderPhoto
+  ProviderPhoto,
+  Review
 } from '@/services/petCareService';
 import { getImageUrl } from '@/services/api';
 import { APPOINTMENT_STATUS } from '@/constants/status';
@@ -67,11 +70,18 @@ export default function ProviderDetailScreen() {
   const [showBooking, setShowBooking] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [userRating, setUserRating] = useState(5);
+  const [userComment, setUserComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [canReview, setCanReview] = useState(false);
+  const [completedAppointmentId, setCompletedAppointmentId] = useState<number | null>(null);
 
   useEffect(() => {
     if (id) {
       loadProviderData();
       checkIfSaved();
+      recentProviderService.addRecentProvider(Number(id));
     }
   }, [id]);
 
@@ -123,17 +133,36 @@ export default function ProviderDetailScreen() {
   const loadProviderData = async () => {
     try {
       setLoading(true);
-      const [providerData, availabilityData, petsData, typesData, photoData] = await Promise.all([
+      const [providerData, availabilityData, petsData, typesData, photoData, reviewsData, appointmentsData] = await Promise.all([
         providerService.getProvider(Number(id)),
         availabilityService.getProviderAvailability(Number(id)),
         petService.getMyPets(),
         petService.getPetTypes(),
-        providerPhotoService.getProviderPhotos(Number(id))
+        providerPhotoService.getProviderPhotos(Number(id)),
+        reviewService.getProviderReviews(Number(id)),
+        appointmentService.getOwnerAppointments().catch(() => [])
       ]);
       setProvider(providerData);
       setAvailabilities(availabilityData);
       setMyPets(petsData);
       setPetTypes(typesData);
+      setReviews(reviewsData);
+
+      // Check if user has a completed appointment with this provider that hasn't been reviewed
+      const completedApt = appointmentsData.find(apt => 
+        apt.providerId === Number(id) && 
+        apt.status === APPOINTMENT_STATUS.COMPLETED
+      );
+      
+      if (completedApt) {
+        // Check if this appointment already has a review
+        const alreadyReviewed = reviewsData.some(r => r.appointmentId === completedApt.id);
+        if (!alreadyReviewed) {
+          setCanReview(true);
+          setCompletedAppointmentId(completedApt.id);
+        }
+      }
+
       const dogType = typesData.find(t => t.name === 'Dog');
       if (dogType) {
         setSelectedPetTypeId(dogType.id);
@@ -191,22 +220,39 @@ export default function ProviderDetailScreen() {
     }
   };
 
-  const reviews = [
-    {
-      id: '1',
-      userName: 'Sarah M.',
-      rating: 5,
-      date: 'March 15, 2024',
-      comment: 'Amazing service! My golden retriever always looks fantastic. The staff is so gentle and caring.'
-    },
-    {
-      id: '2',
-      userName: 'Mike T.',
-      rating: 5,
-      date: 'March 10, 2024',
-      comment: 'Best groomer in town! Very professional and my dog actually enjoys going there.'
+  const handleReviewSubmit = async () => {
+    if (!completedAppointmentId || !provider) return;
+    
+    setSubmittingReview(true);
+    try {
+      await reviewService.createReview({
+        appointmentId: completedAppointmentId,
+        providerId: provider.id,
+        rating: userRating,
+        comment: userComment
+      });
+      
+      if (Platform.OS === 'web') {
+        window.alert('Success: Review submitted successfully!');
+      } else {
+        Alert.alert('Success', 'Review submitted successfully!');
+      }
+      
+      setCanReview(false);
+      setUserComment('');
+      // Reload provider and reviews to update rating
+      loadProviderData();
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      if (Platform.OS === 'web') {
+        window.alert('Error: Failed to submit review');
+      } else {
+        Alert.alert('Error', 'Failed to submit review');
+      }
+    } finally {
+      setSubmittingReview(false);
     }
-  ];
+  };
 
   const availableDates = availabilities.reduce((acc: any, curr) => {
     const dateStr = curr.date.split('T')[0];
@@ -407,7 +453,7 @@ export default function ProviderDetailScreen() {
           </View>
         </View>
 
-        {/* Photo Gallery */}
+        {/* Photo Gallery - Commented out
         <ScrollView 
           horizontal 
           pagingEnabled
@@ -431,6 +477,7 @@ export default function ProviderDetailScreen() {
             />
           )}
         </ScrollView>
+        */}
 
         {/* Business Info */}
         <View className="p-6">
@@ -443,10 +490,10 @@ export default function ProviderDetailScreen() {
                 <View className="flex-row items-center">
                   <Star color="#EAB308" size={18} fill="#EAB308" />
                   <Text className="text-foreground font-semibold ml-1">
-                    4.8
+                    {provider.rating.toFixed(1)}
                   </Text>
                   <Text className="text-muted-foreground ml-1">
-                    (127 reviews)
+                    ({provider.reviewCount} reviews)
                   </Text>
                 </View>
                 <View className="bg-green-500/20 px-2 py-1 rounded">
@@ -785,25 +832,72 @@ export default function ProviderDetailScreen() {
           <View className="mb-6">
             <View className="flex-row items-center justify-between mb-3">
               <Text className="text-lg font-bold text-foreground">Reviews</Text>
-              <TouchableOpacity className="flex-row items-center gap-1">
-                <Text className="text-primary font-medium">See All</Text>
-                <ChevronRight color={isDark ? '#fb923c' : '#ea580c'} size={16} />
-              </TouchableOpacity>
             </View>
-            <View className="gap-3">
-              {reviews.map((review) => (
-                <View key={review.id} className="bg-card border border-border rounded-xl p-4">
-                  <View className="flex-row items-center justify-between mb-2">
-                    <Text className="text-foreground font-semibold">{review.userName}</Text>
-                    <View className="flex-row items-center gap-1">
-                      <Star className="text-yellow-500" size={14} fill="#EAB308" />
-                      <Text className="text-foreground font-medium">{review.rating}</Text>
-                    </View>
-                  </View>
-                  <Text className="text-muted-foreground text-xs mb-2">{review.date}</Text>
-                  <Text className="text-foreground leading-5">{review.comment}</Text>
+
+            {canReview && (
+              <View className="bg-card border border-border rounded-xl p-4 mb-6">
+                <Text className="text-foreground font-semibold mb-3">Rate your experience</Text>
+                <View className="flex-row gap-2 mb-4">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <TouchableOpacity key={star} onPress={() => setUserRating(star)}>
+                      <Star 
+                        color="#EAB308" 
+                        size={32} 
+                        fill={star <= userRating ? "#EAB308" : "transparent"} 
+                      />
+                    </TouchableOpacity>
+                  ))}
                 </View>
-              ))}
+                <TextInput
+                  value={userComment}
+                  onChangeText={setUserComment}
+                  placeholder="Share your thoughts about the service..."
+                  placeholderTextColor="#9CA3AF"
+                  multiline
+                  numberOfLines={3}
+                  className="bg-muted px-4 py-2 rounded-lg text-foreground text-sm h-24 mb-4"
+                  textAlignVertical="top"
+                />
+                <TouchableOpacity
+                  onPress={handleReviewSubmit}
+                  disabled={submittingReview || !userComment.trim()}
+                  className={`py-3 rounded-lg items-center justify-center ${
+                    submittingReview || !userComment.trim() ? 'bg-muted' : 'bg-primary'
+                  }`}
+                >
+                  {submittingReview ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text className="text-primary-foreground font-bold">Submit Review</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            )}
+
+            <View className="gap-3">
+              {reviews.length > 0 ? (
+                reviews.map((review) => (
+                  <View key={review.id} className="bg-card border border-border rounded-xl p-4">
+                    <View className="flex-row items-center justify-between mb-2">
+                      <Text className="text-foreground font-semibold">
+                        {review.owner?.firstName} {review.owner?.lastName}
+                      </Text>
+                      <View className="flex-row items-center gap-1">
+                        <Star color="#EAB308" size={14} fill="#EAB308" />
+                        <Text className="text-foreground font-medium">{review.rating}</Text>
+                      </View>
+                    </View>
+                    <Text className="text-muted-foreground text-xs mb-2">
+                      {format(new Date(review.createdAt), 'MMMM dd, yyyy')}
+                    </Text>
+                    <Text className="text-foreground leading-5">{review.comment}</Text>
+                  </View>
+                ))
+              ) : (
+                <View className="bg-muted p-6 rounded-xl items-center justify-center">
+                  <Text className="text-muted-foreground italic">No reviews yet</Text>
+                </View>
+              )}
             </View>
           </View>
         </View>

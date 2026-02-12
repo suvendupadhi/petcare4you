@@ -48,6 +48,8 @@ export interface Provider {
   serviceTypes?: ServiceType[];
   serviceTypeIds?: number[];
   hourlyRate: number;
+  rating: number;
+  reviewCount: number;
   address: string;
   city: string;
   latitude: number;
@@ -130,6 +132,24 @@ export interface ProviderPhoto {
   url: string;
   description?: string;
   createdAt: string;
+}
+
+export interface SavedProvider {
+  id: number;
+  ownerId: number;
+  providerId: number;
+  provider?: Provider;
+}
+
+export interface Review {
+  id: number;
+  appointmentId: number;
+  ownerId: number;
+  providerId: number;
+  rating: number;
+  comment: string;
+  createdAt: string;
+  owner?: User;
 }
 
 export const authService = {
@@ -310,5 +330,84 @@ export const providerServicePricingService = {
   },
   deleteService: async (id: number): Promise<void> => {
     await api.delete(`/ProviderServices/${id}`);
+  }
+};
+
+export const savedProviderService = {
+  getSavedProviders: async (): Promise<SavedProvider[]> => {
+    const response = await api.get('/SavedProviders');
+    return response.data;
+  },
+  saveProvider: async (providerId: number): Promise<SavedProvider> => {
+    const response = await api.post('/SavedProviders', { providerId });
+    return response.data;
+  },
+  unsaveProvider: async (providerId: number): Promise<void> => {
+    await api.delete(`/SavedProviders/provider/${providerId}`);
+  },
+  isProviderSaved: async (providerId: number): Promise<boolean> => {
+    const response = await api.get(`/SavedProviders/isSaved/${providerId}`);
+    return response.data;
+  }
+};
+
+export const reviewService = {
+  getProviderReviews: async (providerId: number): Promise<Review[]> => {
+    const response = await api.get(`/Reviews/provider/${providerId}`);
+    return response.data;
+  },
+  createReview: async (reviewData: { appointmentId: number; providerId: number; rating: number; comment: string }): Promise<Review> => {
+    const response = await api.post('/Reviews', reviewData);
+    return response.data;
+  }
+};
+
+const RECENT_PROVIDERS_KEY = 'recent_providers';
+
+export const recentProviderService = {
+  getRecentProviders: async (): Promise<Provider[]> => {
+    try {
+      // Try to get from backend first
+      const response = await api.get('/ProviderServices/recent');
+      if (response.data && response.data.length > 0) {
+        return response.data;
+      }
+    } catch (error) {
+      console.warn('Failed to fetch recent providers from backend, falling back to local storage', error);
+    }
+
+    try {
+      const stored = localStorage.getItem(RECENT_PROVIDERS_KEY);
+      const ids: number[] = stored ? JSON.parse(stored) : [];
+      if (ids.length === 0) return [];
+      
+      const providers = await Promise.all(
+        ids.map(async (id) => {
+          try {
+            return await providerService.getProvider(id);
+          } catch {
+            return null;
+          }
+        })
+      );
+      return providers.filter((p): p is Provider => p !== null);
+    } catch (error) {
+      console.error('Error getting recent providers from local storage:', error);
+      return [];
+    }
+  },
+  addRecentProvider: async (providerId: number): Promise<void> => {
+    try {
+      const stored = localStorage.getItem(RECENT_PROVIDERS_KEY);
+      let ids: number[] = stored ? JSON.parse(stored) : [];
+      
+      ids = ids.filter(id => id !== providerId);
+      ids.unshift(providerId);
+      ids = ids.slice(0, 10);
+      
+      localStorage.setItem(RECENT_PROVIDERS_KEY, JSON.stringify(ids));
+    } catch (error) {
+      console.error('Error adding recent provider to local storage:', error);
+    }
   }
 };

@@ -22,6 +22,8 @@ export default function RegisterProviderScreen() {
   const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
   const [loadingServiceTypes, setLoadingServiceTypes] = useState(true);
   const [website, setWebsite] = useState('');
+  const [address, setAddress] = useState('');
+  const [city, setCity] = useState('');
   const [businessDescription, setBusinessDescription] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -73,6 +75,22 @@ export default function RegisterProviderScreen() {
         window.alert('Validation Error: Please enter owner last name');
       } else {
         Alert.alert('Validation Error', 'Please enter owner last name');
+      }
+      return false;
+    }
+    if (!city.trim()) {
+      if (Platform.OS === 'web') {
+        window.alert('Validation Error: Please enter business city');
+      } else {
+        Alert.alert('Validation Error', 'Please enter business city');
+      }
+      return false;
+    }
+    if (!address.trim()) {
+      if (Platform.OS === 'web') {
+        window.alert('Validation Error: Please enter business address');
+      } else {
+        Alert.alert('Validation Error', 'Please enter business address');
       }
       return false;
     }
@@ -138,8 +156,8 @@ export default function RegisterProviderScreen() {
         description: businessDescription,
         serviceTypeIds: selectedServiceTypeIds,
         hourlyRate: 50, // Default or add to form
-        address: 'Business Address', // Add to form if needed
-        city: 'City', // Add to form if needed
+        address: address,
+        city: city,
         latitude: 0,
         longitude: 0
       });
@@ -318,7 +336,7 @@ export default function RegisterProviderScreen() {
             </View>
 
             {/* Website (Optional) */}
-            <View>
+            <View className="mb-4">
               <Text className="text-sm font-semibold text-foreground mb-2">
                 Website <Text className="text-muted-foreground text-xs">(Optional)</Text>
               </Text>
@@ -331,6 +349,40 @@ export default function RegisterProviderScreen() {
                   placeholderTextColor="#9CA3AF"
                   keyboardType="url"
                   autoCapitalize="none"
+                  className="flex-1 text-foreground text-base"
+                />
+              </View>
+            </View>
+
+            {/* City */}
+            <View className="mb-4">
+              <Text className="text-sm font-semibold text-foreground mb-2">
+                City <Text className="text-destructive">*</Text>
+              </Text>
+              <View className="flex-row items-center bg-card border border-border rounded-xl px-4 py-3">
+                <MapPin className="text-muted-foreground mr-3" size={20} />
+                <TextInput
+                  value={city}
+                  onChangeText={setCity}
+                  placeholder="e.g., New York"
+                  placeholderTextColor="#9CA3AF"
+                  className="flex-1 text-foreground text-base"
+                />
+              </View>
+            </View>
+
+            {/* Business Address */}
+            <View>
+              <Text className="text-sm font-semibold text-foreground mb-2">
+                Business Address <Text className="text-destructive">*</Text>
+              </Text>
+              <View className="flex-row items-center bg-card border border-border rounded-xl px-4 py-3">
+                <MapPin className="text-muted-foreground mr-3" size={20} />
+                <TextInput
+                  value={address}
+                  onChangeText={setAddress}
+                  placeholder="e.g., 456 Business Ave, Suite 101"
+                  placeholderTextColor="#9CA3AF"
                   className="flex-1 text-foreground text-base"
                 />
               </View>

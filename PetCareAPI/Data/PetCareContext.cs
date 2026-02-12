@@ -25,6 +25,7 @@ namespace PetCareAPI.Data
         public DbSet<ProviderPhoto> ProviderPhotos { get; set; } = null!;
         public DbSet<Notification> Notifications { get; set; } = null!;
         public DbSet<SavedProvider> SavedProviders { get; set; } = null!;
+        public DbSet<Review> Reviews { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -150,6 +151,25 @@ namespace PetCareAPI.Data
             modelBuilder.Entity<SavedProvider>()
                 .HasIndex(sp => new { sp.UserId, sp.ProviderId })
                 .IsUnique();
+
+            // Review Configuration
+            modelBuilder.Entity<Review>()
+                .HasOne(r => r.Appointment)
+                .WithOne()
+                .HasForeignKey<Review>(r => r.AppointmentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Review>()
+                .HasOne(r => r.Owner)
+                .WithMany()
+                .HasForeignKey(r => r.OwnerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Review>()
+                .HasOne(r => r.Provider)
+                .WithMany(p => p.Reviews)
+                .HasForeignKey(r => r.ProviderId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Force all table and column names to snake_case for PostgreSQL compatibility
             foreach (var entity in modelBuilder.Model.GetEntityTypes())

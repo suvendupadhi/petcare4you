@@ -30,6 +30,7 @@ namespace PetCareAPI.Models
         public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
         public virtual ICollection<Availability> Availabilities { get; set; } = new List<Availability>();
         public virtual ICollection<ProviderPhoto> Photos { get; set; } = new List<ProviderPhoto>();
+        public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
 
         [NotMapped]
         public virtual ICollection<ServiceType> ServiceTypes => ProviderServices?.Where(ps => ps?.ServiceType != null).Select(ps => ps.ServiceType!).ToList() ?? new List<ServiceType>();

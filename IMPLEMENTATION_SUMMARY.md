@@ -452,7 +452,7 @@ export const API_BASE_URL = 'https://localhost:7099/api';
 
 ### Official Documentation
 - [ASP.NET Core](https://learn.microsoft.com/en-us/aspnet/core/)
-- [Cassandra](https://cassandra.apache.org/doc/latest/)
+- [PostgreSQL](https://www.postgresql.org/docs/)
 - [JWT](https://tools.ietf.org/html/rfc7519)
 
 ### Tools Used
