@@ -20,7 +20,7 @@ import {
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { authService, appointmentService, providerService, recentProviderService, userService, Appointment, Provider, User as UserType } from '@/services/petCareService';
-import { api } from '@/services/api';
+import { api, getToken } from '@/services/api';
 import { getStatusLabel } from '@/constants/status';
 import { useColorScheme } from 'react-native';
 
@@ -39,14 +39,23 @@ export default function OwnerDashboardScreen() {
   const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
     loadDashboardData();
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 30000); // Polling every 30s
-    return () => clearInterval(interval);
+    const interval = setInterval(() => {
+      if (isMounted) fetchNotifications();
+    }, 30000); // Polling every 30s
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, []);
 
   const fetchNotifications = async () => {
     try {
+      const token = await getToken();
+      if (!token) return;
+
       const [notifs, count] = await Promise.all([
         api.getNotifications(),
         api.getUnreadCount()
@@ -54,7 +63,11 @@ export default function OwnerDashboardScreen() {
       setNotifications(notifs);
       setUnreadCount(count);
     } catch (error) {
-      console.error('Error fetching notifications:', error);
+      // Don't log if it's just a 401/unauthorized error during logout
+      const token = await getToken();
+      if (token) {
+        console.error('Error fetching notifications:', error);
+      }
     }
   };
 

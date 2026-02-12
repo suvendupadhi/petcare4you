@@ -22,7 +22,7 @@ import {
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { authService, appointmentService, Appointment, userService, User, Provider, paymentService, RevenueSummary } from '@/services/petCareService';
-import { api } from '@/services/api';
+import { api, getToken } from '@/services/api';
 import { APPOINTMENT_STATUS, getStatusLabel } from '@/constants/status';
 import { useColorScheme } from 'react-native';
 
@@ -42,14 +42,23 @@ export default function ProviderDashboard() {
   const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
     loadDashboardData();
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 30000); // Polling every 30s
-    return () => clearInterval(interval);
+    const interval = setInterval(() => {
+      if (isMounted) fetchNotifications();
+    }, 30000); // Polling every 30s
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, []);
 
   const fetchNotifications = async () => {
     try {
+      const token = await getToken();
+      if (!token) return;
+
       // Use Promise.allSettled to prevent one failure from blocking both
       const results = await Promise.allSettled([
         api.getNotifications(),
@@ -85,7 +94,11 @@ export default function ProviderDashboard() {
       setNotifications(normalizedNotifs);
       setUnreadCount(count);
     } catch (error) {
-      console.error('Error in fetchNotifications:', error);
+      // Don't log if it's just a 401/unauthorized error during logout
+      const token = await getToken();
+      if (token) {
+        console.error('Error in fetchNotifications:', error);
+      }
     }
   };
 
