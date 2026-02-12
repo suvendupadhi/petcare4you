@@ -19,7 +19,7 @@ import {
   Trash2
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
-import { authService, appointmentService, providerService, recentProviderService, userService, Appointment, Provider, User as UserType } from '@/services/petCareService';
+import { authService, appointmentService, providerService, recentProviderService, userService, tipService, Appointment, Provider, User as UserType, Tip } from '@/services/petCareService';
 import { api, getToken } from '@/services/api';
 import { getStatusLabel } from '@/constants/status';
 import { useColorScheme } from 'react-native';
@@ -37,6 +37,7 @@ export default function OwnerDashboardScreen() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [currentTip, setCurrentTip] = useState<Tip | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -116,15 +117,17 @@ export default function OwnerDashboardScreen() {
 
   const loadDashboardData = async () => {
     try {
-      const [appointmentsData, providersData, userData, recentData] = await Promise.all([
+      const [appointmentsData, providersData, userData, recentData, tipData] = await Promise.all([
         appointmentService.getOwnerAppointments(),
         providerService.getProviders(),
         userService.getCurrentUser(),
-        recentProviderService.getRecentProviders()
+        recentProviderService.getRecentProviders(),
+        tipService.getRandomTip().catch(() => null)
       ]);
       setAppointments(appointmentsData);
       setRecentProviders(recentData.length > 0 ? recentData.slice(0, 3) : providersData.slice(0, 3));
       setUser(userData);
+      setCurrentTip(tipData);
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
     } finally {
@@ -468,22 +471,23 @@ export default function OwnerDashboardScreen() {
         </View>
 
         {/* Tips Section */}
-        <View className="px-6 mt-6">
-          <View className="bg-primary/5 border border-primary/20 rounded-2xl p-5">
-            <View className="flex-row items-center mb-3">
-              <View className="bg-primary rounded-full p-2 mr-3">
-                <PawPrint className="text-primary-foreground" size={20} />
+        {currentTip && (
+          <View className="px-6 mt-6">
+            <View className="bg-primary/5 border border-primary/20 rounded-2xl p-5">
+              <View className="flex-row items-center mb-3">
+                <View className="bg-primary rounded-full p-2 mr-3">
+                  <PawPrint className="text-primary-foreground" size={20} />
+                </View>
+                <Text className="text-foreground font-bold text-base flex-1">
+                  {currentTip.title}
+                </Text>
               </View>
-              <Text className="text-foreground font-bold text-base flex-1">
-                Pet Care Tip
+              <Text className="text-muted-foreground text-sm leading-5">
+                {currentTip.content}
               </Text>
             </View>
-            <Text className="text-muted-foreground text-sm leading-5">
-              Regular grooming keeps your pet healthy and happy! Book a grooming session 
-              every 4-6 weeks for optimal coat and skin health.
-            </Text>
           </View>
-        </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

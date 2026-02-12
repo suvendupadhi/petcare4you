@@ -168,6 +168,17 @@ CREATE TABLE IF NOT EXISTS payments (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 13. Tips Table
+CREATE TABLE IF NOT EXISTS tips (
+    id SERIAL PRIMARY KEY,
+    user_role_id INTEGER REFERENCES user_roles(id), -- Null means all roles
+    service_type_id INTEGER REFERENCES service_types(id), -- Specific to a service
+    title VARCHAR(200) NOT NULL,
+    content TEXT NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Indexes
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_providers_city ON providers(city);
@@ -249,3 +260,13 @@ INSERT INTO availability (provider_id, date, start_time, end_time, is_booked)
 VALUES 
 (1, CURRENT_DATE + INTERVAL '1 day', '2026-01-21 09:00:00+00', '2026-01-21 10:00:00+00', FALSE),
 (1, CURRENT_DATE + INTERVAL '1 day', '2026-01-21 10:00:00+00', '2026-01-21 11:00:00+00', FALSE);
+
+-- Insert Tips
+INSERT INTO tips (user_role_id, service_type_id, title, content)
+VALUES 
+    (1, NULL, 'Pet Health Tip', 'Ensure your pet stays hydrated! Fresh water should always be available, especially after exercise.'),
+    (1, 1, 'Grooming Tip', 'Regular brushing helps prevent matting and keeps your pets coat healthy and shiny.'),
+    (1, 2, 'Vet Visit Tip', 'Keep a folder of your pets medical history and vaccination records for quick reference during vet visits.'),
+    (2, NULL, 'Business Tip', 'Respond to booking requests within 2 hours to increase your chance of confirmation by 40%.'),
+    (2, NULL, 'Profile Tip', 'Adding high-quality photos of your workplace builds trust with potential pet owners.'),
+    (2, 1, 'Pro Groomer Tip', 'Always check for skin irritations or lumps during grooming and inform the owner immediately.');

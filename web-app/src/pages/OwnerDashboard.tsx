@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Calendar, PawPrint, Star, MapPin, Clock } from 'lucide-react';
 import Layout from '../components/Layout';
-import { petService, providerService, appointmentService, recentProviderService, Pet, Provider, Appointment } from '../services/petCareService';
+import { petService, providerService, appointmentService, recentProviderService, tipService, Pet, Provider, Appointment, Tip } from '../services/petCareService';
 
 export default function OwnerDashboard() {
   const navigate = useNavigate();
@@ -10,21 +10,24 @@ export default function OwnerDashboard() {
   const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([]);
   const [featuredProviders, setFeaturedProviders] = useState<Provider[]>([]);
   const [recentProviders, setRecentProviders] = useState<Provider[]>([]);
+  const [currentTip, setCurrentTip] = useState<Tip | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [petsData, appointmentsData, providersData, recentData] = await Promise.all([
+        const [petsData, appointmentsData, providersData, recentData, tipData] = await Promise.all([
           petService.getMyPets(),
           appointmentService.getOwnerAppointments(),
           providerService.getProviders(),
-          recentProviderService.getRecentProviders()
+          recentProviderService.getRecentProviders(),
+          tipService.getRandomTip().catch(() => null)
         ]);
         setPets(petsData);
         setUpcomingAppointments(appointmentsData.filter(a => a.status === 1 || a.status === 2).slice(0, 3));
         setFeaturedProviders(providersData.slice(0, 4));
         setRecentProviders(recentData.length > 0 ? recentData.slice(0, 4) : providersData.slice(0, 4));
+        setCurrentTip(tipData);
       } catch (error) {
         console.error('Error loading dashboard data:', error);
       } finally {
@@ -73,6 +76,19 @@ export default function OwnerDashboard() {
             Find a Provider
           </button>
         </div>
+
+        {/* Dynamic Tip Section */}
+        {currentTip && (
+          <div className="bg-orange-50 border border-orange-100 rounded-2xl p-6 flex items-start gap-4">
+            <div className="bg-orange-600 p-2 rounded-lg text-white mt-1">
+              <PawPrint size={20} />
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900">{currentTip.title}</h3>
+              <p className="text-slate-600 text-sm mt-1">{currentTip.content}</p>
+            </div>
+          </div>
+        )}
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

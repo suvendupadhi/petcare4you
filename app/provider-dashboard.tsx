@@ -21,7 +21,7 @@ import {
   Trash2
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
-import { authService, appointmentService, Appointment, userService, User, Provider, paymentService, RevenueSummary } from '@/services/petCareService';
+import { authService, appointmentService, Appointment, userService, User, Provider, paymentService, RevenueSummary, tipService, Tip } from '@/services/petCareService';
 import { api, getToken } from '@/services/api';
 import { APPOINTMENT_STATUS, getStatusLabel } from '@/constants/status';
 import { useColorScheme } from 'react-native';
@@ -40,6 +40,7 @@ export default function ProviderDashboard() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [currentTip, setCurrentTip] = useState<Tip | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -171,12 +172,14 @@ export default function ProviderDashboard() {
 
   const loadDashboardData = async () => {
     try {
-      const [currentUser, appointments] = await Promise.all([
+      const [currentUser, appointments, tipData] = await Promise.all([
         userService.getCurrentUser(),
-        appointmentService.getProviderAppointments()
+        appointmentService.getProviderAppointments(),
+        tipService.getRandomTip().catch(() => null)
       ]);
       
       setUser(currentUser);
+      setCurrentTip(tipData);
       if (currentUser.provider) {
         setProvider(currentUser.provider);
         const revenueData = await paymentService.getRevenueSummary();
@@ -549,20 +552,24 @@ export default function ProviderDashboard() {
           </View>
         </View>
 
-        {/* Quick Tip */}
-        <View className="px-6 mb-6">
-          <View className="bg-primary/10 border border-primary/20 rounded-2xl p-4">
-            <View className="flex-row items-start gap-3">
-              <AlertCircle className="text-primary" size={20} />
-              <View className="flex-1">
-                <Text className="text-foreground font-semibold mb-1">Business Tip</Text>
-                <Text className="text-muted-foreground text-sm">
-                  Keep your availability calendar updated to receive more bookings. Clients prefer providers with clear schedules.
+        {/* Dynamic Tip Section */}
+        {currentTip && (
+          <View className="px-6 mb-6">
+            <View className="bg-primary/10 border border-primary/20 rounded-2xl p-5">
+              <View className="flex-row items-center mb-3">
+                <View className="bg-primary rounded-full p-2 mr-3">
+                  <TrendingUp className="text-primary-foreground" size={20} />
+                </View>
+                <Text className="text-foreground font-bold text-base flex-1">
+                  {currentTip.title}
                 </Text>
               </View>
+              <Text className="text-muted-foreground text-sm leading-5">
+                {currentTip.content}
+              </Text>
             </View>
           </View>
-        </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

@@ -14,25 +14,30 @@ import Layout from '../components/Layout';
 import { 
   appointmentService, 
   paymentService, 
+  tipService,
   Appointment, 
-  RevenueSummary 
+  RevenueSummary,
+  Tip
 } from '../services/petCareService';
 
 export default function ProviderDashboard() {
   const navigate = useNavigate();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [revenue, setRevenue] = useState<RevenueSummary | null>(null);
+  const [tip, setTip] = useState<Tip | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [appData, revData] = await Promise.all([
+        const [appData, revData, tipData] = await Promise.all([
           appointmentService.getProviderAppointments(),
-          paymentService.getRevenueSummary()
+          paymentService.getRevenueSummary(),
+          tipService.getRandomTip()
         ]);
         setAppointments(appData.slice(0, 5));
         setRevenue(revData);
+        setTip(tipData);
       } catch (error) {
         console.error('Error loading provider data:', error);
       } finally {
@@ -218,16 +223,18 @@ export default function ProviderDashboard() {
               </div>
             </div>
 
-            <div className="bg-orange-600 p-6 rounded-2xl shadow-lg text-white">
-              <h3 className="font-bold mb-2">Grow your business! 🚀</h3>
-              <p className="text-sm text-orange-100 mb-4">Complete your profile and add photos to attract 3x more pet owners.</p>
-              <button 
-                onClick={() => navigate('/profile-provider')}
-                className="w-full py-2 bg-white text-orange-600 rounded-xl font-bold text-sm hover:bg-orange-50 transition-colors"
-              >
-                Complete Profile
-              </button>
-            </div>
+            {tip && (
+              <div className="bg-orange-600 p-6 rounded-2xl shadow-lg text-white">
+                <h3 className="font-bold mb-2">{tip.title} 🚀</h3>
+                <p className="text-sm text-orange-100 mb-4">{tip.content}</p>
+                <button 
+                  onClick={() => navigate('/profile-provider')}
+                  className="w-full py-2 bg-white text-orange-600 rounded-xl font-bold text-sm hover:bg-orange-50 transition-colors"
+                >
+                  Boost Profile
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

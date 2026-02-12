@@ -363,6 +363,16 @@ export interface Review {
   owner?: User;
 }
 
+export interface Tip {
+  id: number;
+  userRoleId?: number;
+  serviceTypeId?: number;
+  title: string;
+  content: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
 export const providerPhotoService = {
   getProviderPhotos: async (providerId: number): Promise<ProviderPhoto[]> => {
     return await api.get(`/providerPhotos/provider/${providerId}`);
@@ -384,6 +394,19 @@ export const reviewService = {
   },
   createReview: async (reviewData: { appointmentId: number; providerId: number; rating: number; comment: string }): Promise<Review> => {
     return await api.post('/reviews', reviewData);
+  }
+};
+
+export const tipService = {
+  getTips: async (serviceTypeId?: number): Promise<Tip[]> => {
+    let url = '/tips';
+    if (serviceTypeId) url += `?serviceTypeId=${serviceTypeId}`;
+    return await api.get(url);
+  },
+  getRandomTip: async (serviceTypeId?: number): Promise<Tip> => {
+    let url = '/tips/random';
+    if (serviceTypeId) url += `?serviceTypeId=${serviceTypeId}`;
+    return await api.get(url);
   }
 };
 
