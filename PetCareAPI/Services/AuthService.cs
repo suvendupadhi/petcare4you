@@ -6,6 +6,7 @@ using PetCareAPI.Models.DTOs;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using BC = BCrypt.Net.BCrypt;
 
 namespace PetCareAPI.Services
 {
@@ -24,7 +25,10 @@ namespace PetCareAPI.Services
         {
             var email = loginDto.Email.ToLower().Trim();
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email);
-            if (user == null || loginDto.Password != user.PasswordHash)
+            //if (user == null || loginDto.Password != user.PasswordHash)
+            //    return null;
+
+            if (user == null || !BC.Verify(loginDto.Password, user.PasswordHash))
                 return null;
 
             var token = GenerateJwtToken(user);
@@ -45,7 +49,7 @@ namespace PetCareAPI.Services
             var user = new User
             {
                 Email = email,
-                PasswordHash = registerDto.Password,
+                PasswordHash = BC.HashPassword(registerDto.Password),
                 FirstName = registerDto.FirstName,
                 LastName = registerDto.LastName,
                 PhoneNumber = registerDto.PhoneNumber,

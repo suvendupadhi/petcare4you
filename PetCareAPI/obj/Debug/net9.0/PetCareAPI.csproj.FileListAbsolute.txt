@@ -135,3 +135,4 @@ d:\W\Asnet123\petcare\PetCareAPI\obj\Debug\net9.0\PetCareAPI.pdb
 d:\W\Asnet123\petcare\PetCareAPI\obj\Debug\net9.0\PetCareAPI.genruntimeconfig.cache
 d:\W\Asnet123\petcare\PetCareAPI\obj\Debug\net9.0\ref\PetCareAPI.dll
 D:\W\Asnet123\petcare\PetCareAPI\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt
+D:\W\Asnet123\petcare\PetCareAPI\bin\Debug\net9.0\BCrypt.Net-Next.dll

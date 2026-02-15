@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert, Switch, Platform, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { ArrowLeft, Building2, User, Phone, Mail, Lock, Globe, FileText, CheckCircle2, ArrowRight, Award, Scissors, Dog, Home as HomeIcon, Award as TrainingIcon, Stethoscope } from 'lucide-react-native';
+import { ArrowLeft, Building2, User, Phone, Mail, Lock, Globe, FileText, CheckCircle2, ArrowRight, Award, Scissors, Dog, Home as HomeIcon, Award as TrainingIcon, Stethoscope, MapPin } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { authService, providerService, serviceTypeService, ServiceType } from '@/services/petCareService';
 import { MultiSelect } from '@/components/MultiSelect';
