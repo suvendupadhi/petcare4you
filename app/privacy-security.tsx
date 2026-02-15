@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Switch, TextInput, Alert, Platform, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ArrowLeft, Lock, Shield, Eye, Smartphone, ChevronRight, LogOut, Home, X, EyeOff } from 'lucide-react-native';
+import { ArrowLeft, Lock, Shield, Eye, Smartphone, ChevronRight, LogOut, Home, X, EyeOff, Lightbulb } from 'lucide-react-native';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { authService, userService, User } from '@/services/petCareService';
 import { USER_ROLE } from '@/constants/status';
@@ -154,6 +154,17 @@ export default function PrivacySecurityScreen() {
           <Text className="text-sm font-bold text-muted-foreground mb-4 uppercase">Data & Privacy</Text>
           
           <View className="bg-card rounded-2xl border border-border overflow-hidden">
+            <TouchableOpacity 
+              onPress={() => router.push('/manage-tips')}
+              className="p-4 border-b border-border flex-row items-center justify-between"
+            >
+              <View className="flex-row items-center gap-3">
+                <Lightbulb className="text-muted-foreground" size={20} />
+                <Text className="text-foreground font-medium">Manage Pet Care Tips</Text>
+              </View>
+              <ChevronRight className="text-muted-foreground" size={20} />
+            </TouchableOpacity>
+
             <TouchableOpacity className="p-4 border-b border-border flex-row items-center justify-between">
               <View className="flex-row items-center gap-3">
                 <Shield className="text-muted-foreground" size={20} />
