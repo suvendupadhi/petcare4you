@@ -9,5 +9,6 @@ namespace PetCareAPI.Services
         Task<bool> RegisterAsync(RegisterDto registerDto);
         Task<bool> ForgotPasswordAsync(ForgotPasswordDto forgotPasswordDto);
         Task<bool> ResetPasswordAsync(ResetPasswordDto resetPasswordDto);
+        Task<bool> ChangePasswordAsync(int userId, ChangePasswordDto changePasswordDto);
     }
 }

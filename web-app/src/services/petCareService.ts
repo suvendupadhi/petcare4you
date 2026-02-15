@@ -187,6 +187,10 @@ export const authService = {
     const response = await api.post('/Auth/reset-password', data);
     return response.data;
   },
+  changePassword: async (data: any) => {
+    const response = await api.post('/Auth/change-password', data);
+    return response.data;
+  },
 };
 
 export const petService = {

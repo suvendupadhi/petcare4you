@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using PetCareAPI.Models.DTOs;
 using PetCareAPI.Services;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace PetCareAPI.Controllers
 {
@@ -52,6 +54,20 @@ namespace PetCareAPI.Controllers
                 return BadRequest(new { message = "Invalid email or token" });
 
             return Ok(new { message = "Password has been reset successfully" });
+        }
+
+        [Authorize]
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto changePasswordDto)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null) return Unauthorized();
+
+            var result = await _authService.ChangePasswordAsync(int.Parse(userIdClaim.Value), changePasswordDto);
+            if (!result)
+                return BadRequest(new { message = "Invalid current password" });
+
+            return Ok(new { message = "Password changed successfully" });
         }
     }
 }

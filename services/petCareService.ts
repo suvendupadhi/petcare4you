@@ -112,6 +112,9 @@ export const authService = {
   },
   resetPassword: async (data: any) => {
     return await api.post('/auth/reset-password', data);
+  },
+  changePassword: async (data: any) => {
+    return await api.post('/auth/change-password', data);
   }
 };
 

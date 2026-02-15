@@ -87,6 +87,21 @@ namespace PetCareAPI.Services
             return true;
         }
 
+        public async Task<bool> ChangePasswordAsync(int userId, ChangePasswordDto changePasswordDto)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+                return false;
+
+            if (!BC.Verify(changePasswordDto.CurrentPassword, user.PasswordHash))
+                return false;
+
+            user.PasswordHash = BC.HashPassword(changePasswordDto.NewPassword);
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
         private string GenerateJwtToken(User user)
         {
             var jwtSettings = _configuration.GetSection("Jwt");

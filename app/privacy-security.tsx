@@ -1,14 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Switch, TextInput, Alert, Platform } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Switch, TextInput, Alert, Platform, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ArrowLeft, Lock, Shield, Eye, Smartphone, ChevronRight, LogOut, Home } from 'lucide-react-native';
+import { ArrowLeft, Lock, Shield, Eye, Smartphone, ChevronRight, LogOut, Home, X, EyeOff } from 'lucide-react-native';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { authService, userService, User } from '@/services/petCareService';
 import { USER_ROLE } from '@/constants/status';
 
 export default function PrivacySecurityScreen() {
   const [user, setUser] = useState<User | null>(null);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     userService.getCurrentUser().then(setUser).catch(console.error);
@@ -38,6 +45,37 @@ export default function PrivacySecurityScreen() {
           },
         ]
       );
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      if (Platform.OS === 'web') window.alert('Please fill in all fields');
+      else Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      if (Platform.OS === 'web') window.alert('New passwords do not match');
+      else Alert.alert('Error', 'New passwords do not match');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await authService.changePassword({ currentPassword, newPassword });
+      if (Platform.OS === 'web') window.alert('Password changed successfully');
+      else Alert.alert('Success', 'Password changed successfully');
+      setIsPasswordModalOpen(false);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error: any) {
+      const msg = error.message || 'Failed to change password';
+      if (Platform.OS === 'web') window.alert(msg);
+      else Alert.alert('Error', msg);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -76,7 +114,10 @@ export default function PrivacySecurityScreen() {
           <Text className="text-sm font-bold text-muted-foreground mb-4 uppercase">Login Security</Text>
           
           <View className="bg-card rounded-2xl border border-border overflow-hidden mb-8">
-            <TouchableOpacity className="p-4 border-b border-border flex-row items-center justify-between">
+            <TouchableOpacity 
+              onPress={() => setIsPasswordModalOpen(true)}
+              className="p-4 border-b border-border flex-row items-center justify-between"
+            >
               <View className="flex-row items-center gap-3">
                 <Lock className="text-muted-foreground" size={20} />
                 <Text className="text-foreground font-medium">Change Password</Text>
@@ -143,6 +184,82 @@ export default function PrivacySecurityScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Change Password Modal */}
+      <Modal
+        visible={isPasswordModalOpen}
+        animationType="slide"
+        transparent={true}
+      >
+        <View className="flex-1 justify-end bg-black/50">
+          <View className="bg-background rounded-t-3xl p-6">
+            <View className="flex-row justify-between items-center mb-6">
+              <Text className="text-2xl font-bold text-foreground">Change Password</Text>
+              <TouchableOpacity onPress={() => setIsPasswordModalOpen(false)}>
+                <X className="text-muted-foreground" size={24} />
+              </TouchableOpacity>
+            </View>
+
+            <View className="gap-4">
+              <View>
+                <Text className="text-sm font-semibold text-foreground mb-2">Current Password</Text>
+                <View className="flex-row items-center bg-card border border-border rounded-xl px-4 py-3">
+                  <TextInput
+                    secureTextEntry={!showCurrent}
+                    value={currentPassword}
+                    onChangeText={setCurrentPassword}
+                    placeholder="Enter current password"
+                    placeholderTextColor="#9CA3AF"
+                    className="flex-1 text-foreground text-base"
+                  />
+                  <TouchableOpacity onPress={() => setShowCurrent(!showCurrent)}>
+                    {showCurrent ? <EyeOff size={20} className="text-muted-foreground" /> : <Eye size={20} className="text-muted-foreground" />}
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <View>
+                <Text className="text-sm font-semibold text-foreground mb-2">New Password</Text>
+                <View className="flex-row items-center bg-card border border-border rounded-xl px-4 py-3">
+                  <TextInput
+                    secureTextEntry={!showNew}
+                    value={newPassword}
+                    onChangeText={setNewPassword}
+                    placeholder="Enter new password"
+                    placeholderTextColor="#9CA3AF"
+                    className="flex-1 text-foreground text-base"
+                  />
+                  <TouchableOpacity onPress={() => setShowNew(!showNew)}>
+                    {showNew ? <EyeOff size={20} className="text-muted-foreground" /> : <Eye size={20} className="text-muted-foreground" />}
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <View>
+                <Text className="text-sm font-semibold text-foreground mb-2">Confirm New Password</Text>
+                <TextInput
+                  secureTextEntry
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  placeholder="Confirm new password"
+                  placeholderTextColor="#9CA3AF"
+                  className="bg-card border border-border rounded-xl px-4 py-3 text-foreground text-base"
+                />
+              </View>
+
+              <TouchableOpacity
+                onPress={handleChangePassword}
+                disabled={loading}
+                className={`bg-primary rounded-xl py-4 items-center justify-center mt-4 ${loading ? 'opacity-70' : ''}`}
+              >
+                <Text className="text-primary-foreground font-bold text-base">
+                  {loading ? 'Updating...' : 'Update Password'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }

@@ -12,10 +12,18 @@ import {
   UserPlus,
   Building2,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  Lightbulb
 } from 'lucide-react-native';
 
 const screenGroups = [
+  {
+    title: '🔧 Admin / Management',
+    screens: [
+      { name: 'Manage Tips', route: '/manage-tips', icon: Lightbulb },
+      { name: 'Privacy & Security', route: '/privacy-security', icon: Settings },
+    ],
+  },
   {
     title: '🐾 Pet Owner Screens',
     screens: [
