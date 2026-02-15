@@ -95,6 +95,15 @@ export default function LoginPage() {
                   placeholder="Enter your password"
                 />
               </div>
+              <div className="flex justify-end mt-2">
+                <button
+                  type="button"
+                  onClick={() => navigate('/forgot-password')}
+                  className="text-sm font-semibold text-orange-600 hover:text-orange-700"
+                >
+                  Forgot Password?
+                </button>
+              </div>
             </div>
 
             <button

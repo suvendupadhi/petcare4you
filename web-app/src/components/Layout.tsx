@@ -10,7 +10,8 @@ import {
   Bell,
   MessageSquare,
   Search,
-  CreditCard
+  CreditCard,
+  Lightbulb
 } from 'lucide-react';
 import { authService, notificationService } from '../services/petCareService';
 
@@ -58,6 +59,7 @@ export default function Layout({ children, userType: propUserType }: LayoutProps
   ];
 
   const commonItems = [
+    { icon: Lightbulb, label: 'Tips', path: '/tips-management' },
     { icon: Settings, label: 'Settings', path: '/settings' },
   ];
 

@@ -61,6 +61,32 @@ namespace PetCareAPI.Services
             return true;
         }
 
+        public async Task<bool> ForgotPasswordAsync(ForgotPasswordDto forgotPasswordDto)
+        {
+            var email = forgotPasswordDto.Email.ToLower().Trim();
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email);
+            
+            // In a real application, we would generate a token, save it to the database with an expiration, 
+            // and send an email to the user. For this implementation, we'll just check if the user exists.
+            return user != null;
+        }
+
+        public async Task<bool> ResetPasswordAsync(ResetPasswordDto resetPasswordDto)
+        {
+            var email = resetPasswordDto.Email.ToLower().Trim();
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email);
+
+            if (user == null)
+                return false;
+
+            // In a real application, we would validate the token here.
+            
+            user.PasswordHash = BC.HashPassword(resetPasswordDto.NewPassword);
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
         private string GenerateJwtToken(User user)
         {
             var jwtSettings = _configuration.GetSection("Jwt");

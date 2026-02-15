@@ -179,6 +179,14 @@ export const authService = {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user_type');
   },
+  forgotPassword: async (email: string) => {
+    const response = await api.post('/Auth/forgot-password', { email });
+    return response.data;
+  },
+  resetPassword: async (data: any) => {
+    const response = await api.post('/Auth/reset-password', data);
+    return response.data;
+  },
 };
 
 export const petService = {
@@ -373,11 +381,25 @@ export const reviewService = {
 };
 
 export const tipService = {
-  getTips: async (serviceTypeId?: number): Promise<Tip[]> => {
-    let url = '/Tips';
-    if (serviceTypeId) url += `?serviceTypeId=${serviceTypeId}`;
+  getTips: async (serviceTypeId?: number, includeInactive: boolean = false): Promise<Tip[]> => {
+    let url = `/Tips?includeInactive=${includeInactive}`;
+    if (serviceTypeId) url += `&serviceTypeId=${serviceTypeId}`;
     const response = await api.get(url);
     return response.data;
+  },
+  getTip: async (id: number): Promise<Tip> => {
+    const response = await api.get(`/Tips/${id}`);
+    return response.data;
+  },
+  createTip: async (tipData: Partial<Tip>): Promise<Tip> => {
+    const response = await api.post('/Tips', tipData);
+    return response.data;
+  },
+  updateTip: async (id: number, tipData: Partial<Tip>): Promise<void> => {
+    await api.put(`/Tips/${id}`, tipData);
+  },
+  deleteTip: async (id: number): Promise<void> => {
+    await api.delete(`/Tips/${id}`);
   },
   getRandomTip: async (serviceTypeId?: number): Promise<Tip> => {
     let url = '/Tips/random';

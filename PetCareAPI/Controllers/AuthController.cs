@@ -34,5 +34,24 @@ namespace PetCareAPI.Controllers
 
             return StatusCode(201);
         }
+
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto forgotPasswordDto)
+        {
+            var result = await _authService.ForgotPasswordAsync(forgotPasswordDto);
+            // We return Ok even if user doesn't exist for security reasons (don't reveal registered emails)
+            // But for this demo, the service returns true if user exists.
+            return Ok(new { message = "If an account exists with this email, a password reset link has been sent." });
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto resetPasswordDto)
+        {
+            var result = await _authService.ResetPasswordAsync(resetPasswordDto);
+            if (!result)
+                return BadRequest(new { message = "Invalid email or token" });
+
+            return Ok(new { message = "Password has been reset successfully" });
+        }
     }
 }

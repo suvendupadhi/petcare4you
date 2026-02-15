@@ -106,6 +106,12 @@ export const authService = {
   },
   logout: async () => {
     await clearToken();
+  },
+  forgotPassword: async (email: string) => {
+    return await api.post('/auth/forgot-password', { email });
+  },
+  resetPassword: async (data: any) => {
+    return await api.post('/auth/reset-password', data);
   }
 };
 
@@ -398,10 +404,22 @@ export const reviewService = {
 };
 
 export const tipService = {
-  getTips: async (serviceTypeId?: number): Promise<Tip[]> => {
-    let url = '/tips';
-    if (serviceTypeId) url += `?serviceTypeId=${serviceTypeId}`;
+  getTips: async (serviceTypeId?: number, includeInactive: boolean = false): Promise<Tip[]> => {
+    let url = `/tips?includeInactive=${includeInactive}`;
+    if (serviceTypeId) url += `&serviceTypeId=${serviceTypeId}`;
     return await api.get(url);
+  },
+  getTip: async (id: number): Promise<Tip> => {
+    return await api.get(`/tips/${id}`);
+  },
+  createTip: async (tipData: Partial<Tip>): Promise<Tip> => {
+    return await api.post('/tips', tipData);
+  },
+  updateTip: async (id: number, tipData: Partial<Tip>): Promise<void> => {
+    return await api.put(`/tips/${id}`, tipData);
+  },
+  deleteTip: async (id: number): Promise<void> => {
+    return await api.delete(`/tips/${id}`);
   },
   getRandomTip: async (serviceTypeId?: number): Promise<Tip> => {
     let url = '/tips/random';
