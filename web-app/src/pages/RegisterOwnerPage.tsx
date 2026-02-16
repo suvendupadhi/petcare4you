@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { PawPrint, User, Mail, Lock, Phone, MapPin, ArrowRight } from 'lucide-react';
+import { PawPrint, User, Mail, Lock, MapPin, ArrowRight } from 'lucide-react';
 import { authService } from '../services/petCareService';
+import CountryCodePicker from '../components/CountryCodePicker';
+import { countries, Country } from '../constants/countries';
 
 export default function RegisterOwnerPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [selectedCountry, setSelectedCountry] = useState<Country>(countries[0]); // Default to US
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -33,9 +36,11 @@ export default function RegisterOwnerPage() {
       newErrors.password = 'Password must be 8+ chars, with uppercase, lowercase, number and special char';
     }
 
-    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
-    if (!phoneRegex.test(formData.phoneNumber.replace(/[\s()-]/g, ''))) {
-      newErrors.phoneNumber = 'Invalid phone number (e.g. +1234567890)';
+    const phoneDigits = formData.phoneNumber.replace(/[\s()-]/g, '');
+    if (!phoneDigits) {
+      newErrors.phoneNumber = 'Phone number is required';
+    } else if (!/^\d{1,14}$/.test(phoneDigits)) {
+      newErrors.phoneNumber = 'Invalid phone number';
     }
 
     setErrors(newErrors);
@@ -48,9 +53,10 @@ export default function RegisterOwnerPage() {
 
     setLoading(true);
     try {
+      const fullPhoneNumber = `${selectedCountry.dialCode}${formData.phoneNumber.replace(/[\s()-]/g, '')}`;
       await authService.register({
         ...formData,
-        phoneNumber: formData.phoneNumber.replace(/[\s()-]/g, '')
+        phoneNumber: fullPhoneNumber
       });
       alert('Registration successful! Please login.');
       navigate('/');
@@ -129,14 +135,18 @@ export default function RegisterOwnerPage() {
 
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">Phone Number</label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-3 text-slate-400" size={20} />
+              <div className="flex">
+                <CountryCodePicker 
+                  selectedCountry={selectedCountry} 
+                  onSelect={setSelectedCountry} 
+                  error={!!errors.phoneNumber}
+                />
                 <input
                   type="tel"
                   value={formData.phoneNumber}
                   onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                  className={`w-full pl-10 pr-4 py-3 bg-slate-50 border ${errors.phoneNumber ? 'border-red-500' : 'border-slate-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500`}
-                  placeholder="+1234567890"
+                  className={`w-full px-4 py-3 bg-slate-50 border ${errors.phoneNumber ? 'border-red-500' : 'border-slate-200'} rounded-r-xl focus:outline-none focus:ring-2 focus:ring-orange-500 border-l-0`}
+                  placeholder="123 456 7890"
                 />
               </div>
               {errors.phoneNumber && <p className="text-red-500 text-xs mt-1 ml-1">{errors.phoneNumber}</p>}

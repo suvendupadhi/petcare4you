@@ -43,12 +43,15 @@ import {
 } from '@/services/petCareService';
 import { getImageUrl } from '@/services/api';
 import { format, parseISO } from 'date-fns';
+import CountryCodePicker from '@/components/CountryCodePicker';
+import { countries, Country } from '@/constants/countries';
 
 export default function ProfileProviderScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   
   const [loading, setLoading] = useState(true);
+  const [selectedCountry, setSelectedCountry] = useState<Country>(countries[0]);
   const [editMode, setEditMode] = useState(false);
   const [userData, setUserData] = useState<User | null>(null);
   const [provider, setProvider] = useState<Provider | null>(null);

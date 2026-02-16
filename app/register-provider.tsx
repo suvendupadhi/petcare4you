@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert, Switch, Platform, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { ArrowLeft, Building2, User, Phone, Mail, Lock, Globe, FileText, CheckCircle2, ArrowRight, Award, Scissors, Dog, Home as HomeIcon, Award as TrainingIcon, Stethoscope, MapPin } from 'lucide-react-native';
+import { ArrowLeft, Building2, User, Mail, Lock, Globe, FileText, CheckCircle2, ArrowRight, Award, Scissors, Dog, Home as HomeIcon, Award as TrainingIcon, Stethoscope, MapPin } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { authService, providerService, serviceTypeService, ServiceType } from '@/services/petCareService';
 import { MultiSelect } from '@/components/MultiSelect';
 import { USER_ROLE } from '@/constants/status';
+import CountryCodePicker from '@/components/CountryCodePicker';
+import { countries, Country } from '@/constants/countries';
 
 export default function RegisterProviderScreen() {
   const router = useRouter();
@@ -17,6 +19,7 @@ export default function RegisterProviderScreen() {
   const [ownerLastName, setOwnerLastName] = useState('');
   const [isLicensed, setIsLicensed] = useState(false);
   const [businessPhone, setBusinessPhone] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState<Country>(countries[0]);
   const [businessEmail, setBusinessEmail] = useState('');
   const [selectedServiceTypeIds, setSelectedServiceTypeIds] = useState<number[]>([]);
   const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
@@ -62,10 +65,11 @@ export default function RegisterProviderScreen() {
     if (!city.trim()) newErrors.city = 'City is required';
     if (!address.trim()) newErrors.address = 'Address is required';
     
-    if (!businessPhone.trim()) {
+    const phoneDigits = businessPhone.replace(/[\s()-]/g, '');
+    if (!phoneDigits.trim()) {
       newErrors.businessPhone = 'Business phone is required';
-    } else if (!/^\+?[1-9]\d{1,14}$/.test(businessPhone.replace(/[\s()-]/g, ''))) {
-      newErrors.businessPhone = 'Invalid phone number (e.g. +1234567890)';
+    } else if (!/^\d{1,14}$/.test(phoneDigits)) {
+      newErrors.businessPhone = 'Invalid phone number';
     }
 
     if (!businessEmail.trim()) {
@@ -100,23 +104,15 @@ export default function RegisterProviderScreen() {
     setLoading(true);
 
     try {
-      // 1. Register User
+      const fullPhoneNumber = `${selectedCountry.dialCode}${businessPhone.replace(/[\s()-]/g, '')}`;
+      // Register User and Provider details in one go
       await authService.register({
         email: businessEmail,
         password,
         firstName: ownerFirstName,
         lastName: ownerLastName,
-        roleId: USER_ROLE.PROVIDER
-      });
-
-      // 2. Login to get token
-      await authService.login({
-        email: businessEmail,
-        password
-      });
-
-      // 3. Create Provider Profile
-      await providerService.createProvider({
+        phoneNumber: fullPhoneNumber,
+        roleId: USER_ROLE.PROVIDER,
         companyName: businessName,
         description: businessDescription,
         serviceTypeIds: selectedServiceTypeIds,
@@ -271,16 +267,22 @@ export default function RegisterProviderScreen() {
               <Text className="text-sm font-semibold text-foreground mb-2">
                 Business Phone <Text className="text-destructive">*</Text>
               </Text>
-              <View className={`flex-row items-center bg-card border ${errors.businessPhone ? 'border-destructive' : 'border-border'} rounded-xl px-4 py-3`}>
-                <Phone className="text-muted-foreground mr-3" size={20} />
-                <TextInput
-                  value={businessPhone}
-                  onChangeText={setBusinessPhone}
-                  placeholder="+1234567890"
-                  placeholderTextColor="#9CA3AF"
-                  keyboardType="phone-pad"
-                  className="flex-1 text-foreground text-base"
+              <View className="flex-row">
+                <CountryCodePicker 
+                  selectedCountry={selectedCountry} 
+                  onSelect={setSelectedCountry} 
+                  error={!!errors.businessPhone}
                 />
+                <View className={`flex-1 flex-row items-center bg-card border ${errors.businessPhone ? 'border-destructive' : 'border-border'} rounded-r-xl px-4 py-3 border-l-0`}>
+                  <TextInput
+                    value={businessPhone}
+                    onChangeText={setBusinessPhone}
+                    placeholder="123 456 7890"
+                    placeholderTextColor="#9CA3AF"
+                    keyboardType="phone-pad"
+                    className="flex-1 text-foreground text-base"
+                  />
+                </View>
               </View>
               {errors.businessPhone && <Text className="text-destructive text-xs mt-1 ml-1">{errors.businessPhone}</Text>}
             </View>

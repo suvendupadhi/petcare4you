@@ -1,4 +1,4 @@
--- PetCare Services PostgreSQL Database Schema
+ PetCare Services PostgreSQL Database Schema
 CREATE SCHEMA IF NOT EXISTS petcare;
 SET search_path TO petcare;
 
@@ -108,9 +108,14 @@ CREATE TABLE IF NOT EXISTS provider_photos (
 
 -- 9. ProviderServiceTypes (Join Table)
 CREATE TABLE IF NOT EXISTS provider_service_types (
+    id SERIAL PRIMARY KEY,
     provider_id INTEGER REFERENCES providers(id) ON DELETE CASCADE,
     service_type_id INTEGER REFERENCES service_types(id) ON DELETE CASCADE,
-    PRIMARY KEY (provider_id, service_type_id)
+    price DECIMAL(10, 2) DEFAULT 0.00,
+    description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (provider_id, service_type_id)
 );
 
 -- 10. Appointments Table
@@ -207,9 +212,15 @@ VALUES
 ON CONFLICT (role_name) DO NOTHING;
 
 -- Insert Pet Types
-INSERT INTO pet_types (name) 
-VALUES ('Dog'), ('Cat'), ('Bird'), ('Rabbit'), ('Other') 
-ON CONFLICT DO NOTHING;
+--INSERT INTO pet_types (name) 
+--VALUES ('Dog'), ('Cat'), ('Bird'), ('Rabbit'), ('Other') 
+--ON CONFLICT DO NOTHING;
+
+INSERT INTO petcare.pet_types VALUES (1, 'Dog', '2026-02-02 17:54:47.047886+05:30', true);
+INSERT INTO petcare.pet_types VALUES (2, 'Cat', '2026-02-02 17:54:47.047886+05:30', false);
+INSERT INTO petcare.pet_types VALUES (3, 'Bird', '2026-02-02 17:54:47.047886+05:30', false);
+INSERT INTO petcare.pet_types VALUES (4, 'Rabbit', '2026-02-02 17:54:47.047886+05:30', false);
+INSERT INTO petcare.pet_types VALUES (5, 'Other', '2026-02-02 17:54:47.047886+05:30', false);
 
 -- Insert Breeds
 INSERT INTO breeds (pet_type_id, name, origin) 
@@ -226,7 +237,7 @@ ON CONFLICT DO NOTHING;
 INSERT INTO service_types (name, description, icon_name)
 VALUES 
     ('Pet Grooming', 'Professional grooming services for your pets', 'scissors'),
-    ('Veterinary Care', 'Expert medical care and checkups', 'stethoscop'),
+    ('Veterinary Care', 'Expert medical care and checkups', 'stethoscope'),
     ('Dog Walking', 'Daily walks and exercise for dogs', 'dog'),
     ('Pet Boarding', 'Safe and comfortable stay for your pets', 'home'),
     ('Pet Training', 'Behavioral training and obedience classes', 'award'),
@@ -239,11 +250,11 @@ VALUES
     ('Pet Photography', 'Professional photo sessions for your furry friends', 'camera')
 ON CONFLICT (name) DO NOTHING;
 
--- Passwords are stored in plain text (password for all is 'password123')
+-- Passwords are stored in plain text (password for all is 'Password@1') --
 INSERT INTO users (email, password_hash, first_name, last_name, phone_number, role_id)
 VALUES 
-('owner@example.com', 'password123', 'John', 'Owner', '555-1234', 1),
-('groomer@example.com', 'password123', 'Jane', 'Groomer', '555-5678', 2);
+('owner@example.com', '$2a$11$1wK0iVqAkXbH6CeLcprc/OH91/vT2vy9lDnc8HR7PgxL1CCXnBLjO', 'John', 'Owner', '555-1234', 1),
+('groomer@example.com', '$2a$11$1wK0iVqAkXbH6CeLcprc/OH91/vT2vy9lDnc8HR7PgxL1CCXnBLjO', 'Jane', 'Groomer', '555-5678', 2);
 
 INSERT INTO pets (owner_id, pet_type_id, breed_id, name, age)
 VALUES (1, 1, 1, 'Buddy', 3);
@@ -262,11 +273,33 @@ VALUES
 (1, CURRENT_DATE + INTERVAL '1 day', '2026-01-21 10:00:00+00', '2026-01-21 11:00:00+00', FALSE);
 
 -- Insert Tips
-INSERT INTO tips (user_role_id, service_type_id, title, content)
-VALUES 
-    (1, NULL, 'Pet Health Tip', 'Ensure your pet stays hydrated! Fresh water should always be available, especially after exercise.'),
-    (1, 1, 'Grooming Tip', 'Regular brushing helps prevent matting and keeps your pets coat healthy and shiny.'),
-    (1, 2, 'Vet Visit Tip', 'Keep a folder of your pets medical history and vaccination records for quick reference during vet visits.'),
-    (2, NULL, 'Business Tip', 'Respond to booking requests within 2 hours to increase your chance of confirmation by 40%.'),
-    (2, NULL, 'Profile Tip', 'Adding high-quality photos of your workplace builds trust with potential pet owners.'),
-    (2, 1, 'Pro Groomer Tip', 'Always check for skin irritations or lumps during grooming and inform the owner immediately.');
+--INSERT INTO tips (user_role_id, service_type_id, title, content)
+--VALUES 
+--    (1, NULL, 'Pet Health Tip', 'Ensure your pet stays hydrated! Fresh water should always be available, especially after exercise.'),
+--    (1, 1, 'Grooming Tip', 'Regular brushing helps prevent matting and keeps your pets coat healthy and shiny.'),
+--    (1, 2, 'Vet Visit Tip', 'Keep a folder of your pets medical history and vaccination records for quick reference during vet visits.'),
+--    (2, NULL, 'Business Tip', 'Respond to booking requests within 2 hours to increase your chance of confirmation by 40%.'),
+--    (2, NULL, 'Profile Tip', 'Adding high-quality photos of your workplace builds trust with potential pet owners.'),
+--    (2, 1, 'Pro Groomer Tip', 'Always check for skin irritations or lumps during grooming and inform the owner immediately.');
+INSERT INTO tips VALUES (1, 1, NULL, 'Pet Health Tip', 'Ensure your pet stays hydrated! Fresh water should always be available, especially after exercise.', true, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO tips VALUES (2, 1, 1, 'Grooming Tip', 'Regular brushing helps prevent matting and keeps your pets coat healthy and shiny.', true, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO tips VALUES (3, 1, 2, 'Vet Visit Tip', 'Keep a folder of your pets medical history and vaccination records for quick reference during vet visits.', true, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO tips VALUES (4, 2, NULL, 'Business Tip', 'Respond to booking requests within 2 hours to increase your chance of confirmation by 40%.', true, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO tips VALUES (5, 2, NULL, 'Profile Tip', 'Adding high-quality photos of your workplace builds trust with potential pet owners.', true, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO tips VALUES (6, 2, 1, 'Pro Groomer Tip', 'Always check for skin irritations or lumps during grooming and inform the owner immediately.', true, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO tips VALUES (12, 2, 1, 'Safety Protocol', 'Sanitize all grooming tools between clients to prevent cross-contamination and maintain hygiene standards.', true, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO tips VALUES (11, 2, NULL, 'Marketing Strategy', 'Share before-and-after photos with owner permission to showcase your work on social media.', true, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO tips VALUES (10, 2, NULL, 'Customer Service', 'Send a follow-up message after each booking to gather feedback and improve your service quality.', true, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO tips VALUES (9, 1, 2, 'Medical Records', 'Take photos of vaccination certificates and store them digitally for easy access during emergencies.', true, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO tips VALUES (8, 1, 1, 'Coat Care Basics', 'Brush your pet at least twice a week to reduce shedding and distribute natural oils throughout their coat.', true, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO tips VALUES (7, 1, NULL, 'Nutrition Essentials', 'Feed your pet at consistent times each day to establish a healthy routine and prevent digestive issues.', true, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO tips VALUES (13, 1, NULL, 'Exercise Routine', 'Ensure your pet gets at least 30 minutes of physical activity daily to maintain a healthy weight and mental well-being.', true, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO tips VALUES (14, 1, 1, 'Dental Care Tip', 'Brush your pet''s teeth regularly using pet-safe toothpaste to prevent plaque buildup and bad breath.', true, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO tips VALUES (15, 1, 2, 'Vaccination Reminder', 'Stay up to date with your pet''s vaccination schedule to protect them from common infectious diseases.', true, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO tips VALUES (16, 2, NULL, 'Client Retention Tip', 'Offer loyalty discounts to repeat customers to encourage long-term relationships and steady bookings.', true, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO tips VALUES (17, 2, NULL, 'Scheduling Tip', 'Use automated reminders to reduce no-shows and keep your daily appointments organized.', true, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO tips VALUES (18, 2, 1, 'Advanced Grooming Tip', 'Always use breed-specific grooming techniques to ensure the best results and comfort for the pet.', true, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO tips VALUES (19, 2, NULL, 'Hygiene Standard', 'Maintain a clean workspace by disinfecting tables and drying areas after every session.', true, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO tips VALUES (20, 2, NULL, 'Online Presence', 'Keep your business profile updated with accurate service details and pricing information.', true, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO tips VALUES (21, 1, 1, 'Shedding Control', 'Use de-shedding tools during seasonal coat changes to minimize loose fur around your home.', true, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO tips VALUES (22, 1, NULL, 'Hydration Check', 'Monitor your pet''s water intake daily to quickly detect any unusual changes in behavior or health.', true, '2026-02-12 18:42:54.217953+05:30');

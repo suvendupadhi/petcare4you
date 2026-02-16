@@ -3,6 +3,28 @@ import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import RegisterOwnerScreen from './register-owner';
 import { authService } from '@/services/petCareService';
 
+// Mock expo-router
+jest.mock('expo-router', () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+    back: jest.fn(),
+  }),
+}));
+
+// Mock lucide-react-native
+jest.mock('lucide-react-native', () => ({
+  ArrowLeft: () => null,
+  User: () => null,
+  Phone: () => null,
+  Mail: () => null,
+  Lock: () => null,
+  CheckCircle2: () => null,
+  ArrowRight: () => null,
+  ChevronDown: () => null,
+  Search: () => null,
+  X: () => null,
+}));
+
 // Mock authService
 jest.mock('@/services/petCareService', () => ({
   authService: {
@@ -14,6 +36,12 @@ jest.mock('@/services/petCareService', () => ({
 jest.mock('@/components/ThemeToggle', () => ({
   ThemeToggle: () => null,
 }));
+
+jest.mock('@/components/CountryCodePicker', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  return (props: any) => React.createElement(View, { testID: 'country-picker' });
+});
 
 describe('RegisterOwnerScreen Validation', () => {
   it('shows validation errors when submitting empty form', async () => {

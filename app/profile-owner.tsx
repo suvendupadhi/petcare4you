@@ -28,6 +28,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { authService, userService, User as UserType, petService, Pet, PetType, Breed, savedProviderService, SavedProvider } from '@/services/petCareService';
 import { getImageUrl } from '@/services/api';
+import CountryCodePicker from '@/components/CountryCodePicker';
+import { countries, Country } from '@/constants/countries';
 
 export default function ProfileOwnerScreen() {
   const colorScheme = useColorScheme();
@@ -35,6 +37,7 @@ export default function ProfileOwnerScreen() {
   
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState<UserType | null>(null);
+  const [selectedCountry, setSelectedCountry] = useState<Country>(countries[0]);
   const [pets, setPets] = useState<Pet[]>([]);
   const [petTypes, setPetTypes] = useState<PetType[]>([]);
   const [breeds, setBreeds] = useState<Breed[]>([]);
@@ -227,10 +230,17 @@ export default function ProfileOwnerScreen() {
 
   const handleEditProfile = () => {
     if (userData) {
+      let phone = userData.phoneNumber || '';
+      const country = countries.find(c => phone.startsWith(c.dialCode)) || countries[0];
+      const nationalNumber = phone.startsWith(country.dialCode) 
+        ? phone.slice(country.dialCode.length) 
+        : phone;
+
+      setSelectedCountry(country);
       setProfileForm({
         firstName: userData.firstName,
         lastName: userData.lastName,
-        phoneNumber: userData.phoneNumber || '',
+        phoneNumber: nationalNumber,
         address: userData.address || '',
         profileImageUrl: userData.profileImageUrl || ''
       });
@@ -242,7 +252,11 @@ export default function ProfileOwnerScreen() {
   const handleSaveProfile = async () => {
     if (!validateProfile()) return;
     try {
-      await userService.updateProfile(profileForm);
+      const fullPhoneNumber = `${selectedCountry.dialCode}${profileForm.phoneNumber.replace(/[\s()-]/g, '')}`;
+      await userService.updateProfile({
+        ...profileForm,
+        phoneNumber: fullPhoneNumber
+      });
       setShowProfileModal(false);
       loadProfileData();
       if (Platform.OS === 'web') {
@@ -689,14 +703,23 @@ export default function ProfileOwnerScreen() {
 
                 <View>
                   <Text className="text-foreground font-semibold mb-2">Phone Number</Text>
-                  <TextInput
-                    className={`bg-card p-4 rounded-xl border ${errors.phoneNumber ? 'border-destructive' : 'border-border'} text-foreground`}
-                    placeholder="Phone Number"
-                    placeholderTextColor="#94a3b8"
-                    keyboardType="phone-pad"
-                    value={profileForm.phoneNumber}
-                    onChangeText={(text) => setProfileForm({ ...profileForm, phoneNumber: text })}
-                  />
+                  <View className="flex-row">
+                    <CountryCodePicker 
+                      selectedCountry={selectedCountry} 
+                      onSelect={setSelectedCountry} 
+                      error={!!errors.phoneNumber}
+                    />
+                    <View className={`flex-1 bg-card px-4 py-3 rounded-r-xl border ${errors.phoneNumber ? 'border-destructive' : 'border-border'} border-l-0`}>
+                      <TextInput
+                        className="text-foreground text-base h-6"
+                        placeholder="Phone Number"
+                        placeholderTextColor="#94a3b8"
+                        keyboardType="phone-pad"
+                        value={profileForm.phoneNumber}
+                        onChangeText={(text) => setProfileForm({ ...profileForm, phoneNumber: text })}
+                      />
+                    </View>
+                  </View>
                   {errors.phoneNumber && <Text className="text-destructive text-xs mt-1 ml-1">{errors.phoneNumber}</Text>}
                 </View>
 

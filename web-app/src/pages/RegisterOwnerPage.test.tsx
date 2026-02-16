@@ -35,7 +35,7 @@ describe('RegisterOwnerPage Validation', () => {
     await waitFor(() => {
       expect(screen.getByText(/invalid email address/i)).toBeInTheDocument();
       expect(screen.getByText(/password must be 8\+ chars/i)).toBeInTheDocument();
-      expect(screen.getByText(/invalid phone number/i)).toBeInTheDocument();
+      expect(screen.getByText(/phone number is required/i)).toBeInTheDocument();
     });
   });
 

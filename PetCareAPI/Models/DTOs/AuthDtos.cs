@@ -40,6 +40,16 @@ namespace PetCareAPI.Models.DTOs
 
         [Required(ErrorMessage = "Role is required")]
         public int RoleId { get; set; }
+
+        // Provider specific fields
+        public string? CompanyName { get; set; }
+        public string? Description { get; set; }
+        public decimal? HourlyRate { get; set; }
+        public string? Address { get; set; }
+        public string? City { get; set; }
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
+        public List<int>? ServiceTypeIds { get; set; }
     }
 
     public class AuthResponseDto

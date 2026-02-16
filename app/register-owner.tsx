@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { ArrowLeft, User, Phone, Mail, Lock, CheckCircle2, ArrowRight } from 'lucide-react-native';
+import { ArrowLeft, User, Mail, Lock, CheckCircle2, ArrowRight } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { authService } from '@/services/petCareService';
 import { USER_ROLE } from '@/constants/status';
+import CountryCodePicker from '@/components/CountryCodePicker';
+import { countries, Country } from '@/constants/countries';
 
 export default function RegisterOwnerScreen() {
   const router = useRouter();
@@ -14,6 +16,7 @@ export default function RegisterOwnerScreen() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [contactNumber, setContactNumber] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState<Country>(countries[0]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -26,10 +29,11 @@ export default function RegisterOwnerScreen() {
     if (!firstName.trim()) newErrors.firstName = 'First name is required';
     if (!lastName.trim()) newErrors.lastName = 'Last name is required';
     
-    if (!contactNumber.trim()) {
+    const phoneDigits = contactNumber.replace(/[\s()-]/g, '');
+    if (!phoneDigits.trim()) {
       newErrors.contactNumber = 'Phone number is required';
-    } else if (!/^\+?[1-9]\d{1,14}$/.test(contactNumber.replace(/[\s()-]/g, ''))) {
-      newErrors.contactNumber = 'Invalid phone number (e.g. +1234567890)';
+    } else if (!/^\d{1,14}$/.test(phoneDigits)) {
+      newErrors.contactNumber = 'Invalid phone number';
     }
 
     if (!email.trim()) {
@@ -60,12 +64,13 @@ export default function RegisterOwnerScreen() {
     setLoading(true);
 
     try {
+      const fullPhoneNumber = `${selectedCountry.dialCode}${contactNumber.replace(/[\s()-]/g, '')}`;
       await authService.register({
         email,
         password,
         firstName,
         lastName,
-        phoneNumber: contactNumber,
+        phoneNumber: fullPhoneNumber,
         roleId: USER_ROLE.OWNER
       });
       
@@ -172,16 +177,22 @@ export default function RegisterOwnerScreen() {
               <Text className="text-sm font-semibold text-foreground mb-2">
                 Contact Number <Text className="text-destructive">*</Text>
               </Text>
-              <View className={`flex-row items-center bg-card border ${errors.contactNumber ? 'border-destructive' : 'border-border'} rounded-xl px-4 py-3`}>
-                <Phone className="text-muted-foreground mr-3" size={20} />
-                <TextInput
-                  value={contactNumber}
-                  onChangeText={setContactNumber}
-                  placeholder="+1234567890"
-                  placeholderTextColor="#9CA3AF"
-                  keyboardType="phone-pad"
-                  className="flex-1 text-foreground text-base"
+              <View className="flex-row">
+                <CountryCodePicker 
+                  selectedCountry={selectedCountry} 
+                  onSelect={setSelectedCountry} 
+                  error={!!errors.contactNumber}
                 />
+                <View className={`flex-1 flex-row items-center bg-card border ${errors.contactNumber ? 'border-destructive' : 'border-border'} rounded-r-xl px-4 py-3 border-l-0`}>
+                  <TextInput
+                    value={contactNumber}
+                    onChangeText={setContactNumber}
+                    placeholder="123 456 7890"
+                    placeholderTextColor="#9CA3AF"
+                    keyboardType="phone-pad"
+                    className="flex-1 text-foreground text-base"
+                  />
+                </View>
               </View>
               {errors.contactNumber && <Text className="text-destructive text-xs mt-1 ml-1">{errors.contactNumber}</Text>}
             </View>

@@ -108,6 +108,20 @@ export default function ProfileOwnerPage() {
     return Object.keys(newErrors).length === 0;
   };
 
+  const handlePetTypeChange = async (typeId: number) => {
+    setPetForm(prev => ({ ...prev, petTypeId: typeId, breedId: 0 }));
+    if (typeId > 0) {
+      try {
+        const breedData = await petService.getBreeds(typeId);
+        setBreeds(breedData);
+      } catch (error) {
+        console.error('Error loading breeds:', error);
+      }
+    } else {
+      setBreeds([]);
+    }
+  };
+
   const handleSaveProfile = async () => {
     if (!validateProfile()) return;
     try {

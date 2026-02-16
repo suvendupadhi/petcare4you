@@ -33,6 +33,7 @@ namespace PetCareAPI.Data
             base.OnModelCreating(modelBuilder);
 
             // User Configuration
+            modelBuilder.Entity<User>().ToTable("users");
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Email)
                 .IsUnique();
@@ -44,6 +45,7 @@ namespace PetCareAPI.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Pet Configuration
+            modelBuilder.Entity<Pet>().ToTable("pets");
             modelBuilder.Entity<Pet>()
                 .HasOne(p => p.Owner)
                 .WithMany(u => u.Pets)
@@ -62,12 +64,14 @@ namespace PetCareAPI.Data
                 .HasForeignKey(p => p.BreedId)
                 .OnDelete(DeleteBehavior.SetNull);
 
+            modelBuilder.Entity<Breed>().ToTable("breeds");
             modelBuilder.Entity<Breed>()
                 .HasOne(b => b.PetType)
                 .WithMany(pt => pt.Breeds)
                 .HasForeignKey(b => b.PetTypeId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<Appointment>().ToTable("appointments");
             modelBuilder.Entity<Appointment>()
                 .HasOne(a => a.Pet)
                 .WithMany(p => p.Appointments)
@@ -75,12 +79,14 @@ namespace PetCareAPI.Data
                 .OnDelete(DeleteBehavior.SetNull);
 
             // Provider Configuration
+            modelBuilder.Entity<Provider>().ToTable("providers");
             modelBuilder.Entity<Provider>()
                 .HasOne(p => p.User)
                 .WithOne(u => u.Provider)
                 .HasForeignKey<Provider>(p => p.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<ProviderPhoto>().ToTable("provider_photos");
             modelBuilder.Entity<ProviderPhoto>()
                 .HasOne(pp => pp.Provider)
                 .WithMany(p => p.Photos)
@@ -89,6 +95,7 @@ namespace PetCareAPI.Data
 
             // ProviderService Configuration
             modelBuilder.Entity<ProviderService>()
+                .ToTable("provider_service_types")
                 .HasOne(ps => ps.Provider)
                 .WithMany(p => p.ProviderServices)
                 .HasForeignKey(ps => ps.ProviderId)
@@ -117,6 +124,7 @@ namespace PetCareAPI.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Availability Configuration
+            modelBuilder.Entity<Availability>().ToTable("availability");
             modelBuilder.Entity<Availability>()
                 .HasOne(a => a.Provider)
                 .WithMany(p => p.Availabilities)
@@ -124,6 +132,7 @@ namespace PetCareAPI.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
             // Payment Configuration
+            modelBuilder.Entity<Payment>().ToTable("payments");
             modelBuilder.Entity<Payment>()
                 .HasOne(p => p.Appointment)
                 .WithOne(a => a.Payment)
@@ -137,6 +146,7 @@ namespace PetCareAPI.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
             // SavedProvider Configuration
+            modelBuilder.Entity<SavedProvider>().ToTable("saved_providers");
             modelBuilder.Entity<SavedProvider>()
                 .HasOne(sp => sp.User)
                 .WithMany()
@@ -154,6 +164,7 @@ namespace PetCareAPI.Data
                 .IsUnique();
 
             // Review Configuration
+            modelBuilder.Entity<Review>().ToTable("reviews");
             modelBuilder.Entity<Review>()
                 .HasOne(r => r.Appointment)
                 .WithOne()
@@ -172,11 +183,26 @@ namespace PetCareAPI.Data
                 .HasForeignKey(r => r.ProviderId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // Other mappings
+            modelBuilder.Entity<ServiceType>().ToTable("service_types");
+            modelBuilder.Entity<UserRole>().ToTable("user_roles");
+            modelBuilder.Entity<PetType>().ToTable("pet_types");
+            modelBuilder.Entity<StatusMaster>().ToTable("status_master");
+            modelBuilder.Entity<Tip>().ToTable("tips");
+            modelBuilder.Entity<Notification>().ToTable("notifications");
+
             // Force all table and column names to snake_case for PostgreSQL compatibility
             foreach (var entity in modelBuilder.Model.GetEntityTypes())
             {
+                // Ensure schema is set for all entities
                 entity.SetSchema("petcare");
-                entity.SetTableName(ToSnakeCase(entity.GetTableName()));
+                
+                // Set table name to snake_case
+                var tableName = entity.GetTableName();
+                if (!string.IsNullOrEmpty(tableName))
+                {
+                    entity.SetTableName(ToSnakeCase(tableName));
+                }
 
                 foreach (var property in entity.GetProperties())
                 {

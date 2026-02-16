@@ -46,19 +46,68 @@ namespace PetCareAPI.Services
             if (await _context.Users.AnyAsync(u => u.Email.ToLower() == email))
                 return false;
 
-            var user = new User
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
             {
-                Email = email,
-                PasswordHash = BC.HashPassword(registerDto.Password),
-                FirstName = registerDto.FirstName,
-                LastName = registerDto.LastName,
-                PhoneNumber = registerDto.PhoneNumber,
-                RoleId = registerDto.RoleId
-            };
+                var user = new User
+                {
+                    Email = email,
+                    PasswordHash = BC.HashPassword(registerDto.Password),
+                    FirstName = registerDto.FirstName,
+                    LastName = registerDto.LastName,
+                    PhoneNumber = registerDto.PhoneNumber,
+                    RoleId = registerDto.RoleId,
+                    Address = registerDto.Address
+                };
 
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-            return true;
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+
+                // If user is a provider, create provider profile
+                if (registerDto.RoleId == 2) // Assuming 2 is Provider role
+                {
+                    var provider = new Provider
+                    {
+                        UserId = user.Id,
+                        CompanyName = registerDto.CompanyName ?? $"{user.FirstName} {user.LastName}'s Services",
+                        Description = registerDto.Description ?? "No description provided",
+                        HourlyRate = registerDto.HourlyRate ?? 0,
+                        Address = registerDto.Address ?? string.Empty,
+                        City = registerDto.City ?? string.Empty,
+                        Latitude = (decimal?)registerDto.Latitude,
+                        Longitude = (decimal?)registerDto.Longitude,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+
+                    _context.Providers.Add(provider);
+                    await _context.SaveChangesAsync();
+
+                    if (registerDto.ServiceTypeIds != null && registerDto.ServiceTypeIds.Any())
+                    {
+                        foreach (var stId in registerDto.ServiceTypeIds)
+                        {
+                            _context.ProviderServices.Add(new ProviderService
+                            {
+                                ProviderId = provider.Id,
+                                ServiceTypeId = stId,
+                                Price = provider.HourlyRate,
+                                CreatedAt = DateTime.UtcNow,
+                                UpdatedAt = DateTime.UtcNow
+                            });
+                        }
+                        await _context.SaveChangesAsync();
+                    }
+                }
+
+                await transaction.CommitAsync();
+                return true;
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
         public async Task<bool> ForgotPasswordAsync(ForgotPasswordDto forgotPasswordDto)

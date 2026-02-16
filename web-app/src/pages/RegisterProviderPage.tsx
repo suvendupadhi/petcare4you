@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { PawPrint, User, Mail, Lock, Phone, MapPin, Building2, DollarSign, ArrowRight } from 'lucide-react';
+import { PawPrint, User, Mail, Lock, MapPin, Building2, DollarSign, ArrowRight } from 'lucide-react';
 import { authService, serviceTypeService, ServiceType } from '../services/petCareService';
+import CountryCodePicker from '../components/CountryCodePicker';
+import { countries, Country } from '../constants/countries';
 
 export default function RegisterProviderPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
+  const [selectedCountry, setSelectedCountry] = useState<Country>(countries[0]);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -37,11 +40,14 @@ export default function RegisterProviderPage() {
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email is invalid';
     }
-    if (!formData.phoneNumber.trim()) {
+    
+    const phoneDigits = formData.phoneNumber.replace(/[\s()-]/g, '');
+    if (!phoneDigits) {
       newErrors.phoneNumber = 'Phone number is required';
-    } else if (!/^\+?[1-9]\d{1,14}$/.test(formData.phoneNumber.replace(/[\s()-]/g, ''))) {
-      newErrors.phoneNumber = 'Invalid phone number (e.g. +1234567890)';
+    } else if (!/^\d{1,14}$/.test(phoneDigits)) {
+      newErrors.phoneNumber = 'Invalid phone number';
     }
+
     if (!formData.password) {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 8) {
@@ -64,7 +70,17 @@ export default function RegisterProviderPage() {
     if (!validate()) return;
     setLoading(true);
     try {
-      await authService.register(formData);
+      const fullPhoneNumber = `${selectedCountry.dialCode}${formData.phoneNumber.replace(/[\s()-]/g, '')}`;
+      await authService.register({
+        ...formData,
+        phoneNumber: fullPhoneNumber,
+        companyName: formData.companyName,
+        description: formData.description,
+        hourlyRate: formData.hourlyRate,
+        serviceTypeIds: formData.serviceTypeIds,
+        city: formData.city,
+        address: formData.address
+      });
       alert('Registration successful! Please login.');
       navigate('/');
     } catch (error: any) {
@@ -153,15 +169,19 @@ export default function RegisterProviderPage() {
 
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">Phone Number</label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-3 text-slate-400" size={20} />
+              <div className="flex">
+                <CountryCodePicker 
+                  selectedCountry={selectedCountry} 
+                  onSelect={setSelectedCountry} 
+                  error={!!errors.phoneNumber}
+                />
                 <input
                   type="tel"
                   required
                   value={formData.phoneNumber}
                   onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                  className={`w-full pl-10 pr-4 py-3 bg-slate-50 border ${errors.phoneNumber ? 'border-red-500' : 'border-slate-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500`}
-                  placeholder="+1234567890"
+                  className={`w-full px-4 py-3 bg-slate-50 border ${errors.phoneNumber ? 'border-red-500' : 'border-slate-200'} rounded-r-xl focus:outline-none focus:ring-2 focus:ring-orange-500 border-l-0`}
+                  placeholder="123 456 7890"
                 />
               </div>
               {errors.phoneNumber && <p className="text-red-500 text-xs mt-1 ml-1">{errors.phoneNumber}</p>}

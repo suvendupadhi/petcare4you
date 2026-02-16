@@ -90,7 +90,9 @@ namespace PetCareAPI.Controllers
                     provider.ProviderServices.Add(new ProviderService 
                     { 
                         ServiceTypeId = stId,
-                        Price = provider.HourlyRate // Use default hourly rate as initial price
+                        Price = provider.HourlyRate, // Use default hourly rate as initial price
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
                     });
                 }
             }
@@ -151,7 +153,9 @@ namespace PetCareAPI.Controllers
                     existing.ProviderServices.Add(new ProviderService 
                     { 
                         ServiceTypeId = stId,
-                        Price = existing.HourlyRate 
+                        Price = existing.HourlyRate,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
                     });
                 }
             }
