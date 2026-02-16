@@ -326,8 +326,13 @@ export default function OwnerDashboardScreen() {
         <View className="mb-6">
           <View className="px-6 mb-4 flex-row items-center justify-between">
             <Text className="text-foreground text-xl font-bold">Upcoming Appointments</Text>
-            <TouchableOpacity onPress={() => router.push('/appointments-owner')}>
-              <Text className="text-primary font-semibold">See All</Text>
+            <TouchableOpacity 
+              onPress={() => router.push('/appointments-owner')}
+              disabled={appointments.length === 0}
+            >
+              <Text className={`font-semibold ${appointments.length === 0 ? 'text-muted-foreground opacity-50' : 'text-primary'}`}>
+                See All
+              </Text>
             </TouchableOpacity>
           </View>
 

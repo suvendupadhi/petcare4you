@@ -1,17 +1,37 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace PetCareAPI.Models
 {
     public class User
     {
         public int Id { get; set; }
+
+        [Required]
+        [EmailAddress]
+        [StringLength(255)]
         public string Email { get; set; } = string.Empty;
+
+        [Required]
         public string PasswordHash { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(100)]
         public string FirstName { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(100)]
         public string LastName { get; set; } = string.Empty;
+
+        [Required]
+        [Phone]
+        [RegularExpression(@"^\+?[1-9]\d{1,14}$")]
         public string PhoneNumber { get; set; } = string.Empty;
+
+        [StringLength(500)]
         public string? Address { get; set; }
+
         public string? ProfileImageUrl { get; set; }
         public int RoleId { get; set; }
         public bool IsActive { get; set; } = true;

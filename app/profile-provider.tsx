@@ -56,6 +56,46 @@ export default function ProfileProviderScreen() {
   const [services, setServices] = useState<ProviderService[]>([]);
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
   const [photos, setPhotos] = useState<ProviderPhoto[]>([]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [serviceErrors, setServiceErrors] = useState<Record<string, string>>({});
+  const [availabilityErrors, setAvailabilityErrors] = useState<Record<string, string>>({});
+  const [photoErrors, setPhotoErrors] = useState<Record<string, string>>({});
+
+  const validateBusiness = () => {
+    const newErrors: Record<string, string> = {};
+    if (!editForm.companyName.trim()) newErrors.companyName = 'Business name is required';
+    if (!editForm.description.trim()) newErrors.description = 'Description is required';
+    if (editForm.hourlyRate <= 0) newErrors.hourlyRate = 'Rate must be > 0';
+    if (!editForm.city.trim()) newErrors.city = 'City is required';
+    if (!editForm.address.trim()) newErrors.address = 'Address is required';
+    if (editForm.serviceTypeIds.length === 0) newErrors.serviceTypeIds = 'Select at least one specialty';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateService = () => {
+    const newErrors: Record<string, string> = {};
+    if (serviceForm.serviceTypeId === 0) newErrors.serviceTypeId = 'Select service type';
+    if (serviceForm.price <= 0) newErrors.price = 'Price must be > 0';
+    setServiceErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateAvailability = () => {
+    const newErrors: Record<string, string> = {};
+    if (!availabilityForm.date.trim()) newErrors.date = 'Date is required';
+    if (!availabilityForm.startTime.trim()) newErrors.startTime = 'Start time required';
+    if (!availabilityForm.endTime.trim()) newErrors.endTime = 'End time required';
+    setAvailabilityErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validatePhoto = () => {
+    const newErrors: Record<string, string> = {};
+    if (!photoForm.url.trim()) newErrors.url = 'Photo URL is required';
+    setPhotoErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   // Photo state
   const [showPhotoModal, setShowPhotoModal] = useState(false);
@@ -112,14 +152,12 @@ export default function ProfileProviderScreen() {
 
   const handleSavePhoto = async () => {
     Keyboard.dismiss();
+    if (!validatePhoto()) return;
     try {
-      if (!photoForm.url.trim()) {
-        Alert.alert('Error', 'Please enter a photo URL');
-        return;
-      }
       await providerPhotoService.addPhoto(photoForm);
       setShowPhotoModal(false);
       setPhotoForm({ url: '', description: '' });
+      setPhotoErrors({});
       loadPhotos();
       if (Platform.OS === 'web') {
         window.alert('Success: Photo added to gallery');
@@ -143,6 +181,7 @@ export default function ProfileProviderScreen() {
 
   const handleAddAvailability = async () => {
     Keyboard.dismiss();
+    if (!validateAvailability()) return;
     try {
       if (!provider) return;
       
@@ -159,6 +198,7 @@ export default function ProfileProviderScreen() {
         isBooked: false
       });
       setShowAvailabilityModal(false);
+      setAvailabilityErrors({});
       loadAvailability();
     } catch (error) {
       console.error('Error adding availability:', error);
@@ -250,6 +290,7 @@ export default function ProfileProviderScreen() {
   const handleSaveProfile = async () => {
     Keyboard.dismiss();
     if (!provider) return;
+    if (!validateBusiness()) return;
     try {
       console.log('Saving profile with data:', editForm);
       await providerService.updateProvider(provider.id, editForm);
@@ -266,6 +307,7 @@ export default function ProfileProviderScreen() {
       setServices(updatedServices);
       
       setEditMode(false);
+      setErrors({});
       if (Platform.OS === 'web') {
         window.alert('Success: Profile updated successfully');
       } else {
@@ -295,6 +337,7 @@ export default function ProfileProviderScreen() {
         longitude: provider.longitude
       });
     }
+    setErrors({});
     setEditMode(false);
   };
 
@@ -571,12 +614,15 @@ export default function ProfileProviderScreen() {
                       </View>
                       <View className="flex-1 ml-4">
                         {editMode ? (
-                          <TextInput
-                            value={editForm.companyName}
-                            onChangeText={(text) => setEditForm({ ...editForm, companyName: text })}
-                            className="text-xl font-bold text-foreground bg-muted rounded-lg px-3 py-2 mb-2"
-                            placeholder="Business Name"
-                          />
+                          <>
+                            <TextInput
+                              value={editForm.companyName}
+                              onChangeText={(text) => setEditForm({ ...editForm, companyName: text })}
+                              className={`text-xl font-bold text-foreground bg-muted rounded-lg px-3 py-2 mb-1 ${errors.companyName ? 'border border-destructive' : ''}`}
+                              placeholder="Business Name"
+                            />
+                            {errors.companyName && <Text className="text-destructive text-xs mb-2 ml-1">{errors.companyName}</Text>}
+                          </>
                         ) : (
                           <Text className="text-xl font-bold text-foreground">{provider?.companyName}</Text>
                         )}
@@ -606,16 +652,18 @@ export default function ProfileProviderScreen() {
                           placeholder="Select services"
                           label="Business Services"
                         />
+                        {errors.serviceTypeIds && <Text className="text-destructive text-xs mt-1 ml-1">{errors.serviceTypeIds}</Text>}
                       </View>
                       <View>
                         <Text className="text-sm text-muted-foreground mb-1">Hourly Rate ($)</Text>
                         <TextInput
                           value={editForm.hourlyRate.toString()}
                           onChangeText={(text) => setEditForm({ ...editForm, hourlyRate: parseFloat(text) || 0 })}
-                          className="text-foreground bg-muted rounded-lg px-3 py-2"
+                          className={`text-foreground bg-muted rounded-lg px-3 py-2 ${errors.hourlyRate ? 'border border-destructive' : ''}`}
                           placeholder="50"
                           keyboardType="numeric"
                         />
+                        {errors.hourlyRate && <Text className="text-destructive text-xs mt-1 ml-1">{errors.hourlyRate}</Text>}
                       </View>
                       {/* City and Address are captured during registration and cannot be edited here */}
                       {/* 
@@ -643,11 +691,12 @@ export default function ProfileProviderScreen() {
                         <TextInput
                           value={editForm.description}
                           onChangeText={(text) => setEditForm({ ...editForm, description: text })}
-                          className="text-foreground bg-muted rounded-lg px-3 py-2"
+                          className={`text-foreground bg-muted rounded-lg px-3 py-2 ${errors.description ? 'border border-destructive' : ''}`}
                           placeholder="Business Description"
                           multiline
                           numberOfLines={4}
                         />
+                        {errors.description && <Text className="text-destructive text-xs mt-1 ml-1">{errors.description}</Text>}
                       </View>
 
                       <View className="flex-row gap-3 mt-2">
@@ -937,7 +986,7 @@ export default function ProfileProviderScreen() {
             <View className="gap-4">
               <View>
                 <Text className="text-sm font-medium text-muted-foreground mb-2">Service Type</Text>
-                <View className="bg-muted rounded-xl border border-border">
+                <View className={`bg-muted rounded-xl border ${serviceErrors.serviceTypeId ? 'border-destructive' : 'border-border'}`}>
                   {Platform.OS === 'web' ? (
                     <select
                       value={serviceForm.serviceTypeId}
@@ -967,7 +1016,7 @@ export default function ProfileProviderScreen() {
                               serviceForm.serviceTypeId === st.id 
                                 ? 'bg-primary border-primary' 
                                 : 'bg-background border-border'
-                            }`}
+                            } ${serviceErrors.serviceTypeId && serviceForm.serviceTypeId !== st.id ? 'border-destructive' : ''}`}
                           >
                             <Text className={serviceForm.serviceTypeId === st.id ? 'text-primary-foreground' : 'text-foreground'}>
                               {st.name}
@@ -978,6 +1027,7 @@ export default function ProfileProviderScreen() {
                     </ScrollView>
                   )}
                 </View>
+                {serviceErrors.serviceTypeId && <Text className="text-destructive text-xs mt-1 ml-1">{serviceErrors.serviceTypeId}</Text>}
               </View>
 
               <View>
@@ -985,10 +1035,11 @@ export default function ProfileProviderScreen() {
                 <TextInput
                   value={serviceForm.price.toString()}
                   onChangeText={(text) => setServiceForm({ ...serviceForm, price: parseFloat(text) || 0 })}
-                  className="bg-muted text-foreground p-4 rounded-xl border border-border"
+                  className={`bg-muted text-foreground p-4 rounded-xl border ${serviceErrors.price ? 'border-destructive' : 'border-border'}`}
                   placeholder="0.00"
                   keyboardType="numeric"
                 />
+                {serviceErrors.price && <Text className="text-destructive text-xs mt-1 ml-1">{serviceErrors.price}</Text>}
               </View>
 
               <View>
@@ -1048,7 +1099,7 @@ export default function ProfileProviderScreen() {
                       borderRadius: 12,
                       backgroundColor: 'rgba(var(--muted), 1)',
                       color: 'rgba(var(--foreground), 1)',
-                      border: '1px solid rgba(var(--border), 1)',
+                      border: availabilityErrors.date ? '1px solid #dc2626' : '1px solid rgba(var(--border), 1)',
                       width: '100%',
                       fontSize: 16
                     }}
@@ -1057,10 +1108,11 @@ export default function ProfileProviderScreen() {
                   <TextInput
                     value={availabilityForm.date}
                     onChangeText={(text) => setAvailabilityForm({ ...availabilityForm, date: text })}
-                    className="bg-muted text-foreground p-4 rounded-xl border border-border"
+                    className={`bg-muted text-foreground p-4 rounded-xl border ${availabilityErrors.date ? 'border-destructive' : 'border-border'}`}
                     placeholder="2024-05-20"
                   />
                 )}
+                {availabilityErrors.date && <Text className="text-destructive text-xs mt-1 ml-1">{availabilityErrors.date}</Text>}
               </View>
 
               <View className="flex-row gap-4">
@@ -1076,7 +1128,7 @@ export default function ProfileProviderScreen() {
                         borderRadius: 12,
                         backgroundColor: 'rgba(var(--muted), 1)',
                         color: 'rgba(var(--foreground), 1)',
-                        border: '1px solid rgba(var(--border), 1)',
+                        border: availabilityErrors.startTime ? '1px solid #dc2626' : '1px solid rgba(var(--border), 1)',
                         width: '100%',
                         fontSize: 16
                       }}
@@ -1085,10 +1137,11 @@ export default function ProfileProviderScreen() {
                     <TextInput
                       value={availabilityForm.startTime}
                       onChangeText={(text) => setAvailabilityForm({ ...availabilityForm, startTime: text })}
-                      className="bg-muted text-foreground p-4 rounded-xl border border-border"
+                      className={`bg-muted text-foreground p-4 rounded-xl border ${availabilityErrors.startTime ? 'border-destructive' : 'border-border'}`}
                       placeholder="09:00"
                     />
                   )}
+                  {availabilityErrors.startTime && <Text className="text-destructive text-xs mt-1 ml-1">{availabilityErrors.startTime}</Text>}
                 </View>
                 <View className="flex-1">
                   <Text className="text-sm font-medium text-muted-foreground mb-2">End Time</Text>
@@ -1102,7 +1155,7 @@ export default function ProfileProviderScreen() {
                         borderRadius: 12,
                         backgroundColor: 'rgba(var(--muted), 1)',
                         color: 'rgba(var(--foreground), 1)',
-                        border: '1px solid rgba(var(--border), 1)',
+                        border: availabilityErrors.endTime ? '1px solid #dc2626' : '1px solid rgba(var(--border), 1)',
                         width: '100%',
                         fontSize: 16
                       }}
@@ -1111,10 +1164,11 @@ export default function ProfileProviderScreen() {
                     <TextInput
                       value={availabilityForm.endTime}
                       onChangeText={(text) => setAvailabilityForm({ ...availabilityForm, endTime: text })}
-                      className="bg-muted text-foreground p-4 rounded-xl border border-border"
+                      className={`bg-muted text-foreground p-4 rounded-xl border ${availabilityErrors.endTime ? 'border-destructive' : 'border-border'}`}
                       placeholder="17:00"
                     />
                   )}
+                  {availabilityErrors.endTime && <Text className="text-destructive text-xs mt-1 ml-1">{availabilityErrors.endTime}</Text>}
                 </View>
               </View>
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 
@@ -9,12 +10,27 @@ namespace PetCareAPI.Models
     {
         public int Id { get; set; }
         public int UserId { get; set; }
+
+        [Required]
+        [StringLength(200)]
         public string CompanyName { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(2000)]
         public string Description { get; set; } = string.Empty;
+
+        [Range(0, 1000)]
         public decimal HourlyRate { get; set; }
+
         public decimal Rating { get; set; } = 5.0m;
         public int ReviewCount { get; set; } = 0;
+
+        [Required]
+        [StringLength(500)]
         public string Address { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(100)]
         public string City { get; set; } = string.Empty;
         public decimal? Latitude { get; set; }
         public decimal? Longitude { get; set; }

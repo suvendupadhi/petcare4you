@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\W\\Asnet123\\petcare\\PetCareAPI\\PetCareAPI.csproj": {}
+    "d:\\W\\Asnet123\\petcare\\PetCareAPI\\PetCareAPI.csproj": {}
   },
   "projects": {
-    "D:\\W\\Asnet123\\petcare\\PetCareAPI\\PetCareAPI.csproj": {
+    "d:\\W\\Asnet123\\petcare\\PetCareAPI\\PetCareAPI.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\W\\Asnet123\\petcare\\PetCareAPI\\PetCareAPI.csproj",
+        "projectUniqueName": "d:\\W\\Asnet123\\petcare\\PetCareAPI\\PetCareAPI.csproj",
         "projectName": "PetCareAPI",
-        "projectPath": "D:\\W\\Asnet123\\petcare\\PetCareAPI\\PetCareAPI.csproj",
+        "projectPath": "d:\\W\\Asnet123\\petcare\\PetCareAPI\\PetCareAPI.csproj",
         "packagesPath": "C:\\Users\\suven\\.nuget\\packages\\",
-        "outputPath": "D:\\W\\Asnet123\\petcare\\PetCareAPI\\obj\\",
+        "outputPath": "d:\\W\\Asnet123\\petcare\\PetCareAPI\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

@@ -28,16 +28,26 @@ export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+    if (!email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = "Invalid email format";
+    }
+
+    if (!password) {
+      newErrors.password = "Password is required";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      if (Platform.OS === 'web') {
-        window.alert('Error: Please enter email and password');
-      } else {
-        Alert.alert("Error", "Please enter email and password");
-      }
-      return;
-    }
+    if (!validate()) return;
 
     setLoading(true);
     try {
@@ -218,11 +228,14 @@ export default function LoginScreen() {
             <Text className="text-sm font-semibold text-foreground mb-2">
               Email
             </Text>
-            <View className="flex-row items-center bg-card border border-border rounded-xl px-4 py-3">
+            <View className={`flex-row items-center bg-card border ${errors.email ? 'border-destructive' : 'border-border'} rounded-xl px-4 py-3`}>
               <Mail className="text-muted-foreground mr-3" size={20} />
               <TextInput
                 value={email}
-                onChangeText={setEmail}
+                onChangeText={(text) => {
+                  setEmail(text);
+                  if (errors.email) setErrors({ ...errors, email: '' });
+                }}
                 placeholder="Enter your email"
                 placeholderTextColor="#9CA3AF"
                 keyboardType="email-address"
@@ -230,6 +243,7 @@ export default function LoginScreen() {
                 className="flex-1 text-foreground text-base"
               />
             </View>
+            {errors.email && <Text className="text-destructive text-xs mt-1 ml-1">{errors.email}</Text>}
           </View>
 
           {/* Password Input */}
@@ -237,17 +251,21 @@ export default function LoginScreen() {
             <Text className="text-sm font-semibold text-foreground mb-2">
               Password
             </Text>
-            <View className="flex-row items-center bg-card border border-border rounded-xl px-4 py-3">
+            <View className={`flex-row items-center bg-card border ${errors.password ? 'border-destructive' : 'border-border'} rounded-xl px-4 py-3`}>
               <Lock className="text-muted-foreground mr-3" size={20} />
               <TextInput
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  if (errors.password) setErrors({ ...errors, password: '' });
+                }}
                 placeholder="Enter your password"
                 placeholderTextColor="#9CA3AF"
                 secureTextEntry
                 className="flex-1 text-foreground text-base"
               />
             </View>
+            {errors.password && <Text className="text-destructive text-xs mt-1 ml-1">{errors.password}</Text>}
           </View>
 
           {/* Forgot Password */}

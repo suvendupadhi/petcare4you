@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace PetCareAPI.Models
 {
@@ -7,11 +8,23 @@ namespace PetCareAPI.Models
     {
         public int Id { get; set; }
         public int OwnerId { get; set; }
+
+        [Required]
         public int PetTypeId { get; set; }
+
         public int? BreedId { get; set; }
+
+        [Required]
+        [StringLength(100)]
         public string Name { get; set; } = string.Empty;
+
+        [Range(0, 30)]
         public int? Age { get; set; }
+
+        [Range(0.1, 200)]
         public decimal? Weight { get; set; }
+
+        [StringLength(1000)]
         public string? MedicalNotes { get; set; }
         public string? ProfileImageUrl { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

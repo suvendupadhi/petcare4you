@@ -96,7 +96,17 @@ export default function OwnerDashboard() {
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold text-slate-800">Recent Bookings</h2>
-              <button onClick={() => navigate('/appointments-owner')} className="text-sm text-orange-600 font-bold hover:underline">View All</button>
+              <button 
+                onClick={() => navigate('/appointments-owner')} 
+                disabled={upcomingAppointments.length === 0}
+                className={`text-sm font-bold ${
+                  upcomingAppointments.length === 0 
+                    ? 'text-slate-300 cursor-not-allowed' 
+                    : 'text-orange-600 hover:underline'
+                }`}
+              >
+                View All
+              </button>
             </div>
             <div className="space-y-4">
               {upcomingAppointments.length > 0 ? upcomingAppointments.map(app => (
@@ -172,7 +182,11 @@ export default function OwnerDashboard() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {featuredProviders.map(provider => (
-                  <div key={provider.id} className="bg-white p-4 rounded-xl border border-slate-100 hover:border-orange-200 transition-all cursor-pointer shadow-sm group">
+                  <div 
+                    key={provider.id} 
+                    onClick={() => navigate(`/provider-detail/${provider.id}`)}
+                    className="bg-white p-4 rounded-xl border border-slate-100 hover:border-orange-200 transition-all cursor-pointer shadow-sm group"
+                  >
                     <div className="flex items-center gap-4">
                       <div className="w-16 h-16 bg-slate-100 rounded-xl overflow-hidden">
                         {provider.profileImageUrl ? (

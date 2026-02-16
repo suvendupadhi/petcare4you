@@ -23,16 +23,23 @@ export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState("");
+
+  const validate = () => {
+    if (!email.trim()) {
+      setError("Email is required");
+      return false;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("Invalid email format");
+      return false;
+    }
+    setError("");
+    return true;
+  };
 
   const handleSubmit = async () => {
-    if (!email) {
-      if (Platform.OS === 'web') {
-        window.alert('Error: Please enter your email');
-      } else {
-        Alert.alert("Error", "Please enter your email");
-      }
-      return;
-    }
+    if (!validate()) return;
 
     setLoading(true);
     try {
@@ -123,11 +130,14 @@ export default function ForgotPasswordScreen() {
             <Text className="text-sm font-semibold text-foreground mb-2">
               Email Address
             </Text>
-            <View className="flex-row items-center bg-card border border-border rounded-xl px-4 py-3">
+            <View className={`flex-row items-center bg-card border ${error ? 'border-destructive' : 'border-border'} rounded-xl px-4 py-3`}>
               <Mail className="text-muted-foreground mr-3" size={20} />
               <TextInput
                 value={email}
-                onChangeText={setEmail}
+                onChangeText={(text) => {
+                  setEmail(text);
+                  if (error) setError("");
+                }}
                 placeholder="Enter your email"
                 placeholderTextColor="#9CA3AF"
                 keyboardType="email-address"
@@ -135,6 +145,7 @@ export default function ForgotPasswordScreen() {
                 className="flex-1 text-foreground text-base"
               />
             </View>
+            {error ? <Text className="text-destructive text-xs mt-1 ml-1">{error}</Text> : null}
           </View>
 
           <TouchableOpacity

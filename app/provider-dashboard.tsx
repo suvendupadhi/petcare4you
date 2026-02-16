@@ -470,8 +470,13 @@ export default function ProviderDashboard() {
         <View className="px-6 mb-6">
           <View className="flex-row items-center justify-between mb-3">
             <Text className="text-foreground text-lg font-semibold">Upcoming Appointments</Text>
-            <TouchableOpacity onPress={() => router.push('/appointments-provider')}>
-              <Text className="text-primary font-medium">See All</Text>
+            <TouchableOpacity 
+              onPress={() => router.push('/appointments-provider')}
+              disabled={upcomingAppointments.length === 0}
+            >
+              <Text className={`font-medium ${upcomingAppointments.length === 0 ? 'text-muted-foreground opacity-50' : 'text-primary'}`}>
+                See All
+              </Text>
             </TouchableOpacity>
           </View>
 

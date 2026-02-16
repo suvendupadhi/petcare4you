@@ -94,8 +94,30 @@ export default function ProfileProviderPage() {
     }
   };
 
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [serviceErrors, setServiceErrors] = useState<Record<string, string>>({});
+
+  const validateBusiness = () => {
+    const newErrors: Record<string, string> = {};
+    if (!editForm.companyName.trim()) newErrors.companyName = 'Business name is required';
+    if (!editForm.description.trim()) newErrors.description = 'Description is required';
+    if (editForm.hourlyRate <= 0) newErrors.hourlyRate = 'Rate must be greater than 0';
+    if (editForm.serviceTypeIds.length === 0) newErrors.serviceTypeIds = 'Select at least one specialty';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateService = () => {
+    const newErrors: Record<string, string> = {};
+    if (serviceForm.serviceTypeId <= 0) newErrors.serviceTypeId = 'Select service type';
+    if (serviceForm.price <= 0) newErrors.price = 'Price must be greater than 0';
+    setServiceErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSaveBusiness = async () => {
     if (!provider) return;
+    if (!validateBusiness()) return;
     try {
       await providerService.updateProvider(provider.id, editForm);
       setEditMode(false);
@@ -107,6 +129,7 @@ export default function ProfileProviderPage() {
   };
 
   const handleAddService = async () => {
+    if (!validateService()) return;
     try {
       if (editingService?.id) {
         // Send only the necessary fields to the API, avoiding navigation properties
@@ -122,6 +145,7 @@ export default function ProfileProviderPage() {
         await providerServicePricingService.createService(serviceForm as ProviderService);
       }
       setShowServiceModal(false);
+      setServiceErrors({});
       loadData();
       alert('Service saved successfully!');
     } catch (error) {
@@ -175,12 +199,15 @@ export default function ProfileProviderPage() {
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                   {editMode ? (
-                    <input 
-                      type="text" 
-                      value={editForm.companyName}
-                      onChange={(e) => setEditForm({ ...editForm, companyName: e.target.value })}
-                      className="text-3xl font-bold text-slate-900 bg-slate-50 border-b-2 border-orange-600 focus:outline-none px-2"
-                    />
+                    <>
+                      <input 
+                        type="text" 
+                        value={editForm.companyName}
+                        onChange={(e) => setEditForm({ ...editForm, companyName: e.target.value })}
+                        className={`text-3xl font-bold text-slate-900 bg-slate-50 border-b-2 ${errors.companyName ? 'border-red-500' : 'border-orange-600'} focus:outline-none px-2 w-full`}
+                      />
+                      {errors.companyName && <p className="text-red-500 text-xs mt-1">{errors.companyName}</p>}
+                    </>
                   ) : (
                     <h1 className="text-3xl font-bold text-slate-900">{provider?.companyName}</h1>
                   )}
@@ -215,33 +242,10 @@ export default function ProfileProviderPage() {
                       <textarea 
                         value={editForm.description}
                         onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                        className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 min-h-[100px]"
+                        className={`w-full p-4 bg-slate-50 border ${errors.description ? 'border-red-500' : 'border-slate-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 min-h-[100px]`}
                       />
+                      {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description}</p>}
 
-                      {/* City and Address are captured during registration and cannot be edited here */}
-                      {/* 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">City</label>
-                          <input 
-                            type="text" 
-                            value={editForm.city}
-                            onChange={(e) => setEditForm({ ...editForm, city: e.target.value })}
-                            className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Address</label>
-                          <input 
-                            type="text" 
-                            value={editForm.address}
-                            onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
-                            className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
-                          />
-                        </div>
-                      </div>
-                      */}
-                      
                       <div className="space-y-2">
                         <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Service Specialties</label>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
@@ -250,7 +254,7 @@ export default function ProfileProviderPage() {
                               editForm.serviceTypeIds.includes(type.id) 
                                 ? 'bg-orange-50 border-orange-200 text-orange-700' 
                                 : 'bg-slate-50 border-slate-100 text-slate-500 hover:bg-slate-100'
-                            }`}>
+                            } ${errors.serviceTypeIds ? 'border-red-500' : ''}`}>
                               <input 
                                 type="checkbox"
                                 checked={editForm.serviceTypeIds.includes(type.id)}
@@ -267,6 +271,7 @@ export default function ProfileProviderPage() {
                             </label>
                           ))}
                         </div>
+                        {errors.serviceTypeIds && <p className="text-red-500 text-xs mt-1">{errors.serviceTypeIds}</p>}
                       </div>
                     </div>
                   ) : (
@@ -347,15 +352,18 @@ export default function ProfileProviderPage() {
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Standard Hourly Rate</label>
                   {editMode ? (
-                    <div className="relative">
-                      <DollarSign className="absolute left-3 top-2.5 text-slate-400" size={16} />
-                      <input 
-                        type="number" 
-                        value={editForm.hourlyRate}
-                        onChange={(e) => setEditForm({ ...editForm, hourlyRate: parseFloat(e.target.value) })}
-                        className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none"
-                      />
-                    </div>
+                    <>
+                      <div className="relative">
+                        <DollarSign className="absolute left-3 top-2.5 text-slate-400" size={16} />
+                        <input 
+                          type="number" 
+                          value={editForm.hourlyRate}
+                          onChange={(e) => setEditForm({ ...editForm, hourlyRate: parseFloat(e.target.value) })}
+                          className={`w-full pl-9 pr-4 py-2 bg-slate-50 border ${errors.hourlyRate ? 'border-red-500' : 'border-slate-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500`}
+                        />
+                      </div>
+                      {errors.hourlyRate && <p className="text-red-500 text-[10px] mt-1">{errors.hourlyRate}</p>}
+                    </>
                   ) : (
                     <div className="text-2xl font-black text-slate-900">${provider?.hourlyRate}/hr</div>
                   )}
@@ -393,11 +401,12 @@ export default function ProfileProviderPage() {
                 <select 
                   value={serviceForm.serviceTypeId}
                   onChange={(e) => setServiceForm({ ...serviceForm, serviceTypeId: parseInt(e.target.value) })}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className={`w-full px-4 py-3 bg-slate-50 border ${serviceErrors.serviceTypeId ? 'border-red-500' : 'border-slate-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500`}
                 >
                   <option value={0}>Select a service</option>
                   {sortedServiceTypes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                 </select>
+                {serviceErrors.serviceTypeId && <p className="text-red-500 text-xs">{serviceErrors.serviceTypeId}</p>}
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-700">Service Price ($)</label>
@@ -407,10 +416,11 @@ export default function ProfileProviderPage() {
                     type="number" 
                     value={serviceForm.price}
                     onChange={(e) => setServiceForm({ ...serviceForm, price: parseFloat(e.target.value) })}
-                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    className={`w-full pl-10 pr-4 py-3 bg-slate-50 border ${serviceErrors.price ? 'border-red-500' : 'border-slate-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500`}
                     placeholder="0.00"
                   />
                 </div>
+                {serviceErrors.price && <p className="text-red-500 text-xs">{serviceErrors.price}</p>}
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-700">Service Description</label>

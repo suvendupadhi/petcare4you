@@ -18,58 +18,40 @@ export default function RegisterOwnerScreen() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Form validation
   const validateForm = () => {
-    if (!firstName.trim()) {
-      if (Platform.OS === 'web') {
-        window.alert('Validation Error: Please enter your first name');
-      } else {
-        Alert.alert('Validation Error', 'Please enter your first name');
-      }
-      return false;
-    }
-    if (!lastName.trim()) {
-      if (Platform.OS === 'web') {
-        window.alert('Validation Error: Please enter your last name');
-      } else {
-        Alert.alert('Validation Error', 'Please enter your last name');
-      }
-      return false;
-    }
+    const newErrors: Record<string, string> = {};
+    if (!firstName.trim()) newErrors.firstName = 'First name is required';
+    if (!lastName.trim()) newErrors.lastName = 'Last name is required';
+    
     if (!contactNumber.trim()) {
-      if (Platform.OS === 'web') {
-        window.alert('Validation Error: Please enter your contact number');
-      } else {
-        Alert.alert('Validation Error', 'Please enter your contact number');
-      }
-      return false;
+      newErrors.contactNumber = 'Phone number is required';
+    } else if (!/^\+?[1-9]\d{1,14}$/.test(contactNumber.replace(/[\s()-]/g, ''))) {
+      newErrors.contactNumber = 'Invalid phone number (e.g. +1234567890)';
     }
-    if (!email.trim() || !email.includes('@')) {
-      if (Platform.OS === 'web') {
-        window.alert('Validation Error: Please enter a valid email address');
-      } else {
-        Alert.alert('Validation Error', 'Please enter a valid email address');
-      }
-      return false;
+
+    if (!email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = 'Email is invalid';
     }
-    if (!password || password.length < 6) {
-      if (Platform.OS === 'web') {
-        window.alert('Validation Error: Password must be at least 6 characters');
-      } else {
-        Alert.alert('Validation Error', 'Password must be at least 6 characters');
-      }
-      return false;
+
+    if (!password) {
+      newErrors.password = 'Password is required';
+    } else if (password.length < 8) {
+      newErrors.password = 'Min 8 chars, 1 upper, 1 lower, 1 number, 1 special';
+    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/.test(password)) {
+      newErrors.password = 'Min 8 chars, 1 upper, 1 lower, 1 number, 1 special';
     }
+
     if (password !== confirmPassword) {
-      if (Platform.OS === 'web') {
-        window.alert('Validation Error: Passwords do not match');
-      } else {
-        Alert.alert('Validation Error', 'Passwords do not match');
-      }
-      return false;
+      newErrors.confirmPassword = 'Passwords do not match';
     }
-    return true;
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleRegister = async () => {
@@ -154,7 +136,7 @@ export default function RegisterOwnerScreen() {
               <Text className="text-sm font-semibold text-foreground mb-2">
                 First Name <Text className="text-destructive">*</Text>
               </Text>
-              <View className="flex-row items-center bg-card border border-border rounded-xl px-4 py-3">
+              <View className={`flex-row items-center bg-card border ${errors.firstName ? 'border-destructive' : 'border-border'} rounded-xl px-4 py-3`}>
                 <User className="text-muted-foreground mr-3" size={20} />
                 <TextInput
                   value={firstName}
@@ -164,6 +146,7 @@ export default function RegisterOwnerScreen() {
                   className="flex-1 text-foreground text-base"
                 />
               </View>
+              {errors.firstName && <Text className="text-destructive text-xs mt-1 ml-1">{errors.firstName}</Text>}
             </View>
 
             {/* Last Name */}
@@ -171,7 +154,7 @@ export default function RegisterOwnerScreen() {
               <Text className="text-sm font-semibold text-foreground mb-2">
                 Last Name <Text className="text-destructive">*</Text>
               </Text>
-              <View className="flex-row items-center bg-card border border-border rounded-xl px-4 py-3">
+              <View className={`flex-row items-center bg-card border ${errors.lastName ? 'border-destructive' : 'border-border'} rounded-xl px-4 py-3`}>
                 <User className="text-muted-foreground mr-3" size={20} />
                 <TextInput
                   value={lastName}
@@ -181,6 +164,7 @@ export default function RegisterOwnerScreen() {
                   className="flex-1 text-foreground text-base"
                 />
               </View>
+              {errors.lastName && <Text className="text-destructive text-xs mt-1 ml-1">{errors.lastName}</Text>}
             </View>
 
             {/* Contact Number */}
@@ -188,25 +172,26 @@ export default function RegisterOwnerScreen() {
               <Text className="text-sm font-semibold text-foreground mb-2">
                 Contact Number <Text className="text-destructive">*</Text>
               </Text>
-              <View className="flex-row items-center bg-card border border-border rounded-xl px-4 py-3">
+              <View className={`flex-row items-center bg-card border ${errors.contactNumber ? 'border-destructive' : 'border-border'} rounded-xl px-4 py-3`}>
                 <Phone className="text-muted-foreground mr-3" size={20} />
                 <TextInput
                   value={contactNumber}
                   onChangeText={setContactNumber}
-                  placeholder="(555) 123-4567"
+                  placeholder="+1234567890"
                   placeholderTextColor="#9CA3AF"
                   keyboardType="phone-pad"
                   className="flex-1 text-foreground text-base"
                 />
               </View>
+              {errors.contactNumber && <Text className="text-destructive text-xs mt-1 ml-1">{errors.contactNumber}</Text>}
             </View>
 
             {/* Email */}
-            <View>
+            <View className="mb-4">
               <Text className="text-sm font-semibold text-foreground mb-2">
                 Email Address <Text className="text-destructive">*</Text>
               </Text>
-              <View className="flex-row items-center bg-card border border-border rounded-xl px-4 py-3">
+              <View className={`flex-row items-center bg-card border ${errors.email ? 'border-destructive' : 'border-border'} rounded-xl px-4 py-3`}>
                 <Mail className="text-muted-foreground mr-3" size={20} />
                 <TextInput
                   value={email}
@@ -218,6 +203,7 @@ export default function RegisterOwnerScreen() {
                   className="flex-1 text-foreground text-base"
                 />
               </View>
+              {errors.email && <Text className="text-destructive text-xs mt-1 ml-1">{errors.email}</Text>}
             </View>
           </View>
 
@@ -230,7 +216,7 @@ export default function RegisterOwnerScreen() {
               <Text className="text-sm font-semibold text-foreground mb-2">
                 Password <Text className="text-destructive">*</Text>
               </Text>
-              <View className="flex-row items-center bg-card border border-border rounded-xl px-4 py-3">
+              <View className={`flex-row items-center bg-card border ${errors.password ? 'border-destructive' : 'border-border'} rounded-xl px-4 py-3`}>
                 <Lock className="text-muted-foreground mr-3" size={20} />
                 <TextInput
                   value={password}
@@ -241,9 +227,13 @@ export default function RegisterOwnerScreen() {
                   className="flex-1 text-foreground text-base"
                 />
               </View>
-              <Text className="text-xs text-muted-foreground mt-1">
-                Minimum 6 characters
-              </Text>
+              {errors.password ? (
+                <Text className="text-destructive text-[10px] mt-1 ml-1">{errors.password}</Text>
+              ) : (
+                <Text className="text-xs text-muted-foreground mt-1">
+                  Min 8 chars, 1 upper, 1 lower, 1 number, 1 special
+                </Text>
+              )}
             </View>
 
             {/* Confirm Password */}
@@ -251,7 +241,7 @@ export default function RegisterOwnerScreen() {
               <Text className="text-sm font-semibold text-foreground mb-2">
                 Confirm Password <Text className="text-destructive">*</Text>
               </Text>
-              <View className="flex-row items-center bg-card border border-border rounded-xl px-4 py-3">
+              <View className={`flex-row items-center bg-card border ${errors.confirmPassword ? 'border-destructive' : 'border-border'} rounded-xl px-4 py-3`}>
                 <Lock className="text-muted-foreground mr-3" size={20} />
                 <TextInput
                   value={confirmPassword}
@@ -262,6 +252,7 @@ export default function RegisterOwnerScreen() {
                   className="flex-1 text-foreground text-base"
                 />
               </View>
+              {errors.confirmPassword && <Text className="text-destructive text-xs mt-1 ml-1">{errors.confirmPassword}</Text>}
             </View>
           </View>
 

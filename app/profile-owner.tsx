@@ -39,7 +39,9 @@ export default function ProfileOwnerScreen() {
   const [petTypes, setPetTypes] = useState<PetType[]>([]);
   const [breeds, setBreeds] = useState<Breed[]>([]);
   const [uploading, setUploading] = useState(false);
-  
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [petErrors, setPetErrors] = useState<Record<string, string>>({});
+
   // Profile Edit State
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [profileForm, setProfileForm] = useState({
@@ -49,6 +51,59 @@ export default function ProfileOwnerScreen() {
     address: '',
     profileImageUrl: ''
   });
+
+  const validateProfile = () => {
+    const newErrors: Record<string, string> = {};
+    if (!profileForm.firstName.trim()) {
+      newErrors.firstName = 'First name is required';
+    } else if (profileForm.firstName.length < 2) {
+      newErrors.firstName = 'First name must be at least 2 characters';
+    }
+
+    if (!profileForm.lastName.trim()) {
+      newErrors.lastName = 'Last name is required';
+    } else if (profileForm.lastName.length < 2) {
+      newErrors.lastName = 'Last name must be at least 2 characters';
+    }
+
+    if (profileForm.phoneNumber) {
+      const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+      if (!phoneRegex.test(profileForm.phoneNumber.replace(/[\s()-]/g, ''))) {
+        newErrors.phoneNumber = 'Invalid phone number (e.g. +1234567890)';
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validatePet = () => {
+    const newErrors: Record<string, string> = {};
+    if (!petForm.name.trim()) {
+      newErrors.name = 'Pet name is required';
+    } else if (petForm.name.length < 2) {
+      newErrors.name = 'Pet name must be at least 2 characters';
+    }
+
+    if (petForm.petTypeId === 0) {
+      newErrors.petTypeId = 'Select pet type';
+    }
+
+    if (petForm.age < 0) {
+      newErrors.age = 'Age cannot be negative';
+    } else if (petForm.age > 30) {
+      newErrors.age = 'Age seems invalid (max 30)';
+    }
+
+    if (petForm.weight <= 0) {
+      newErrors.weight = 'Weight must be greater than 0';
+    } else if (petForm.weight > 200) {
+      newErrors.weight = 'Weight seems invalid (max 200kg)';
+    }
+
+    setPetErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   // Pet CRUD State
   const [showPetModal, setShowPetModal] = useState(false);
@@ -179,11 +234,13 @@ export default function ProfileOwnerScreen() {
         address: userData.address || '',
         profileImageUrl: userData.profileImageUrl || ''
       });
+      setErrors({});
       setShowProfileModal(true);
     }
   };
 
   const handleSaveProfile = async () => {
+    if (!validateProfile()) return;
     try {
       await userService.updateProfile(profileForm);
       setShowProfileModal(false);
@@ -210,6 +267,7 @@ export default function ProfileOwnerScreen() {
       medicalNotes: pet.medicalNotes || '',
       profileImageUrl: pet.profileImageUrl || ''
     });
+    setPetErrors({});
     setShowPetModal(true);
   };
 
@@ -225,20 +283,13 @@ export default function ProfileOwnerScreen() {
       medicalNotes: '',
       profileImageUrl: ''
     });
+    setPetErrors({});
     setShowPetModal(true);
   };
 
   const handleSavePet = async () => {
+    if (!validatePet()) return;
     try {
-      if (!petForm.name.trim()) {
-        Alert.alert('Error', 'Please enter a pet name');
-        return;
-      }
-      if (petForm.petTypeId === 0) {
-        Alert.alert('Error', 'Please select a pet type');
-        return;
-      }
-
       if (editingPet && editingPet.id) {
         await petService.updatePet(editingPet.id, petForm);
       } else {
@@ -615,35 +666,38 @@ export default function ProfileOwnerScreen() {
                 <View>
                   <Text className="text-foreground font-semibold mb-2">First Name</Text>
                   <TextInput
-                    className="bg-card p-4 rounded-xl border border-border text-foreground"
+                    className={`bg-card p-4 rounded-xl border ${errors.firstName ? 'border-destructive' : 'border-border'} text-foreground`}
                     placeholder="First Name"
                     placeholderTextColor="#94a3b8"
                     value={profileForm.firstName}
                     onChangeText={(text) => setProfileForm({ ...profileForm, firstName: text })}
                   />
+                  {errors.firstName && <Text className="text-destructive text-xs mt-1 ml-1">{errors.firstName}</Text>}
                 </View>
 
                 <View>
                   <Text className="text-foreground font-semibold mb-2">Last Name</Text>
                   <TextInput
-                    className="bg-card p-4 rounded-xl border border-border text-foreground"
+                    className={`bg-card p-4 rounded-xl border ${errors.lastName ? 'border-destructive' : 'border-border'} text-foreground`}
                     placeholder="Last Name"
                     placeholderTextColor="#94a3b8"
                     value={profileForm.lastName}
                     onChangeText={(text) => setProfileForm({ ...profileForm, lastName: text })}
                   />
+                  {errors.lastName && <Text className="text-destructive text-xs mt-1 ml-1">{errors.lastName}</Text>}
                 </View>
 
                 <View>
                   <Text className="text-foreground font-semibold mb-2">Phone Number</Text>
                   <TextInput
-                    className="bg-card p-4 rounded-xl border border-border text-foreground"
+                    className={`bg-card p-4 rounded-xl border ${errors.phoneNumber ? 'border-destructive' : 'border-border'} text-foreground`}
                     placeholder="Phone Number"
                     placeholderTextColor="#94a3b8"
                     keyboardType="phone-pad"
                     value={profileForm.phoneNumber}
                     onChangeText={(text) => setProfileForm({ ...profileForm, phoneNumber: text })}
                   />
+                  {errors.phoneNumber && <Text className="text-destructive text-xs mt-1 ml-1">{errors.phoneNumber}</Text>}
                 </View>
 
                 <View>
@@ -722,28 +776,31 @@ export default function ProfileOwnerScreen() {
                 <View>
                   <Text className="text-foreground font-semibold mb-2">Pet Name</Text>
                   <TextInput
-                    className="bg-card p-4 rounded-xl border border-border text-foreground"
+                    className={`bg-card p-4 rounded-xl border ${petErrors.name ? 'border-destructive' : 'border-border'} text-foreground`}
                     placeholder="Name"
                     placeholderTextColor="#94a3b8"
                     value={petForm.name}
                     onChangeText={(text) => setPetForm({ ...petForm, name: text })}
                   />
+                  {petErrors.name && <Text className="text-destructive text-xs mt-1 ml-1">{petErrors.name}</Text>}
                 </View>
 
                 <View>
                   <Text className="text-foreground font-semibold mb-2">Pet Type</Text>
-                  <View className="bg-card rounded-xl border border-border overflow-hidden">
+                  <View className={`bg-card rounded-xl border ${petErrors.petTypeId ? 'border-destructive' : 'border-border'} overflow-hidden`}>
                     <Picker
                       selectedValue={petForm.petTypeId}
                       onValueChange={(itemValue) => setPetForm({ ...petForm, petTypeId: itemValue, breedId: undefined })}
                       style={{ color: isDark ? '#f8fafc' : '#1e293b' }}
                       dropdownIconColor={isDark ? '#f8fafc' : '#1e293b'}
                     >
+                      <Picker.Item label="Select Type" value={0} />
                       {petTypes.map((type) => (
                         <Picker.Item key={type.id} label={type.name} value={type.id} />
                       ))}
                     </Picker>
                   </View>
+                  {petErrors.petTypeId && <Text className="text-destructive text-xs mt-1 ml-1">{petErrors.petTypeId}</Text>}
                 </View>
 
                 <View>
@@ -767,24 +824,26 @@ export default function ProfileOwnerScreen() {
                   <View className="flex-1">
                     <Text className="text-foreground font-semibold mb-2">Age (Years)</Text>
                     <TextInput
-                      className="bg-card p-4 rounded-xl border border-border text-foreground"
+                      className={`bg-card p-4 rounded-xl border ${petErrors.age ? 'border-destructive' : 'border-border'} text-foreground`}
                       placeholder="Age"
                       placeholderTextColor="#94a3b8"
                       keyboardType="numeric"
                       value={petForm.age.toString()}
                       onChangeText={(text) => setPetForm({ ...petForm, age: parseInt(text) || 0 })}
                     />
+                    {petErrors.age && <Text className="text-destructive text-xs mt-1 ml-1">{petErrors.age}</Text>}
                   </View>
                   <View className="flex-1">
                     <Text className="text-foreground font-semibold mb-2">Weight (kg)</Text>
                     <TextInput
-                      className="bg-card p-4 rounded-xl border border-border text-foreground"
+                      className={`bg-card p-4 rounded-xl border ${petErrors.weight ? 'border-destructive' : 'border-border'} text-foreground`}
                       placeholder="Weight"
                       placeholderTextColor="#94a3b8"
                       keyboardType="numeric"
                       value={petForm.weight.toString()}
                       onChangeText={(text) => setPetForm({ ...petForm, weight: parseFloat(text) || 0 })}
                     />
+                    {petErrors.weight && <Text className="text-destructive text-xs mt-1 ml-1">{petErrors.weight}</Text>}
                   </View>
                 </View>
 

@@ -33,9 +33,10 @@ export default function SearchProvidersPage() {
   const handleSearch = async () => {
     setLoading(true);
     try {
+      const normalizedCity = searchCity.trim().toLowerCase();
       const data = await providerService.getProviders(
         selectedServiceTypes.length > 0 ? selectedServiceTypes : undefined,
-        searchCity || undefined
+        normalizedCity || undefined
       );
       setProviders(data);
     } catch (error) {

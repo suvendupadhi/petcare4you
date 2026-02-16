@@ -83,7 +83,33 @@ export default function ProfileOwnerPage() {
     }
   };
 
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [petErrors, setPetErrors] = useState<Record<string, string>>({});
+
+  const validateProfile = () => {
+    const newErrors: Record<string, string> = {};
+    if (!editForm.firstName.trim()) newErrors.firstName = 'First name is required';
+    if (!editForm.lastName.trim()) newErrors.lastName = 'Last name is required';
+    if (editForm.phoneNumber && !/^\+?[1-9]\d{1,14}$/.test(editForm.phoneNumber.replace(/[\s()-]/g, ''))) {
+      newErrors.phoneNumber = 'Invalid phone number (e.g. +1234567890)';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validatePet = () => {
+    const newErrors: Record<string, string> = {};
+    if (!petForm.name.trim()) newErrors.name = 'Pet name is required';
+    if (petForm.petTypeId <= 0) newErrors.petTypeId = 'Select pet type';
+    if (petForm.breedId <= 0) newErrors.breedId = 'Select breed';
+    if (petForm.age < 0) newErrors.age = 'Age cannot be negative';
+    if (petForm.weight <= 0) newErrors.weight = 'Weight must be greater than 0';
+    setPetErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSaveProfile = async () => {
+    if (!validateProfile()) return;
     try {
       await userService.updateProfile(editForm);
       setEditMode(false);
@@ -94,20 +120,12 @@ export default function ProfileOwnerPage() {
     }
   };
 
-  const handlePetTypeChange = async (typeId: number) => {
-    setPetForm({ ...petForm, petTypeId: typeId, breedId: 0 });
-    try {
-      const breedsData = await petService.getBreeds(typeId);
-      setBreeds(breedsData);
-    } catch (error) {
-      console.error('Error loading breeds:', error);
-    }
-  };
-
   const handleAddPet = async () => {
+    if (!validatePet()) return;
     try {
       await petService.createPet(petForm);
       setShowPetModal(false);
+      setPetErrors({});
       loadData();
       const dogType = petTypes.find(t => t.name === 'Dog');
       setPetForm({ 
@@ -180,12 +198,15 @@ export default function ProfileOwnerPage() {
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">First Name</label>
                 {editMode ? (
-                  <input 
-                    type="text" 
-                    value={editForm.firstName} 
-                    onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
-                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  />
+                  <>
+                    <input 
+                      type="text" 
+                      value={editForm.firstName} 
+                      onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
+                      className={`w-full px-4 py-2 bg-slate-50 border ${errors.firstName ? 'border-red-500' : 'border-slate-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500`}
+                    />
+                    {errors.firstName && <p className="text-red-500 text-[10px] mt-0.5">{errors.firstName}</p>}
+                  </>
                 ) : (
                   <div className="text-slate-700 font-semibold">{profile?.firstName}</div>
                 )}
@@ -193,12 +214,15 @@ export default function ProfileOwnerPage() {
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Last Name</label>
                 {editMode ? (
-                  <input 
-                    type="text" 
-                    value={editForm.lastName} 
-                    onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
-                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  />
+                  <>
+                    <input 
+                      type="text" 
+                      value={editForm.lastName} 
+                      onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
+                      className={`w-full px-4 py-2 bg-slate-50 border ${errors.lastName ? 'border-red-500' : 'border-slate-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500`}
+                    />
+                    {errors.lastName && <p className="text-red-500 text-[10px] mt-0.5">{errors.lastName}</p>}
+                  </>
                 ) : (
                   <div className="text-slate-700 font-semibold">{profile?.lastName}</div>
                 )}
@@ -206,12 +230,15 @@ export default function ProfileOwnerPage() {
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Phone Number</label>
                 {editMode ? (
-                  <input 
-                    type="text" 
-                    value={editForm.phoneNumber} 
-                    onChange={(e) => setEditForm({ ...editForm, phoneNumber: e.target.value })}
-                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  />
+                  <>
+                    <input 
+                      type="text" 
+                      value={editForm.phoneNumber} 
+                      onChange={(e) => setEditForm({ ...editForm, phoneNumber: e.target.value })}
+                      className={`w-full px-4 py-2 bg-slate-50 border ${errors.phoneNumber ? 'border-red-500' : 'border-slate-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500`}
+                    />
+                    {errors.phoneNumber && <p className="text-red-500 text-[10px] mt-0.5">{errors.phoneNumber}</p>}
+                  </>
                 ) : (
                   <div className="text-slate-700 font-semibold">{profile?.phoneNumber || 'Not provided'}</div>
                 )}
@@ -310,8 +337,9 @@ export default function ProfileOwnerPage() {
                   value={petForm.name}
                   onChange={(e) => setPetForm({ ...petForm, name: e.target.value })}
                   placeholder="e.g. Buddy"
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className={`w-full px-4 py-2.5 bg-slate-50 border ${petErrors.name ? 'border-red-500' : 'border-slate-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500`}
                 />
+                {petErrors.name && <p className="text-red-500 text-xs">{petErrors.name}</p>}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -319,23 +347,25 @@ export default function ProfileOwnerPage() {
                   <select 
                     value={petForm.petTypeId}
                     onChange={(e) => handlePetTypeChange(parseInt(e.target.value))}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    className={`w-full px-4 py-2.5 bg-slate-50 border ${petErrors.petTypeId ? 'border-red-500' : 'border-slate-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500`}
                   >
                     <option value={0}>Select Type</option>
                     {petTypes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                   </select>
+                  {petErrors.petTypeId && <p className="text-red-500 text-xs">{petErrors.petTypeId}</p>}
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-slate-700">Breed</label>
                   <select 
                     value={petForm.breedId}
                     onChange={(e) => setPetForm({ ...petForm, breedId: parseInt(e.target.value) })}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    className={`w-full px-4 py-2.5 bg-slate-50 border ${petErrors.breedId ? 'border-red-500' : 'border-slate-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500`}
                     disabled={!petForm.petTypeId}
                   >
                     <option value={0}>Select Breed</option>
                     {breeds.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                   </select>
+                  {petErrors.breedId && <p className="text-red-500 text-xs">{petErrors.breedId}</p>}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -345,8 +375,9 @@ export default function ProfileOwnerPage() {
                     type="number" 
                     value={petForm.age}
                     onChange={(e) => setPetForm({ ...petForm, age: parseInt(e.target.value) })}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    className={`w-full px-4 py-2.5 bg-slate-50 border ${petErrors.age ? 'border-red-500' : 'border-slate-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500`}
                   />
+                  {petErrors.age && <p className="text-red-500 text-xs">{petErrors.age}</p>}
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-slate-700">Weight (kg)</label>
@@ -354,8 +385,9 @@ export default function ProfileOwnerPage() {
                     type="number" 
                     value={petForm.weight}
                     onChange={(e) => setPetForm({ ...petForm, weight: parseInt(e.target.value) })}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    className={`w-full px-4 py-2.5 bg-slate-50 border ${petErrors.weight ? 'border-red-500' : 'border-slate-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500`}
                   />
+                  {petErrors.weight && <p className="text-red-500 text-xs">{petErrors.weight}</p>}
                 </div>
               </div>
               <div className="space-y-2">

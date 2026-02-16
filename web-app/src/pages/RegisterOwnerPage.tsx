@@ -6,6 +6,7 @@ import { authService } from '../services/petCareService';
 export default function RegisterOwnerPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -16,11 +17,41 @@ export default function RegisterOwnerPage() {
     roleId: 1, // Owner
   });
 
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+    
+    if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
+    if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      newErrors.email = 'Invalid email address';
+    }
+
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(formData.password)) {
+      newErrors.password = 'Password must be 8+ chars, with uppercase, lowercase, number and special char';
+    }
+
+    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+    if (!phoneRegex.test(formData.phoneNumber.replace(/[\s()-]/g, ''))) {
+      newErrors.phoneNumber = 'Invalid phone number (e.g. +1234567890)';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validate()) return;
+
     setLoading(true);
     try {
-      await authService.register(formData);
+      await authService.register({
+        ...formData,
+        phoneNumber: formData.phoneNumber.replace(/[\s()-]/g, '')
+      });
       alert('Registration successful! Please login.');
       navigate('/');
     } catch (error: any) {
@@ -47,7 +78,7 @@ export default function RegisterOwnerPage() {
           <h2 className="text-2xl font-bold text-slate-900 mb-2">Create Account</h2>
           <p className="text-slate-500 mb-8">Join our community of pet lovers</p>
 
-          <form onSubmit={handleRegister} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <form onSubmit={handleRegister} noValidate className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">First Name</label>
               <div className="relative">
@@ -57,10 +88,11 @@ export default function RegisterOwnerPage() {
                   required
                   value={formData.firstName}
                   onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className={`w-full pl-10 pr-4 py-3 bg-slate-50 border ${errors.firstName ? 'border-red-500' : 'border-slate-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500`}
                   placeholder="John"
                 />
               </div>
+              {errors.firstName && <p className="text-red-500 text-xs mt-1 ml-1">{errors.firstName}</p>}
             </div>
 
             <div>
@@ -72,10 +104,11 @@ export default function RegisterOwnerPage() {
                   required
                   value={formData.lastName}
                   onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className={`w-full pl-10 pr-4 py-3 bg-slate-50 border ${errors.lastName ? 'border-red-500' : 'border-slate-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500`}
                   placeholder="Doe"
                 />
               </div>
+              {errors.lastName && <p className="text-red-500 text-xs mt-1 ml-1">{errors.lastName}</p>}
             </div>
 
             <div className="md:col-span-2">
@@ -87,10 +120,11 @@ export default function RegisterOwnerPage() {
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className={`w-full pl-10 pr-4 py-3 bg-slate-50 border ${errors.email ? 'border-red-500' : 'border-slate-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500`}
                   placeholder="john@example.com"
                 />
               </div>
+              {errors.email && <p className="text-red-500 text-xs mt-1 ml-1">{errors.email}</p>}
             </div>
 
             <div>
@@ -101,10 +135,11 @@ export default function RegisterOwnerPage() {
                   type="tel"
                   value={formData.phoneNumber}
                   onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  placeholder="+1 (555) 000-0000"
+                  className={`w-full pl-10 pr-4 py-3 bg-slate-50 border ${errors.phoneNumber ? 'border-red-500' : 'border-slate-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500`}
+                  placeholder="+1234567890"
                 />
               </div>
+              {errors.phoneNumber && <p className="text-red-500 text-xs mt-1 ml-1">{errors.phoneNumber}</p>}
             </div>
 
             <div>
@@ -116,10 +151,11 @@ export default function RegisterOwnerPage() {
                   required
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className={`w-full pl-10 pr-4 py-3 bg-slate-50 border ${errors.password ? 'border-red-500' : 'border-slate-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500`}
                   placeholder="••••••••"
                 />
               </div>
+              {errors.password && <p className="text-red-500 text-[10px] mt-1 ml-1 leading-tight">{errors.password}</p>}
             </div>
 
             <div className="md:col-span-2">

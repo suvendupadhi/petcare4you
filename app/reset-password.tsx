@@ -29,25 +29,39 @@ export default function ResetPasswordScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+    if (!email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = "Invalid email format";
+    }
+
+    if (!token.trim()) {
+      newErrors.token = "Token is required";
+    }
+
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!newPassword) {
+      newErrors.newPassword = "Password is required";
+    } else if (!passwordRegex.test(newPassword)) {
+      newErrors.newPassword = "Min 8 chars, 1 upper, 1 lower, 1 number, 1 special";
+    }
+
+    if (!confirmPassword) {
+      newErrors.confirmPassword = "Confirm your password";
+    } else if (newPassword !== confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async () => {
-    if (!email || !token || !newPassword || !confirmPassword) {
-      if (Platform.OS === 'web') {
-        window.alert('Error: Please fill in all fields');
-      } else {
-        Alert.alert("Error", "Please fill in all fields");
-      }
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      if (Platform.OS === 'web') {
-        window.alert('Error: Passwords do not match');
-      } else {
-        Alert.alert("Error", "Passwords do not match");
-      }
-      return;
-    }
+    if (!validate()) return;
 
     setLoading(true);
     try {
@@ -129,63 +143,79 @@ export default function ResetPasswordScreen() {
             </Text>
             <TextInput
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(text) => {
+                setEmail(text);
+                if (errors.email) setErrors({ ...errors, email: '' });
+              }}
               placeholder="Confirm your email"
               placeholderTextColor="#9CA3AF"
               keyboardType="email-address"
               autoCapitalize="none"
-              className="bg-card border border-border rounded-xl px-4 py-3 text-foreground text-base"
+              className={`bg-card border ${errors.email ? 'border-destructive' : 'border-border'} rounded-xl px-4 py-3 text-foreground text-base`}
             />
+            {errors.email && <Text className="text-destructive text-xs mt-1 ml-1">{errors.email}</Text>}
           </View>
 
           <View>
             <Text className="text-sm font-semibold text-foreground mb-2">
               Reset Token
             </Text>
-            <View className="flex-row items-center bg-card border border-border rounded-xl px-4 py-3">
+            <View className={`flex-row items-center bg-card border ${errors.token ? 'border-destructive' : 'border-border'} rounded-xl px-4 py-3`}>
               <Key className="text-muted-foreground mr-3" size={20} />
               <TextInput
                 value={token}
-                onChangeText={setToken}
+                onChangeText={(text) => {
+                  setToken(text);
+                  if (errors.token) setErrors({ ...errors, token: '' });
+                }}
                 placeholder="Enter token from email"
                 placeholderTextColor="#9CA3AF"
                 className="flex-1 text-foreground text-base"
               />
             </View>
+            {errors.token && <Text className="text-destructive text-xs mt-1 ml-1">{errors.token}</Text>}
           </View>
 
           <View>
             <Text className="text-sm font-semibold text-foreground mb-2">
               New Password
             </Text>
-            <View className="flex-row items-center bg-card border border-border rounded-xl px-4 py-3">
+            <View className={`flex-row items-center bg-card border ${errors.newPassword ? 'border-destructive' : 'border-border'} rounded-xl px-4 py-3`}>
               <Lock className="text-muted-foreground mr-3" size={20} />
               <TextInput
                 value={newPassword}
-                onChangeText={setNewPassword}
+                onChangeText={(text) => {
+                  setNewPassword(text);
+                  if (errors.newPassword) setErrors({ ...errors, newPassword: '' });
+                }}
                 placeholder="Enter new password"
                 placeholderTextColor="#9CA3AF"
                 secureTextEntry
                 className="flex-1 text-foreground text-base"
               />
             </View>
+            {errors.newPassword && <Text className="text-destructive text-xs mt-1 ml-1">{errors.newPassword}</Text>}
           </View>
 
           <View>
             <Text className="text-sm font-semibold text-foreground mb-2">
               Confirm New Password
             </Text>
-            <View className="flex-row items-center bg-card border border-border rounded-xl px-4 py-3">
+            <View className={`flex-row items-center bg-card border ${errors.confirmPassword ? 'border-destructive' : 'border-border'} rounded-xl px-4 py-3`}>
               <Lock className="text-muted-foreground mr-3" size={20} />
               <TextInput
                 value={confirmPassword}
-                onChangeText={setConfirmPassword}
+                onChangeText={(text) => {
+                  setConfirmPassword(text);
+                  if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: '' });
+                }}
                 placeholder="Confirm new password"
                 placeholderTextColor="#9CA3AF"
                 secureTextEntry
                 className="flex-1 text-foreground text-base"
               />
             </View>
+            {errors.confirmPassword && <Text className="text-destructive text-xs mt-1 ml-1">{errors.confirmPassword}</Text>}
           </View>
 
           <TouchableOpacity

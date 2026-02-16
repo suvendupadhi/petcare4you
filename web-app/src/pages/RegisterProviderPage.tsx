@@ -26,8 +26,42 @@ export default function RegisterProviderPage() {
     serviceTypeService.getServiceTypes().then(setServiceTypes).catch(console.error);
   }, []);
 
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+    if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
+    if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Email is invalid';
+    }
+    if (!formData.phoneNumber.trim()) {
+      newErrors.phoneNumber = 'Phone number is required';
+    } else if (!/^\+?[1-9]\d{1,14}$/.test(formData.phoneNumber.replace(/[\s()-]/g, ''))) {
+      newErrors.phoneNumber = 'Invalid phone number (e.g. +1234567890)';
+    }
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 8) {
+      newErrors.password = 'Min 8 chars, 1 upper, 1 lower, 1 number, 1 special';
+    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/.test(formData.password)) {
+      newErrors.password = 'Min 8 chars, 1 upper, 1 lower, 1 number, 1 special';
+    }
+    if (!formData.companyName.trim()) newErrors.companyName = 'Business name is required';
+    if (formData.hourlyRate <= 0) newErrors.hourlyRate = 'Hourly rate must be greater than 0';
+    if (!formData.city.trim()) newErrors.city = 'City is required';
+    if (!formData.address.trim()) newErrors.address = 'Address is required';
+    if (formData.serviceTypeIds.length === 0) newErrors.serviceTypeIds = 'Select at least one service';
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validate()) return;
     setLoading(true);
     try {
       await authService.register(formData);
@@ -64,7 +98,7 @@ export default function RegisterProviderPage() {
           <h2 className="text-2xl font-bold text-slate-900 mb-2">Partner with Us</h2>
           <p className="text-slate-500 mb-8">Grow your pet care business with PetCare Connect</p>
 
-          <form onSubmit={handleRegister} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <form onSubmit={handleRegister} noValidate className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="md:col-span-2">
               <h3 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Personal Information</h3>
             </div>
@@ -78,10 +112,11 @@ export default function RegisterProviderPage() {
                   required
                   value={formData.firstName}
                   onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className={`w-full pl-10 pr-4 py-3 bg-slate-50 border ${errors.firstName ? 'border-red-500' : 'border-slate-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500`}
                   placeholder="Jane"
                 />
               </div>
+              {errors.firstName && <p className="text-red-500 text-xs mt-1 ml-1">{errors.firstName}</p>}
             </div>
 
             <div>
@@ -93,10 +128,11 @@ export default function RegisterProviderPage() {
                   required
                   value={formData.lastName}
                   onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className={`w-full pl-10 pr-4 py-3 bg-slate-50 border ${errors.lastName ? 'border-red-500' : 'border-slate-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500`}
                   placeholder="Smith"
                 />
               </div>
+              {errors.lastName && <p className="text-red-500 text-xs mt-1 ml-1">{errors.lastName}</p>}
             </div>
 
             <div>
@@ -108,10 +144,11 @@ export default function RegisterProviderPage() {
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className={`w-full pl-10 pr-4 py-3 bg-slate-50 border ${errors.email ? 'border-red-500' : 'border-slate-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500`}
                   placeholder="jane@business.com"
                 />
               </div>
+              {errors.email && <p className="text-red-500 text-xs mt-1 ml-1">{errors.email}</p>}
             </div>
 
             <div>
@@ -123,10 +160,11 @@ export default function RegisterProviderPage() {
                   required
                   value={formData.phoneNumber}
                   onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  placeholder="+1 (555) 123-4567"
+                  className={`w-full pl-10 pr-4 py-3 bg-slate-50 border ${errors.phoneNumber ? 'border-red-500' : 'border-slate-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500`}
+                  placeholder="+1234567890"
                 />
               </div>
+              {errors.phoneNumber && <p className="text-red-500 text-xs mt-1 ml-1">{errors.phoneNumber}</p>}
             </div>
 
             <div>
@@ -138,10 +176,11 @@ export default function RegisterProviderPage() {
                   required
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className={`w-full pl-10 pr-4 py-3 bg-slate-50 border ${errors.password ? 'border-red-500' : 'border-slate-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500`}
                   placeholder="••••••••"
                 />
               </div>
+              {errors.password && <p className="text-red-500 text-[10px] mt-1 ml-1 leading-tight">{errors.password}</p>}
             </div>
 
             <div className="md:col-span-2">
@@ -157,10 +196,11 @@ export default function RegisterProviderPage() {
                   required
                   value={formData.companyName}
                   onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className={`w-full pl-10 pr-4 py-3 bg-slate-50 border ${errors.companyName ? 'border-red-500' : 'border-slate-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500`}
                   placeholder="Happy Paws Daycare"
                 />
               </div>
+              {errors.companyName && <p className="text-red-500 text-xs mt-1 ml-1">{errors.companyName}</p>}
             </div>
 
             <div>
@@ -172,10 +212,11 @@ export default function RegisterProviderPage() {
                   required
                   value={formData.hourlyRate}
                   onChange={(e) => setFormData({ ...formData, hourlyRate: parseFloat(e.target.value) })}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className={`w-full pl-10 pr-4 py-3 bg-slate-50 border ${errors.hourlyRate ? 'border-red-500' : 'border-slate-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500`}
                   placeholder="50"
                 />
               </div>
+              {errors.hourlyRate && <p className="text-red-500 text-xs mt-1 ml-1">{errors.hourlyRate}</p>}
             </div>
 
             <div>
@@ -187,10 +228,11 @@ export default function RegisterProviderPage() {
                   required
                   value={formData.city}
                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className={`w-full pl-10 pr-4 py-3 bg-slate-50 border ${errors.city ? 'border-red-500' : 'border-slate-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500`}
                   placeholder="New York"
                 />
               </div>
+              {errors.city && <p className="text-red-500 text-xs mt-1 ml-1">{errors.city}</p>}
             </div>
 
             <div className="md:col-span-2">
@@ -202,10 +244,11 @@ export default function RegisterProviderPage() {
                   required
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className={`w-full pl-10 pr-4 py-3 bg-slate-50 border ${errors.address ? 'border-red-500' : 'border-slate-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500`}
                   placeholder="456 Business Ave, Suite 101"
                 />
               </div>
+              {errors.address && <p className="text-red-500 text-xs mt-1 ml-1">{errors.address}</p>}
             </div>
 
             <div className="md:col-span-2">
@@ -220,12 +263,13 @@ export default function RegisterProviderPage() {
                       formData.serviceTypeIds.includes(st.id)
                         ? 'bg-orange-600 border-orange-600 text-white'
                         : 'bg-white border-slate-200 text-slate-600 hover:border-orange-300'
-                    }`}
+                    } ${errors.serviceTypeIds ? 'border-red-500' : ''}`}
                   >
                     {st.name}
                   </button>
                 ))}
               </div>
+              {errors.serviceTypeIds && <p className="text-red-500 text-xs mt-1 ml-1">{errors.serviceTypeIds}</p>}
             </div>
 
             <div className="md:col-span-2">

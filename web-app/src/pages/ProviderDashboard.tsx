@@ -123,7 +123,17 @@ export default function ProviderDashboard() {
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold text-slate-800">Recent Booking Requests</h2>
-              <button onClick={() => navigate('/appointments-provider')} className="text-sm text-orange-600 font-bold hover:underline">View Schedule</button>
+              <button 
+                onClick={() => navigate('/appointments-provider')} 
+                disabled={appointments.length === 0}
+                className={`text-sm font-bold ${
+                  appointments.length === 0 
+                    ? 'text-slate-300 cursor-not-allowed' 
+                    : 'text-orange-600 hover:underline'
+                }`}
+              >
+                View Schedule
+              </button>
             </div>
             
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">

@@ -28,6 +28,7 @@ export default function RegisterProviderScreen() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const fetchServiceTypes = async () => {
@@ -54,79 +55,43 @@ export default function RegisterProviderScreen() {
 
   // Form validation
   const validateForm = () => {
-    if (!businessName.trim()) {
-      if (Platform.OS === 'web') {
-        window.alert('Validation Error: Please enter your business name');
-      } else {
-        Alert.alert('Validation Error', 'Please enter your business name');
-      }
-      return false;
+    const newErrors: Record<string, string> = {};
+    if (!businessName.trim()) newErrors.businessName = 'Business name is required';
+    if (!ownerFirstName.trim()) newErrors.ownerFirstName = 'Owner first name is required';
+    if (!ownerLastName.trim()) newErrors.ownerLastName = 'Owner last name is required';
+    if (!city.trim()) newErrors.city = 'City is required';
+    if (!address.trim()) newErrors.address = 'Address is required';
+    
+    if (!businessPhone.trim()) {
+      newErrors.businessPhone = 'Business phone is required';
+    } else if (!/^\+?[1-9]\d{1,14}$/.test(businessPhone.replace(/[\s()-]/g, ''))) {
+      newErrors.businessPhone = 'Invalid phone number (e.g. +1234567890)';
     }
-    if (!ownerFirstName.trim()) {
-      if (Platform.OS === 'web') {
-        window.alert('Validation Error: Please enter owner first name');
-      } else {
-        Alert.alert('Validation Error', 'Please enter owner first name');
-      }
-      return false;
+
+    if (!businessEmail.trim()) {
+      newErrors.businessEmail = 'Business email is required';
+    } else if (!/\S+@\S+\.\S+/.test(businessEmail)) {
+      newErrors.businessEmail = 'Email is invalid';
     }
-    if (!ownerLastName.trim()) {
-      if (Platform.OS === 'web') {
-        window.alert('Validation Error: Please enter owner last name');
-      } else {
-        Alert.alert('Validation Error', 'Please enter owner last name');
-      }
-      return false;
-    }
-    if (!city.trim()) {
-      if (Platform.OS === 'web') {
-        window.alert('Validation Error: Please enter business city');
-      } else {
-        Alert.alert('Validation Error', 'Please enter business city');
-      }
-      return false;
-    }
-    if (!address.trim()) {
-      if (Platform.OS === 'web') {
-        window.alert('Validation Error: Please enter business address');
-      } else {
-        Alert.alert('Validation Error', 'Please enter business address');
-      }
-      return false;
-    }
-    if (!businessEmail.trim() || !businessEmail.includes('@')) {
-      if (Platform.OS === 'web') {
-        window.alert('Validation Error: Please enter a valid business email');
-      } else {
-        Alert.alert('Validation Error', 'Please enter a valid business email');
-      }
-      return false;
-    }
+
     if (selectedServiceTypeIds.length === 0) {
-      if (Platform.OS === 'web') {
-        window.alert('Validation Error: Please select at least one service type');
-      } else {
-        Alert.alert('Validation Error', 'Please select at least one service type');
-      }
-      return false;
+      newErrors.services = 'Select at least one service type';
     }
-    if (!password || password.length < 6) {
-      if (Platform.OS === 'web') {
-        window.alert('Validation Error: Password must be at least 6 characters');
-      } else {
-        Alert.alert('Validation Error', 'Password must be at least 6 characters');
-      }
-      return false;
+
+    if (!password) {
+      newErrors.password = 'Password is required';
+    } else if (password.length < 8) {
+      newErrors.password = 'Min 8 chars, 1 upper, 1 lower, 1 number, 1 special';
+    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/.test(password)) {
+      newErrors.password = 'Min 8 chars, 1 upper, 1 lower, 1 number, 1 special';
     }
+
     if (password !== confirmPassword) {
-      if (Platform.OS === 'web') {
-        window.alert('Validation Error: Passwords do not match');
-      } else {
-        Alert.alert('Validation Error', 'Passwords do not match');
-      }
-      return false;
+      newErrors.confirmPassword = 'Passwords do not match';
     }
-    return true;
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleRegister = async () => {
@@ -229,7 +194,7 @@ export default function RegisterProviderScreen() {
               <Text className="text-sm font-semibold text-foreground mb-2">
                 Business Name <Text className="text-destructive">*</Text>
               </Text>
-              <View className="flex-row items-center bg-card border border-border rounded-xl px-4 py-3">
+              <View className={`flex-row items-center bg-card border ${errors.businessName ? 'border-destructive' : 'border-border'} rounded-xl px-4 py-3`}>
                 <Building2 className="text-muted-foreground mr-3" size={20} />
                 <TextInput
                   value={businessName}
@@ -239,6 +204,7 @@ export default function RegisterProviderScreen() {
                   className="flex-1 text-foreground text-base"
                 />
               </View>
+              {errors.businessName && <Text className="text-destructive text-xs mt-1 ml-1">{errors.businessName}</Text>}
             </View>
 
             {/* Owner First Name */}
@@ -246,7 +212,7 @@ export default function RegisterProviderScreen() {
               <Text className="text-sm font-semibold text-foreground mb-2">
                 Owner First Name <Text className="text-destructive">*</Text>
               </Text>
-              <View className="flex-row items-center bg-card border border-border rounded-xl px-4 py-3">
+              <View className={`flex-row items-center bg-card border ${errors.ownerFirstName ? 'border-destructive' : 'border-border'} rounded-xl px-4 py-3`}>
                 <User className="text-muted-foreground mr-3" size={20} />
                 <TextInput
                   value={ownerFirstName}
@@ -256,6 +222,7 @@ export default function RegisterProviderScreen() {
                   className="flex-1 text-foreground text-base"
                 />
               </View>
+              {errors.ownerFirstName && <Text className="text-destructive text-xs mt-1 ml-1">{errors.ownerFirstName}</Text>}
             </View>
 
             {/* Owner Last Name */}
@@ -263,7 +230,7 @@ export default function RegisterProviderScreen() {
               <Text className="text-sm font-semibold text-foreground mb-2">
                 Owner Last Name <Text className="text-destructive">*</Text>
               </Text>
-              <View className="flex-row items-center bg-card border border-border rounded-xl px-4 py-3">
+              <View className={`flex-row items-center bg-card border ${errors.ownerLastName ? 'border-destructive' : 'border-border'} rounded-xl px-4 py-3`}>
                 <User className="text-muted-foreground mr-3" size={20} />
                 <TextInput
                   value={ownerLastName}
@@ -273,6 +240,7 @@ export default function RegisterProviderScreen() {
                   className="flex-1 text-foreground text-base"
                 />
               </View>
+              {errors.ownerLastName && <Text className="text-destructive text-xs mt-1 ml-1">{errors.ownerLastName}</Text>}
             </View>
 
             {/* Is Licensed Toggle */}
@@ -303,17 +271,18 @@ export default function RegisterProviderScreen() {
               <Text className="text-sm font-semibold text-foreground mb-2">
                 Business Phone <Text className="text-destructive">*</Text>
               </Text>
-              <View className="flex-row items-center bg-card border border-border rounded-xl px-4 py-3">
+              <View className={`flex-row items-center bg-card border ${errors.businessPhone ? 'border-destructive' : 'border-border'} rounded-xl px-4 py-3`}>
                 <Phone className="text-muted-foreground mr-3" size={20} />
                 <TextInput
                   value={businessPhone}
                   onChangeText={setBusinessPhone}
-                  placeholder="(555) 123-4567"
+                  placeholder="+1234567890"
                   placeholderTextColor="#9CA3AF"
                   keyboardType="phone-pad"
                   className="flex-1 text-foreground text-base"
                 />
               </View>
+              {errors.businessPhone && <Text className="text-destructive text-xs mt-1 ml-1">{errors.businessPhone}</Text>}
             </View>
 
             {/* Business Email */}
@@ -321,7 +290,7 @@ export default function RegisterProviderScreen() {
               <Text className="text-sm font-semibold text-foreground mb-2">
                 Business Email <Text className="text-destructive">*</Text>
               </Text>
-              <View className="flex-row items-center bg-card border border-border rounded-xl px-4 py-3">
+              <View className={`flex-row items-center bg-card border ${errors.businessEmail ? 'border-destructive' : 'border-border'} rounded-xl px-4 py-3`}>
                 <Mail className="text-muted-foreground mr-3" size={20} />
                 <TextInput
                   value={businessEmail}
@@ -333,6 +302,7 @@ export default function RegisterProviderScreen() {
                   className="flex-1 text-foreground text-base"
                 />
               </View>
+              {errors.businessEmail && <Text className="text-destructive text-xs mt-1 ml-1">{errors.businessEmail}</Text>}
             </View>
 
             {/* Website (Optional) */}
@@ -359,7 +329,7 @@ export default function RegisterProviderScreen() {
               <Text className="text-sm font-semibold text-foreground mb-2">
                 City <Text className="text-destructive">*</Text>
               </Text>
-              <View className="flex-row items-center bg-card border border-border rounded-xl px-4 py-3">
+              <View className={`flex-row items-center bg-card border ${errors.city ? 'border-destructive' : 'border-border'} rounded-xl px-4 py-3`}>
                 <MapPin className="text-muted-foreground mr-3" size={20} />
                 <TextInput
                   value={city}
@@ -369,14 +339,15 @@ export default function RegisterProviderScreen() {
                   className="flex-1 text-foreground text-base"
                 />
               </View>
+              {errors.city && <Text className="text-destructive text-xs mt-1 ml-1">{errors.city}</Text>}
             </View>
 
             {/* Business Address */}
-            <View>
+            <View className="mb-4">
               <Text className="text-sm font-semibold text-foreground mb-2">
                 Business Address <Text className="text-destructive">*</Text>
               </Text>
-              <View className="flex-row items-center bg-card border border-border rounded-xl px-4 py-3">
+              <View className={`flex-row items-center bg-card border ${errors.address ? 'border-destructive' : 'border-border'} rounded-xl px-4 py-3`}>
                 <MapPin className="text-muted-foreground mr-3" size={20} />
                 <TextInput
                   value={address}
@@ -386,6 +357,7 @@ export default function RegisterProviderScreen() {
                   className="flex-1 text-foreground text-base"
                 />
               </View>
+              {errors.address && <Text className="text-destructive text-xs mt-1 ml-1">{errors.address}</Text>}
             </View>
           </View>
 
@@ -394,13 +366,16 @@ export default function RegisterProviderScreen() {
             {loadingServiceTypes ? (
               <ActivityIndicator size="small" color="#EA580C" />
             ) : (
-              <MultiSelect
-                label="Services Offered"
-                options={serviceTypes}
-                selectedValues={selectedServiceTypeIds}
-                onValueChange={setSelectedServiceTypeIds}
-                placeholder="Choose services your business provides"
-              />
+              <>
+                <MultiSelect
+                  label="Services Offered"
+                  options={serviceTypes}
+                  selectedValues={selectedServiceTypeIds}
+                  onValueChange={setSelectedServiceTypeIds}
+                  placeholder="Choose services your business provides"
+                />
+                {errors.services && <Text className="text-destructive text-xs mt-1 ml-1">{errors.services}</Text>}
+              </>
             )}
             <Text className="text-xs text-muted-foreground mt-2 px-1">
               Select all services your business provides. You can select multiple.
@@ -443,7 +418,7 @@ export default function RegisterProviderScreen() {
               <Text className="text-sm font-semibold text-foreground mb-2">
                 Password <Text className="text-destructive">*</Text>
               </Text>
-              <View className="flex-row items-center bg-card border border-border rounded-xl px-4 py-3">
+              <View className={`flex-row items-center bg-card border ${errors.password ? 'border-destructive' : 'border-border'} rounded-xl px-4 py-3`}>
                 <Lock className="text-muted-foreground mr-3" size={20} />
                 <TextInput
                   value={password}
@@ -454,9 +429,13 @@ export default function RegisterProviderScreen() {
                   className="flex-1 text-foreground text-base"
                 />
               </View>
-              <Text className="text-xs text-muted-foreground mt-1">
-                Minimum 6 characters
-              </Text>
+              {errors.password ? (
+                <Text className="text-destructive text-[10px] mt-1 ml-1">{errors.password}</Text>
+              ) : (
+                <Text className="text-xs text-muted-foreground mt-1">
+                  Min 8 chars, 1 upper, 1 lower, 1 number, 1 special
+                </Text>
+              )}
             </View>
 
             {/* Confirm Password */}
@@ -464,7 +443,7 @@ export default function RegisterProviderScreen() {
               <Text className="text-sm font-semibold text-foreground mb-2">
                 Confirm Password <Text className="text-destructive">*</Text>
               </Text>
-              <View className="flex-row items-center bg-card border border-border rounded-xl px-4 py-3">
+              <View className={`flex-row items-center bg-card border ${errors.confirmPassword ? 'border-destructive' : 'border-border'} rounded-xl px-4 py-3`}>
                 <Lock className="text-muted-foreground mr-3" size={20} />
                 <TextInput
                   value={confirmPassword}
@@ -475,6 +454,7 @@ export default function RegisterProviderScreen() {
                   className="flex-1 text-foreground text-base"
                 />
               </View>
+              {errors.confirmPassword && <Text className="text-destructive text-xs mt-1 ml-1">{errors.confirmPassword}</Text>}
             </View>
           </View>
 

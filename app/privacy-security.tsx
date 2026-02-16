@@ -16,6 +16,7 @@ export default function PrivacySecurityScreen() {
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     userService.getCurrentUser().then(setUser).catch(console.error);
@@ -48,18 +49,31 @@ export default function PrivacySecurityScreen() {
     }
   };
 
-  const handleChangePassword = async () => {
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      if (Platform.OS === 'web') window.alert('Please fill in all fields');
-      else Alert.alert('Error', 'Please fill in all fields');
-      return;
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+    if (!currentPassword) {
+      newErrors.currentPassword = 'Current password is required';
     }
 
-    if (newPassword !== confirmPassword) {
-      if (Platform.OS === 'web') window.alert('New passwords do not match');
-      else Alert.alert('Error', 'New passwords do not match');
-      return;
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!newPassword) {
+      newErrors.newPassword = 'New password is required';
+    } else if (!passwordRegex.test(newPassword)) {
+      newErrors.newPassword = 'Min 8 chars, 1 upper, 1 lower, 1 number, 1 special';
     }
+
+    if (!confirmPassword) {
+      newErrors.confirmPassword = 'Confirm your new password';
+    } else if (newPassword !== confirmPassword) {
+      newErrors.confirmPassword = 'New passwords do not match';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleChangePassword = async () => {
+    if (!validate()) return;
 
     setLoading(true);
     try {
@@ -214,11 +228,14 @@ export default function PrivacySecurityScreen() {
             <View className="gap-4">
               <View>
                 <Text className="text-sm font-semibold text-foreground mb-2">Current Password</Text>
-                <View className="flex-row items-center bg-card border border-border rounded-xl px-4 py-3">
+                <View className={`flex-row items-center bg-card border ${errors.currentPassword ? 'border-destructive' : 'border-border'} rounded-xl px-4 py-3`}>
                   <TextInput
                     secureTextEntry={!showCurrent}
                     value={currentPassword}
-                    onChangeText={setCurrentPassword}
+                    onChangeText={(text) => {
+                      setCurrentPassword(text);
+                      if (errors.currentPassword) setErrors({ ...errors, currentPassword: '' });
+                    }}
                     placeholder="Enter current password"
                     placeholderTextColor="#9CA3AF"
                     className="flex-1 text-foreground text-base"
@@ -227,15 +244,19 @@ export default function PrivacySecurityScreen() {
                     {showCurrent ? <EyeOff size={20} className="text-muted-foreground" /> : <Eye size={20} className="text-muted-foreground" />}
                   </TouchableOpacity>
                 </View>
+                {errors.currentPassword && <Text className="text-destructive text-xs mt-1 ml-1">{errors.currentPassword}</Text>}
               </View>
 
               <View>
                 <Text className="text-sm font-semibold text-foreground mb-2">New Password</Text>
-                <View className="flex-row items-center bg-card border border-border rounded-xl px-4 py-3">
+                <View className={`flex-row items-center bg-card border ${errors.newPassword ? 'border-destructive' : 'border-border'} rounded-xl px-4 py-3`}>
                   <TextInput
                     secureTextEntry={!showNew}
                     value={newPassword}
-                    onChangeText={setNewPassword}
+                    onChangeText={(text) => {
+                      setNewPassword(text);
+                      if (errors.newPassword) setErrors({ ...errors, newPassword: '' });
+                    }}
                     placeholder="Enter new password"
                     placeholderTextColor="#9CA3AF"
                     className="flex-1 text-foreground text-base"
@@ -244,6 +265,7 @@ export default function PrivacySecurityScreen() {
                     {showNew ? <EyeOff size={20} className="text-muted-foreground" /> : <Eye size={20} className="text-muted-foreground" />}
                   </TouchableOpacity>
                 </View>
+                {errors.newPassword && <Text className="text-destructive text-xs mt-1 ml-1">{errors.newPassword}</Text>}
               </View>
 
               <View>
@@ -251,11 +273,15 @@ export default function PrivacySecurityScreen() {
                 <TextInput
                   secureTextEntry
                   value={confirmPassword}
-                  onChangeText={setConfirmPassword}
+                  onChangeText={(text) => {
+                    setConfirmPassword(text);
+                    if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: '' });
+                  }}
                   placeholder="Confirm new password"
                   placeholderTextColor="#9CA3AF"
-                  className="bg-card border border-border rounded-xl px-4 py-3 text-foreground text-base"
+                  className={`bg-card border ${errors.confirmPassword ? 'border-destructive' : 'border-border'} rounded-xl px-4 py-3 text-foreground text-base`}
                 />
+                {errors.confirmPassword && <Text className="text-destructive text-xs mt-1 ml-1">{errors.confirmPassword}</Text>}
               </View>
 
               <TouchableOpacity
