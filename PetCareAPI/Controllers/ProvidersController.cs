@@ -38,7 +38,10 @@ namespace PetCareAPI.Controllers
             }
 
             if (!string.IsNullOrEmpty(city))
-                query = query.Where(p => p.City == city);
+            {
+                var searchCity = city.Replace(" ", "").ToLower();
+                query = query.Where(p => p.City != null && p.City.Replace(" ", "").ToLower() == searchCity);
+            }
 
             return await query.ToListAsync();
         }
