@@ -29,6 +29,21 @@ export default function AppointmentsOwnerPage() {
     ? appointments 
     : appointments.filter(a => a.status === filterStatus);
 
+  const formatTime = (timeString: string) => {
+    try {
+      const date = new Date(timeString);
+      if (isNaN(date.getTime())) {
+        const [hours, minutes] = timeString.split(':');
+        const dummyDate = new Date();
+        dummyDate.setHours(parseInt(hours), parseInt(minutes));
+        return dummyDate.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+      }
+      return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+    } catch (e) {
+      return timeString;
+    }
+  };
+
   return (
     <Layout userType="owner">
       <div className="space-y-6">
@@ -88,7 +103,7 @@ export default function AppointmentsOwnerPage() {
                     </div>
                     <div className="flex items-center gap-2 text-sm text-slate-500">
                       <Clock size={16} />
-                      <span className="font-medium">{app.startTime} - {app.endTime}</span>
+                      <span className="font-medium">{formatTime(app.startTime)} - {formatTime(app.endTime)}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-slate-500">
                       <Building2 size={16} />

@@ -52,6 +52,23 @@ export default function AppointmentDetailPage() {
   if (loading) return <div className="flex items-center justify-center h-screen">Loading details...</div>;
   if (!appointment) return <div className="flex items-center justify-center h-screen">Appointment not found</div>;
 
+  const formatTime = (timeString: string) => {
+    try {
+      // Handle cases where time might be a ISO string or just "HH:mm:ss"
+      const date = new Date(timeString);
+      if (isNaN(date.getTime())) {
+        // Fallback for HH:mm:ss format
+        const [hours, minutes] = timeString.split(':');
+        const dummyDate = new Date();
+        dummyDate.setHours(parseInt(hours), parseInt(minutes));
+        return dummyDate.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+      }
+      return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+    } catch (e) {
+      return timeString;
+    }
+  };
+
   return (
     <Layout userType={appointment.ownerId ? 'provider' : 'owner'}>
       <div className="max-w-4xl mx-auto space-y-8">
@@ -77,7 +94,7 @@ export default function AppointmentDetailPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <DetailSection icon={<Calendar size={20} />} label="Date" value={new Date(appointment.appointmentDate).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })} />
-                <DetailSection icon={<Clock size={20} />} label="Time" value={`${appointment.startTime} - ${appointment.endTime}`} />
+                <DetailSection icon={<Clock size={20} />} label="Time" value={`${formatTime(appointment.startTime)} - ${formatTime(appointment.endTime)}`} />
                 <DetailSection icon={<User size={20} />} label={appointment.provider ? "Service Provider" : "Client"} value={appointment.provider ? appointment.provider.companyName : `${appointment.owner?.firstName} ${appointment.owner?.lastName}`} />
                 <DetailSection icon={<DollarSign size={20} />} label="Total Price" value={`$${appointment.totalPrice}`} />
               </div>

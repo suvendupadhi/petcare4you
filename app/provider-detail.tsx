@@ -267,7 +267,7 @@ export default function ProviderDetailScreen() {
     .map(a => ({
       id: a.id?.toString() || a.startTime,
       time: a.startTime.split('T')[1].substring(0, 5),
-      label: new Date(a.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      label: new Date(a.startTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
       available: !a.isBooked
     }))
     .sort((a, b) => a.time.localeCompare(b.time));
@@ -786,7 +786,7 @@ export default function ProviderDetailScreen() {
               {selectedDate && (
                 <>
                   <Text className="text-sm font-semibold text-foreground mb-2">
-                    Available Times for {selectedDate ? format(new Date(selectedDate), 'MMM dd, yyyy') : ''}
+                    Available Times for {selectedDate ? new Date(selectedDate).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
                   </Text>
                   {timeSlots.length > 0 ? (
                     <View className="flex-row flex-wrap gap-2 mb-4">
@@ -888,7 +888,7 @@ export default function ProviderDetailScreen() {
                       </View>
                     </View>
                     <Text className="text-muted-foreground text-xs mb-2">
-                      {format(new Date(review.createdAt), 'MMMM dd, yyyy')}
+                      {new Date(review.createdAt).toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' })}
                     </Text>
                     <Text className="text-foreground leading-5">{review.comment}</Text>
                   </View>

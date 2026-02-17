@@ -20,7 +20,21 @@ export default function ManageAvailabilityPage() {
   // Form state for new slot
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [startTime, setStartTime] = useState("09:00");
-  const [endTime, setEndTime] = useState("17:00");
+  const [endTime, setEndTime] = useState("09:30");
+
+  const handleStartTimeChange = (val: string) => {
+    setStartTime(val);
+    try {
+      const [hours, minutes] = val.split(':').map(Number);
+      const date = new Date();
+      date.setHours(hours, minutes + 30);
+      const newEndHours = date.getHours().toString().padStart(2, '0');
+      const newEndMinutes = date.getMinutes().toString().padStart(2, '0');
+      setEndTime(`${newEndHours}:${newEndMinutes}`);
+    } catch (e) {
+      console.error('Error calculating end time:', e);
+    }
+  };
 
   useEffect(() => {
     loadAvailability();
@@ -125,7 +139,7 @@ export default function ManageAvailabilityPage() {
                     <input 
                       type="time"
                       value={startTime}
-                      onChange={(e) => setStartTime(e.target.value)}
+                      onChange={(e) => handleStartTimeChange(e.target.value)}
                       className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
                       required
                     />
@@ -184,8 +198,9 @@ export default function ManageAvailabilityPage() {
                         <div className="font-bold text-slate-900">{new Date(slot.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
                         <div className="text-sm text-slate-500 flex items-center gap-1">
                           <Clock size={14} />
-                          {new Date(slot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - 
-                          {new Date(slot.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          <span className="font-medium">
+                            {new Date(slot.startTime).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })} - {new Date(slot.endTime).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}
+                          </span>
                         </div>
                       </div>
                     </div>

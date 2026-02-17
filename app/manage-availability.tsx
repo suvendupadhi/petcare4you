@@ -297,7 +297,7 @@ export default function ManageAvailabilityScreen() {
                     >
                       <View className="bg-muted px-4 py-3 rounded-xl flex-row items-center justify-between">
                         <Text className="text-foreground font-medium">
-                          {format(startTime, 'hh:mm a')}
+                          {startTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
                         </Text>
                         <Clock size={16} color={isDark ? '#94a3b8' : '#64748b'} />
                       </View>
@@ -335,7 +335,7 @@ export default function ManageAvailabilityScreen() {
                     >
                       <View className="bg-muted px-4 py-3 rounded-xl flex-row items-center justify-between">
                         <Text className="text-foreground font-medium">
-                          {format(endTime, 'hh:mm a')}
+                          {endTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
                         </Text>
                         <Clock size={16} color={isDark ? '#94a3b8' : '#64748b'} />
                       </View>
@@ -402,13 +402,13 @@ export default function ManageAvailabilityScreen() {
                     <View className="flex-row items-center gap-2 mb-1">
                       <CalendarIcon color={isDark ? '#fb923c' : '#2563eb'} size={16} />
                       <Text className="text-foreground font-semibold">
-                        {format(parseISO(slot.date.toString()), 'PPP')}
+                        {new Date(slot.date).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
                       </Text>
                     </View>
                     <View className="flex-row items-center gap-2">
                       <Clock color={isDark ? '#94a3b8' : '#64748b'} size={16} />
                       <Text className="text-muted-foreground">
-                        {format(parseISO(slot.startTime.toString()), 'hh:mm a')} - {format(parseISO(slot.endTime.toString()), 'hh:mm a')}
+                        {new Date(slot.startTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} - {new Date(slot.endTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
                       </Text>
                     </View>
                   </View>

@@ -436,7 +436,7 @@ export default function ProviderDashboard() {
                       <View className="bg-primary/10 px-2 py-1 rounded-md flex-row items-center gap-1">
                         <Clock color={isDark ? '#fb923c' : '#ea580c'} size={10} />
                         <Text className="text-primary font-bold text-[10px]">
-                          {new Date(appointment.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          {new Date(appointment.startTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
                         </Text>
                       </View>
                     </View>
@@ -510,7 +510,7 @@ export default function ProviderDashboard() {
                         {new Date(appointment.appointmentDate).toLocaleDateString([], { month: 'short', day: 'numeric' })}
                       </Text>
                       <Text className="text-muted-foreground text-xs">
-                        {new Date(appointment.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(appointment.startTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
                       </Text>
                     </View>
                   </View>

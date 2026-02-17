@@ -60,6 +60,21 @@ export default function ProviderDashboard() {
 
   if (loading) return <div className="flex items-center justify-center h-screen text-slate-500">Loading Dashboard...</div>;
 
+  const formatTime = (timeString: string) => {
+    try {
+      const date = new Date(timeString);
+      if (isNaN(date.getTime())) {
+        const [hours, minutes] = timeString.split(':');
+        const dummyDate = new Date();
+        dummyDate.setHours(parseInt(hours), parseInt(minutes));
+        return dummyDate.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+      }
+      return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+    } catch (e) {
+      return timeString;
+    }
+  };
+
   return (
     <Layout userType="provider">
       <div className="space-y-8">
@@ -162,8 +177,8 @@ export default function ProviderDashboard() {
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="text-sm font-medium text-slate-700">{new Date(app.appointmentDate).toLocaleDateString()}</div>
-                          <div className="text-xs text-slate-500">{app.startTime} - {app.endTime}</div>
+                          <div className="text-sm font-medium text-slate-700">{new Date(app.appointmentDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</div>
+                          <div className="text-xs text-slate-500">{formatTime(app.startTime)} - {formatTime(app.endTime)}</div>
                         </td>
                         <td className="px-6 py-4">
                           <StatusBadge status={app.status} />

@@ -39,6 +39,21 @@ export default function OwnerDashboard() {
 
   if (loading) return <div className="flex items-center justify-center h-screen text-slate-500">Loading Dashboard...</div>;
 
+  const formatTime = (timeString: string) => {
+    try {
+      const date = new Date(timeString);
+      if (isNaN(date.getTime())) {
+        const [hours, minutes] = timeString.split(':');
+        const dummyDate = new Date();
+        dummyDate.setHours(parseInt(hours), parseInt(minutes));
+        return dummyDate.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+      }
+      return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+    } catch (e) {
+      return timeString;
+    }
+  };
+
   return (
     <Layout userType="owner">
       <div className="space-y-8">
@@ -117,7 +132,7 @@ export default function OwnerDashboard() {
                     </div>
                     <div>
                       <div className="font-bold text-slate-900">{app.provider?.companyName}</div>
-                      <div className="text-sm text-slate-500">{new Date(app.appointmentDate).toLocaleDateString()} at {app.startTime}</div>
+                      <div className="text-sm text-slate-500">{new Date(app.appointmentDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} at {formatTime(app.startTime)}</div>
                     </div>
                   </div>
                   <div className={`px-3 py-1 rounded-full text-xs font-bold ${

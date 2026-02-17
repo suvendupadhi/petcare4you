@@ -387,7 +387,7 @@ export default function OwnerDashboardScreen() {
                     <View className="flex-row items-center mb-2">
                       <Calendar color={isDark ? '#fb923c' : '#ea580c'} size={16} />
                       <Text className="text-foreground font-semibold ml-2">
-                        {new Date(appointment.appointmentDate).toLocaleDateString('en-US', {
+                        {new Date(appointment.appointmentDate).toLocaleDateString([], {
                           weekday: 'short',
                           month: 'short',
                           day: 'numeric'
@@ -397,7 +397,7 @@ export default function OwnerDashboardScreen() {
                     <View className="flex-row items-center">
                       <Clock color={isDark ? '#fb923c' : '#ea580c'} size={16} />
                       <Text className="text-foreground font-semibold ml-2">
-                        {new Date(appointment.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(appointment.startTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
                       </Text>
                     </View>
                   </View>

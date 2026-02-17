@@ -126,6 +126,9 @@ namespace PetCareAPI.Data
             // Availability Configuration
             modelBuilder.Entity<Availability>().ToTable("availability");
             modelBuilder.Entity<Availability>()
+                .Property(a => a.Id)
+                .ValueGeneratedOnAdd();
+            modelBuilder.Entity<Availability>()
                 .HasOne(a => a.Provider)
                 .WithMany(p => p.Availabilities)
                 .HasForeignKey(a => a.ProviderId)

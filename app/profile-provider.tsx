@@ -825,10 +825,10 @@ export default function ProfileProviderScreen() {
                         <View key={item.id} className="flex-row items-center justify-between border-b border-border/50 pb-2">
                           <View>
                             <Text className="text-foreground font-semibold">
-                              {format(parseISO(item.date), 'EEE, MMM d')}
+                              {new Date(item.date).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}
                             </Text>
                             <Text className="text-muted-foreground text-xs">
-                              {format(parseISO(item.startTime), 'HH:mm')} - {format(parseISO(item.endTime), 'HH:mm')}
+                              {new Date(item.startTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} - {new Date(item.endTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
                             </Text>
                           </View>
                           <View className="flex-row items-center gap-3">

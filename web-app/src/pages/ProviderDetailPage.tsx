@@ -152,6 +152,21 @@ export default function ProviderDetailPage() {
   if (loading) return <div className="flex items-center justify-center h-screen">Loading Profile...</div>;
   if (!provider) return <div className="flex items-center justify-center h-screen">Provider not found</div>;
 
+  const formatTime = (timeString: string) => {
+    try {
+      const date = new Date(timeString);
+      if (isNaN(date.getTime())) {
+        const [hours, minutes] = timeString.split(':');
+        const dummyDate = new Date();
+        dummyDate.setHours(parseInt(hours), parseInt(minutes));
+        return dummyDate.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+      }
+      return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+    } catch (e) {
+      return timeString;
+    }
+  };
+
   return (
     <Layout userType="owner">
       <div className="space-y-8">
@@ -275,7 +290,7 @@ export default function ProviderDetailPage() {
                           </div>
                           <div>
                             <div className="font-bold text-slate-900">{review.owner?.firstName} {review.owner?.lastName}</div>
-                            <div className="text-xs text-slate-400">{new Date(review.createdAt).toLocaleDateString()}</div>
+                            <div className="text-xs text-slate-400 font-medium">{new Date(review.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</div>
                           </div>
                         </div>
                         <div className="flex items-center gap-1 bg-yellow-50 text-yellow-700 px-2 py-1 rounded-lg text-xs font-bold">
@@ -369,7 +384,7 @@ export default function ProviderDetailPage() {
                         <CalendarIcon size={14} />
                         {new Date(slot.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                       </div>
-                      <div className="text-xs">{slot.startTime} - {slot.endTime}</div>
+                      <div className="text-xs font-bold">{formatTime(slot.startTime)} - {formatTime(slot.endTime)}</div>
                     </button>
                   )) : (
                     <div className="text-center py-4 text-xs text-slate-400 font-medium">

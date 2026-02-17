@@ -38,6 +38,21 @@ export default function AppointmentsProviderPage() {
     ? appointments 
     : appointments.filter(a => a.status === filterStatus);
 
+  const formatTime = (timeString: string) => {
+    try {
+      const date = new Date(timeString);
+      if (isNaN(date.getTime())) {
+        const [hours, minutes] = timeString.split(':');
+        const dummyDate = new Date();
+        dummyDate.setHours(parseInt(hours), parseInt(minutes));
+        return dummyDate.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+      }
+      return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+    } catch (e) {
+      return timeString;
+    }
+  };
+
   return (
     <Layout userType="provider">
       <div className="space-y-6">
@@ -92,11 +107,11 @@ export default function AppointmentsProviderPage() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="flex items-center gap-2 text-sm text-slate-500">
                       <Calendar size={16} />
-                      <span className="font-medium">{new Date(app.appointmentDate).toLocaleDateString()}</span>
+                      <span className="font-medium">{new Date(app.appointmentDate).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-slate-500">
                       <Clock size={16} />
-                      <span className="font-medium">{app.startTime} - {app.endTime}</span>
+                      <span className="font-medium">{formatTime(app.startTime)} - {formatTime(app.endTime)}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-slate-500">
                       <User size={16} />

@@ -405,7 +405,7 @@ export default function AppointmentDetailScreen() {
             </View>
             <View className="flex-1">
               <Text className="text-foreground font-semibold">
-                {new Date(appointment.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(appointment.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {new Date(appointment.startTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} - {new Date(appointment.endTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
               </Text>
             </View>
           </View>

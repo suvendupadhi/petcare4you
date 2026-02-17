@@ -298,7 +298,7 @@ export default function AppointmentsOwnerScreen() {
     try {
       const date = new Date(timeString);
       if (isNaN(date.getTime())) return timeString;
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
     } catch {
       return timeString;
     }

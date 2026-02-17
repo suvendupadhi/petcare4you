@@ -118,8 +118,8 @@ export default function NotificationsPage() {
                       {notif.title}
                     </h3>
                     <div className="flex items-center gap-3">
-                      <span className="text-xs text-slate-400 font-medium">
-                        {new Date(notif.createdAt).toLocaleDateString()}
+                      <span className="text-xs text-slate-400 font-bold">
+                        {new Date(notif.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
                       </span>
                       <button 
                         onClick={(e) => {
