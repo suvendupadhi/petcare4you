@@ -1,11 +1,13 @@
 {
   "version": 2,
-  "dgSpecHash": "K6TyU0oZPIk=",
+  "dgSpecHash": "42v0KVgnpKs=",
   "success": true,
   "projectFilePath": "D:\\W\\Asnet123\\petcare\\PetCareAPI\\PetCareAPI.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\suven\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512",
+    "C:\\Users\\suven\\.nuget\\packages\\bouncycastle.cryptography\\2.6.2\\bouncycastle.cryptography.2.6.2.nupkg.sha512",
     "C:\\Users\\suven\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
+    "C:\\Users\\suven\\.nuget\\packages\\itextsharp\\5.5.13.5\\itextsharp.5.5.13.5.nupkg.sha512",
     "C:\\Users\\suven\\.nuget\\packages\\microsoft.aspnetcore.authentication.jwtbearer\\9.0.0\\microsoft.aspnetcore.authentication.jwtbearer.9.0.0.nupkg.sha512",
     "C:\\Users\\suven\\.nuget\\packages\\microsoft.bcl.asyncinterfaces\\7.0.0\\microsoft.bcl.asyncinterfaces.7.0.0.nupkg.sha512",
     "C:\\Users\\suven\\.nuget\\packages\\microsoft.build.framework\\17.8.3\\microsoft.build.framework.17.8.3.nupkg.sha512",
@@ -66,5 +68,18 @@
     "C:\\Users\\suven\\.nuget\\packages\\system.text.json\\9.0.0\\system.text.json.9.0.0.nupkg.sha512",
     "C:\\Users\\suven\\.nuget\\packages\\system.threading.channels\\7.0.0\\system.threading.channels.7.0.0.nupkg.sha512"
   ],
-  "logs": []
+  "logs": [
+    {
+      "code": "NU1701",
+      "level": "Warning",
+      "message": "Package 'iTextSharp 5.5.13.5' was restored using '.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1' instead of the project target framework 'net9.0'. This package may not be fully compatible with your project.",
+      "projectPath": "D:\\W\\Asnet123\\petcare\\PetCareAPI\\PetCareAPI.csproj",
+      "warningLevel": 1,
+      "filePath": "D:\\W\\Asnet123\\petcare\\PetCareAPI\\PetCareAPI.csproj",
+      "libraryId": "iTextSharp",
+      "targetGraphs": [
+        "net9.0"
+      ]
+    }
+  ]
 }

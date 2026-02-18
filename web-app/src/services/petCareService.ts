@@ -305,6 +305,18 @@ export const paymentService = {
   getProviderPayments: async (): Promise<Payment[]> => {
     const response = await api.get('/Payments/provider');
     return response.data;
+  },
+  getPayment: async (id: number): Promise<Payment> => {
+    const response = await api.get(`/Payments/${id}`);
+    return response.data;
+  },
+  payCash: async (id: number, amount: number): Promise<Payment> => {
+    const response = await api.post(`/Payments/${id}/pay-cash`, { amount });
+    return response.data;
+  },
+  getInvoice: async (id: number): Promise<Blob> => {
+    const response = await api.get(`/Payments/${id}/invoice`, { responseType: 'blob' });
+    return response.data;
   }
 };
 
@@ -460,5 +472,20 @@ export const recentProviderService = {
     } catch (error) {
       console.error('Error adding recent provider to local storage:', error);
     }
+  }
+};
+
+export const stripeService = {
+  onboard: async () => {
+    const response = await api.post('/Stripe/onboard');
+    return response.data;
+  },
+  getAccountStatus: async () => {
+    const response = await api.get('/Stripe/account-status');
+    return response.data;
+  },
+  createPaymentIntent: async (paymentId: number) => {
+    const response = await api.post(`/Stripe/create-payment-intent/${paymentId}`);
+    return response.data;
   }
 };

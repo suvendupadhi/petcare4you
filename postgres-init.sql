@@ -192,7 +192,8 @@ CREATE TABLE petcare.payments (
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     status integer NOT NULL,
     stripe_payment_intent_id character varying(100),
-    stripe_client_secret character varying(200)
+    stripe_client_secret character varying(200),
+    invoice_pdf bytea
 );
 
 

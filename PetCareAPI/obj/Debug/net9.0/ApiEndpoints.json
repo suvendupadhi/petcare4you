@@ -421,6 +421,69 @@
   },
   {
     "ContainingType": "PetCareAPI.Controllers.PaymentsController",
+    "Method": "GetPayment",
+    "RelativePath": "api/Payments/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "PetCareAPI.Models.Payment",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "PetCareAPI.Controllers.PaymentsController",
+    "Method": "GetInvoice",
+    "RelativePath": "api/Payments/{id}/invoice",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "PetCareAPI.Controllers.PaymentsController",
+    "Method": "PayCash",
+    "RelativePath": "api/Payments/{id}/pay-cash",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "cashDto",
+        "Type": "PetCareAPI.Controllers.PaymentsController\u002BCashPaymentDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "PetCareAPI.Controllers.PaymentsController",
     "Method": "GetOwnerPayments",
     "RelativePath": "api/Payments/owner",
     "HttpMethod": "GET",

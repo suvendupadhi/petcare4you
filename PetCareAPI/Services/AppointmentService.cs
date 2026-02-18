@@ -160,6 +160,20 @@ namespace PetCareAPI.Services
                 CreatedAt = DateTime.UtcNow
             };
             _context.Notifications.Add(notification);
+            
+            // If completed, create a payment record
+            if (status == StatusConstants.Appointment.Completed)
+            {
+                var payment = new Payment
+                {
+                    AppointmentId = appointment.Id,
+                    UserId = appointment.OwnerId,
+                    Amount = appointment.TotalPrice,
+                    Status = StatusConstants.Payment.Pending,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.Payments.Add(payment);
+            }
 
             // If cancelled, also notify provider and unbook slot
             if (status == StatusConstants.Appointment.Cancelled)
