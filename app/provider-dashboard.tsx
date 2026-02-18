@@ -25,9 +25,11 @@ import { authService, appointmentService, Appointment, userService, User, Provid
 import { api, getToken } from '@/services/api';
 import { APPOINTMENT_STATUS, getStatusLabel } from '@/constants/status';
 import { useColorScheme } from 'react-native';
+import { useAuth } from '@/context/AuthContext';
 
 export default function ProviderDashboard() {
   const router = useRouter();
+  const { logout } = useAuth();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   
@@ -149,7 +151,7 @@ export default function ProviderDashboard() {
   const handleLogout = () => {
     if (Platform.OS === 'web') {
       if (window.confirm('Are you sure you want to logout?')) {
-        authService.logout().then(() => router.replace('/'));
+        logout();
       }
     } else {
       Alert.alert(
@@ -161,8 +163,7 @@ export default function ProviderDashboard() {
             text: 'Logout',
             style: 'destructive',
             onPress: async () => {
-              await authService.logout();
-              router.replace('/');
+              await logout();
             },
           },
         ]

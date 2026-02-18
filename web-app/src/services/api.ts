@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { globalLogout } from '../context/AuthContext';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5088/api';
 
@@ -16,5 +17,15 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      globalLogout();
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default api;

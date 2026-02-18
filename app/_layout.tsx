@@ -6,6 +6,8 @@ import { StripeWrapper } from '@/components/StripeWrapper';
 import { DismissKeyboard } from '@/components/DismissKeyboard';
 import { cssInterop } from 'react-native-css-interop';
 import * as Icons from 'lucide-react-native';
+import { AuthProvider, useAuth, setGlobalLogout } from '@/context/AuthContext';
+import { useEffect } from 'react';
 
 // Register Lucide icons with NativeWind/CSS Interop
 Object.keys(Icons).forEach((key) => {
@@ -23,14 +25,28 @@ Object.keys(Icons).forEach((key) => {
   }
 });
 
+function RootLayoutNav() {
+  const { logout } = useAuth();
+
+  useEffect(() => {
+    setGlobalLogout(logout);
+  }, [logout]);
+
+  return (
+    <Stack screenOptions={{ headerShown: false }} />
+  );
+}
+
 export default function RootLayout() {
   return (
     <StripeWrapper>
-      <ThemeProvider>
-        <SafeAreaProvider>
-          <Stack screenOptions={{ headerShown: false }} />
-        </SafeAreaProvider>
-      </ThemeProvider>
+      <AuthProvider>
+        <ThemeProvider>
+          <SafeAreaProvider>
+            <RootLayoutNav />
+          </SafeAreaProvider>
+        </ThemeProvider>
+      </AuthProvider>
     </StripeWrapper>
   );
 }

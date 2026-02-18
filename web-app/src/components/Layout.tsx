@@ -14,6 +14,7 @@ import {
   Lightbulb
 } from 'lucide-react';
 import { authService, notificationService } from '../services/petCareService';
+import { useAuth } from '../context/AuthContext';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -22,8 +23,9 @@ interface LayoutProps {
 
 export default function Layout({ children, userType: propUserType }: LayoutProps) {
   const navigate = useNavigate();
+  const { logout, user } = useAuth();
   const location = useLocation();
-  const userType = propUserType || (localStorage.getItem('user_type') as 'owner' | 'provider') || 'owner';
+  const userType = propUserType || (user?.roleId === 1 ? 'owner' : 'provider') || 'owner';
   const [unreadCount, setUnreadCount] = React.useState(0);
 
   React.useEffect(() => {
@@ -42,8 +44,7 @@ export default function Layout({ children, userType: propUserType }: LayoutProps
   }, []);
 
   const handleLogout = () => {
-    authService.logout();
-    navigate('/');
+    logout();
   };
 
   const menuItems = userType === 'owner' ? [

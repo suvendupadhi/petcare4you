@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   TextInput,
   Alert,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -21,14 +22,34 @@ import {
 import { useRouter } from "expo-router";
 import { authService } from "@/services/petCareService";
 import { USER_ROLE } from "@/constants/status";
+import { useAuth } from "@/context/AuthContext";
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { login, isLoading, token, user } = useAuth();
   const [userType, setUserType] = useState<"owner" | "provider">("owner");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (!isLoading && token && user) {
+      if (user.roleId === USER_ROLE.OWNER) {
+        router.replace("/owner-dashboard");
+      } else if (user.roleId === USER_ROLE.PROVIDER) {
+        router.replace("/provider-dashboard");
+      }
+    }
+  }, [isLoading, token, user]);
+
+  if (isLoading) {
+    return (
+      <View className="flex-1 items-center justify-center bg-background">
+        <ActivityIndicator size="large" color="#FF6B6B" />
+      </View>
+    );
+  }
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -64,11 +85,16 @@ export default function LoginScreen() {
         }
       }
 
-      if (result.roleId === USER_ROLE.OWNER) {
-        router.push("/owner-dashboard");
-      } else {
-        router.push("/provider-dashboard");
-      }
+      // Update global auth state
+      await login(result.token, {
+        id: result.userId,
+        email: result.email,
+        roleId: result.roleId,
+        firstName: result.firstName || '',
+        lastName: result.lastName || '',
+      });
+
+      // Navigation is handled by AuthContext useEffect
     } catch (error: any) {
       if (Platform.OS === 'web') {
         window.alert(`Login Failed: ${error.message || "Invalid credentials"}`);

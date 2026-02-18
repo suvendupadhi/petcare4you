@@ -23,9 +23,11 @@ import { authService, appointmentService, providerService, recentProviderService
 import { api, getToken } from '@/services/api';
 import { getStatusLabel } from '@/constants/status';
 import { useColorScheme } from 'react-native';
+import { useAuth } from '@/context/AuthContext';
 
 export default function OwnerDashboardScreen() {
   const router = useRouter();
+  const { logout } = useAuth();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   
@@ -143,7 +145,7 @@ export default function OwnerDashboardScreen() {
   const handleLogout = () => {
     if (Platform.OS === 'web') {
       if (window.confirm('Are you sure you want to logout?')) {
-        authService.logout().then(() => router.replace('/'));
+        logout();
       }
     } else {
       Alert.alert(
@@ -155,8 +157,7 @@ export default function OwnerDashboardScreen() {
             text: 'Logout',
             style: 'destructive',
             onPress: async () => {
-              await authService.logout();
-              router.replace('/');
+              await logout();
             },
           },
         ]

@@ -15,12 +15,17 @@ import {
 } from 'lucide-react';
 import Layout from '../components/Layout';
 import { appointmentService, Appointment } from '../services/petCareService';
+import { useAuth } from '../context/AuthContext';
 
 export default function AppointmentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [appointment, setAppointment] = useState<Appointment | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const isOwner = user?.roleId === 1;
+  const isProvider = user?.roleId === 2;
 
   useEffect(() => {
     const loadData = async () => {
@@ -70,7 +75,7 @@ export default function AppointmentDetailPage() {
   };
 
   return (
-    <Layout userType={appointment.ownerId ? 'provider' : 'owner'}>
+    <Layout userType={isOwner ? 'owner' : 'provider'}>
       <div className="max-w-4xl mx-auto space-y-8">
         <button 
           onClick={() => navigate(-1)}
@@ -100,7 +105,7 @@ export default function AppointmentDetailPage() {
               </div>
 
               <div className="space-y-4 pt-4">
-                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest">Notes from Client</h3>
+                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest">{isOwner ? 'My Notes' : 'Notes from Client'}</h3>
                 <div className="p-4 bg-slate-50 rounded-2xl text-slate-600 italic">
                   "{appointment.description || 'No notes provided.'}"
                 </div>
@@ -140,7 +145,7 @@ export default function AppointmentDetailPage() {
             <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-lg space-y-6">
               <h3 className="text-lg font-bold text-slate-800">Actions</h3>
               
-              {appointment.status === 1 ? (
+              {isProvider && appointment.status === 1 ? (
                 <div className="space-y-3">
                   <button 
                     onClick={() => handleStatusUpdate(2)}
@@ -157,7 +162,7 @@ export default function AppointmentDetailPage() {
                     Decline Request
                   </button>
                 </div>
-              ) : appointment.status === 2 ? (
+              ) : isProvider && appointment.status === 2 ? (
                 <div className="space-y-3">
                   <div className="p-4 bg-green-50 text-green-700 rounded-2xl border border-green-100 text-sm font-medium flex items-start gap-3">
                     <CheckCircle size={18} className="mt-0.5" />
@@ -170,12 +175,30 @@ export default function AppointmentDetailPage() {
                     Mark as Completed
                   </button>
                 </div>
+              ) : isOwner && (appointment.status === 1 || appointment.status === 2) ? (
+                <div className="space-y-3">
+                  <div className="p-4 bg-orange-50 text-orange-700 rounded-2xl border border-orange-100 text-sm font-medium">
+                    Wait for your appointment or contact the provider for more details.
+                  </div>
+                  <button 
+                    onClick={() => {
+                      if(window.confirm('Are you sure you want to cancel this booking?')) {
+                        handleStatusUpdate(3);
+                      }
+                    }}
+                    className="w-full py-3 bg-white border border-red-200 text-red-600 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-red-50 transition-all"
+                  >
+                    <XCircle size={20} />
+                    Cancel Appointment
+                  </button>
+                </div>
               ) : (
                 <div className="p-4 bg-slate-50 text-slate-500 rounded-2xl border border-slate-100 text-sm font-medium text-center italic">
                   No actions available for this status.
                 </div>
               )}
 
+              {/* Hide for later use
               <div className="pt-4 border-t border-slate-50 space-y-4">
                 <button className="w-full py-2.5 text-sm font-bold text-slate-600 hover:text-orange-600 transition-colors flex items-center justify-center gap-2">
                   <MapPin size={18} />
@@ -186,6 +209,7 @@ export default function AppointmentDetailPage() {
                   Report Issue
                 </button>
               </div>
+              */}
             </div>
           </div>
         </div>

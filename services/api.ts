@@ -1,6 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform, Alert } from 'react-native';
 import Constants from 'expo-constants';
+import { globalLogout } from '@/context/AuthContext';
+
 // Use 10.0.2.2 for Android emulator to access localhost on host machine
 const getBaseUrl = () => {
   // Use environment variables if available (common for web hosting like Vercel/Netlify)
@@ -84,9 +86,8 @@ async function request(endpoint: string, options: RequestInit = {}) {
   const response = await fetch(`${BASE_URL}${endpoint}`, config);
 
   if (response.status === 401) {
-    await clearToken();
-    // In a real app, you might want to redirect to login
-    // router.replace('/') but we don't have router here
+    await globalLogout();
+    throw new Error('Session expired. Please log in again.');
   }
 
   const contentType = response.headers.get('content-type');

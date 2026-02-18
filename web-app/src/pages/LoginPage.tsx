@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PawPrint, Mail, Lock, ArrowRight } from 'lucide-react';
 import { authService } from '../services/petCareService';
+import { useAuth } from '../context/AuthContext';
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -20,11 +22,17 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const result = await authService.login({ email, password });
-      if (result.roleId === 1) { // Assuming 1 is Owner
-        navigate('/owner-dashboard');
-      } else {
-        navigate('/provider-dashboard');
-      }
+      
+      // Update global auth state
+      login(result.token, {
+        id: result.userId,
+        email: result.email,
+        roleId: result.roleId,
+        firstName: result.firstName || '',
+        lastName: result.lastName || '',
+      });
+
+      // Navigation is handled by AuthGuard in App.tsx
     } catch (error: any) {
       alert(error.response?.data?.message || 'Login failed');
     } finally {
