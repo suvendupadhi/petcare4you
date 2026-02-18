@@ -179,13 +179,13 @@ export default function PrivacySecurityScreen() {
               <ChevronRight className="text-muted-foreground" size={20} />
             </TouchableOpacity>
 
-            <TouchableOpacity className="p-4 border-b border-border flex-row items-center justify-between">
+            {/* <TouchableOpacity className="p-4 border-b border-border flex-row items-center justify-between">
               <View className="flex-row items-center gap-3">
                 <Shield className="text-muted-foreground" size={20} />
                 <Text className="text-foreground font-medium">Privacy Policy</Text>
               </View>
               <ChevronRight className="text-muted-foreground" size={20} />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
             <TouchableOpacity className="p-4 border-b border-border flex-row items-center justify-between">
               <View className="flex-row items-center gap-3">

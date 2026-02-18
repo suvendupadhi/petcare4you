@@ -2,10 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Calendar, PawPrint, Star, MapPin, Clock } from 'lucide-react';
 import Layout from '../components/Layout';
-import { petService, providerService, appointmentService, recentProviderService, tipService, Pet, Provider, Appointment, Tip } from '../services/petCareService';
+import { 
+  petService, 
+  providerService, 
+  appointmentService, 
+  recentProviderService, 
+  tipService, 
+  systemConfigService,
+  Pet, 
+  Provider, 
+  Appointment, 
+  Tip 
+} from '../services/petCareService';
+import { useAuth } from '../context/AuthContext';
 
 export default function OwnerDashboard() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [pets, setPets] = useState<Pet[]>([]);
   const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([]);
   const [featuredProviders, setFeaturedProviders] = useState<Provider[]>([]);
@@ -16,18 +29,27 @@ export default function OwnerDashboard() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [petsData, appointmentsData, providersData, recentData, tipData] = await Promise.all([
+        const [petsData, appointmentsData, providersData, recentData, configs] = await Promise.all([
           petService.getMyPets(),
           appointmentService.getOwnerAppointments(),
           providerService.getProviders(),
           recentProviderService.getRecentProviders(),
-          tipService.getRandomTip().catch(() => null)
+          systemConfigService.getConfigurations()
         ]);
         setPets(petsData);
         setUpcomingAppointments(appointmentsData.filter(a => a.status === 1 || a.status === 2).slice(0, 3));
         setFeaturedProviders(providersData.slice(0, 4));
         setRecentProviders(recentData.length > 0 ? recentData.slice(0, 4) : providersData.slice(0, 4));
-        setCurrentTip(tipData);
+
+        const hideTipsConfig = configs.find(c => c.key === 'hide_tips_management');
+        if (hideTipsConfig?.value?.toLowerCase() !== 'true' || user?.roleId === 4) {
+          try {
+            const tipData = await tipService.getRandomTip();
+            setCurrentTip(tipData);
+          } catch (e) {
+            console.log('No tips available');
+          }
+        }
       } catch (error) {
         console.error('Error loading dashboard data:', error);
       } finally {

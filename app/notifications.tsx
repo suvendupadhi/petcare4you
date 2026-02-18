@@ -78,7 +78,7 @@ export default function NotificationsScreen() {
           </View>
         </View>
 
-        <View className="px-6 mb-8">
+        {/* <View className="px-6 mb-8">
           <Text className="text-muted-foreground mb-6">
             Choose how you want to be notified about your business activity.
           </Text>
@@ -170,7 +170,7 @@ export default function NotificationsScreen() {
               />
             </View>
           </View>
-        </View>
+        </View> */}
       </ScrollView>
     </SafeAreaView>
   );

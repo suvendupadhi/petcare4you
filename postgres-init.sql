@@ -543,7 +543,8 @@ CREATE TABLE petcare.service_types (
     description text,
     icon_name character varying(50),
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    is_active boolean DEFAULT false
 );
 
 
@@ -615,6 +616,49 @@ ALTER SEQUENCE petcare.status_master_id_seq OWNED BY petcare.status_master.id;
 
 
 --
+-- TOC entry 235 (class 1259 OID 18665)
+-- Name: system_configurations; Type: TABLE; Schema: petcare; Owner: postgres
+--
+
+CREATE TABLE petcare.system_configurations (
+    id integer NOT NULL,
+    config_key character varying(100) NOT NULL,
+    config_value text NOT NULL,
+    description text,
+    is_active boolean DEFAULT true,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE petcare.system_configurations OWNER TO postgres;
+
+--
+-- TOC entry 236 (class 1259 OID 18666)
+-- Name: system_configurations_id_seq; Type: SEQUENCE; Schema: petcare; Owner: postgres
+--
+
+CREATE SEQUENCE petcare.system_configurations_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE petcare.system_configurations_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 5378 (class 0 OID 0)
+-- Dependencies: 236
+-- Name: system_configurations_id_seq; Type: SEQUENCE OWNED BY; Schema: petcare; Owner: postgres
+--
+
+ALTER SEQUENCE petcare.system_configurations_id_seq OWNED BY petcare.system_configurations.id;
+
+
+--
 -- TOC entry 253 (class 1259 OID 26967)
 -- Name: tips; Type: TABLE; Schema: petcare; Owner: postgres
 --
@@ -625,7 +669,7 @@ CREATE TABLE petcare.tips (
     service_type_id integer,
     title character varying(200) NOT NULL,
     content text NOT NULL,
-    is_active boolean DEFAULT true,
+    is_active boolean DEFAULT false,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -1003,19 +1047,17 @@ INSERT INTO petcare.providers VALUES (3, 5, 'Perfect Veterinary Clinic', 'Full-s
 -- Dependencies: 233
 -- Data for Name: service_types; Type: TABLE DATA; Schema: petcare; Owner: postgres
 --
+INSERT INTO petcare.service_types VALUES (1, 'Pet Grooming', 'Professional grooming services for your pets', 'scissors', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, true);
 
-INSERT INTO petcare.service_types VALUES (1, 'Pet Grooming', 'Professional grooming services for your pets', 'scissors', '2026-02-01 10:42:09.937027+05:30', '2026-02-01 10:42:09.937027+05:30');
-INSERT INTO petcare.service_types VALUES (2, 'Veterinary Care', 'Expert medical care and checkups', 'stethoscop', '2026-02-01 10:42:09.937027+05:30', '2026-02-01 10:42:09.937027+05:30');
-INSERT INTO petcare.service_types VALUES (3, 'Dog Walking', 'Daily walks and exercise for dogs', 'dog', '2026-02-01 10:42:09.937027+05:30', '2026-02-01 10:42:09.937027+05:30');
-INSERT INTO petcare.service_types VALUES (4, 'Pet Boarding', 'Safe and comfortable stay for your pets', 'home', '2026-02-01 10:42:09.937027+05:30', '2026-02-01 10:42:09.937027+05:30');
-INSERT INTO petcare.service_types VALUES (5, 'Pet Training', 'Behavioral training and obedience classes', 'award', '2026-02-01 10:42:09.937027+05:30', '2026-02-01 10:42:09.937027+05:30');
-INSERT INTO petcare.service_types VALUES (6, 'Pet Daycare', 'Supervised daytime care and socialization', 'clock', '2026-02-01 11:11:49.541482+05:30', '2026-02-01 11:11:49.541482+05:30');
-INSERT INTO petcare.service_types VALUES (7, 'Pet Spa', 'Luxury treatments, massage, and relaxation', 'sparkles', '2026-02-01 11:11:49.541482+05:30', '2026-02-01 11:11:49.541482+05:30');
-INSERT INTO petcare.service_types VALUES (8, 'Nail Trimming', 'Professional paw care and nail clipping', 'paw-print', '2026-02-01 11:11:49.541482+05:30', '2026-02-01 11:11:49.541482+05:30');
-INSERT INTO petcare.service_types VALUES (9, 'Teeth Cleaning', 'Oral hygiene and dental care for pets', 'smile', '2026-02-01 11:11:49.541482+05:30', '2026-02-01 11:11:49.541482+05:30');
-INSERT INTO petcare.service_types VALUES (10, 'Pet Sitting', 'In-home care while owners are away', 'user', '2026-02-01 11:11:49.541482+05:30', '2026-02-01 11:11:49.541482+05:30');
-INSERT INTO petcare.service_types VALUES (11, 'Emergency Care', 'Urgent medical assistance and 24/7 support', 'heart-pulse', '2026-02-01 11:11:49.541482+05:30', '2026-02-01 11:11:49.541482+05:30');
-INSERT INTO petcare.service_types VALUES (12, 'Pet Photography', 'Professional photo sessions for your furry friends', 'camera', '2026-02-01 11:11:49.541482+05:30', '2026-02-01 11:11:49.541482+05:30');
+INSERT INTO petcare.service_types VALUES (6, 'Pet Daycare', 'Supervised daytime care and socialization', 'clock', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, true);
+INSERT INTO petcare.service_types VALUES (12, 'Pet Photography', 'Professional photo sessions for your furry friends', 'camera', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, true);
+
+
+--
+-- Data for Name: system_configurations; Type: TABLE DATA; Schema: petcare; Owner: postgres
+--
+
+INSERT INTO petcare.system_configurations VALUES (1, 'hide_tips_management', 'false', 'If true, hide tips management for all users', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 
 --
@@ -1046,28 +1088,28 @@ INSERT INTO petcare.status_master VALUES (14, 'failed', 'payment', '2026-02-02 1
 -- Data for Name: tips; Type: TABLE DATA; Schema: petcare; Owner: postgres
 --
 
-INSERT INTO petcare.tips VALUES (1, 1, NULL, 'Pet Health Tip', 'Ensure your pet stays hydrated! Fresh water should always be available, especially after exercise.', true, '2026-02-12 18:42:54.217953+05:30');
-INSERT INTO petcare.tips VALUES (2, 1, 1, 'Grooming Tip', 'Regular brushing helps prevent matting and keeps your pets coat healthy and shiny.', true, '2026-02-12 18:42:54.217953+05:30');
-INSERT INTO petcare.tips VALUES (3, 1, 2, 'Vet Visit Tip', 'Keep a folder of your pets medical history and vaccination records for quick reference during vet visits.', true, '2026-02-12 18:42:54.217953+05:30');
-INSERT INTO petcare.tips VALUES (4, 2, NULL, 'Business Tip', 'Respond to booking requests within 2 hours to increase your chance of confirmation by 40%.', true, '2026-02-12 18:42:54.217953+05:30');
-INSERT INTO petcare.tips VALUES (5, 2, NULL, 'Profile Tip', 'Adding high-quality photos of your workplace builds trust with potential pet owners.', true, '2026-02-12 18:42:54.217953+05:30');
-INSERT INTO petcare.tips VALUES (11, 2, NULL, 'Marketing Strategy', 'Share before-and-after photos with owner permission to showcase your work on social media.', true, '2026-02-12 18:42:54.217953+05:30');
-INSERT INTO petcare.tips VALUES (10, 2, NULL, 'Customer Service', 'Send a follow-up message after each booking to gather feedback and improve your service quality.', true, '2026-02-12 18:42:54.217953+05:30');
-INSERT INTO petcare.tips VALUES (9, 1, 2, 'Medical Records', 'Take photos of vaccination certificates and store them digitally for easy access during emergencies.', true, '2026-02-12 18:42:54.217953+05:30');
-INSERT INTO petcare.tips VALUES (8, 1, 1, 'Coat Care Basics', 'Brush your pet at least twice a week to reduce shedding and distribute natural oils throughout their coat.', true, '2026-02-12 18:42:54.217953+05:30');
-INSERT INTO petcare.tips VALUES (7, 1, NULL, 'Nutrition Essentials', 'Feed your pet at consistent times each day to establish a healthy routine and prevent digestive issues.', true, '2026-02-12 18:42:54.217953+05:30');
-INSERT INTO petcare.tips VALUES (13, 1, NULL, 'Exercise Routine', 'Ensure your pet gets at least 30 minutes of physical activity daily to maintain a healthy weight and mental well-being.', true, '2026-02-12 18:42:54.217953+05:30');
-INSERT INTO petcare.tips VALUES (14, 1, 1, 'Dental Care Tip', 'Brush your pet''s teeth regularly using pet-safe toothpaste to prevent plaque buildup and bad breath.', true, '2026-02-12 18:42:54.217953+05:30');
-INSERT INTO petcare.tips VALUES (15, 1, 2, 'Vaccination Reminder', 'Stay up to date with your pet''s vaccination schedule to protect them from common infectious diseases.', true, '2026-02-12 18:42:54.217953+05:30');
-INSERT INTO petcare.tips VALUES (16, 2, NULL, 'Client Retention Tip', 'Offer loyalty discounts to repeat customers to encourage long-term relationships and steady bookings.', true, '2026-02-12 18:42:54.217953+05:30');
-INSERT INTO petcare.tips VALUES (17, 2, NULL, 'Scheduling Tip', 'Use automated reminders to reduce no-shows and keep your daily appointments organized.', true, '2026-02-12 18:42:54.217953+05:30');
-INSERT INTO petcare.tips VALUES (18, 2, 1, 'Advanced Grooming Tip', 'Always use breed-specific grooming techniques to ensure the best results and comfort for the pet.', true, '2026-02-12 18:42:54.217953+05:30');
-INSERT INTO petcare.tips VALUES (19, 2, NULL, 'Hygiene Standard', 'Maintain a clean workspace by disinfecting tables and drying areas after every session.', true, '2026-02-12 18:42:54.217953+05:30');
-INSERT INTO petcare.tips VALUES (20, 2, NULL, 'Online Presence', 'Keep your business profile updated with accurate service details and pricing information.', true, '2026-02-12 18:42:54.217953+05:30');
-INSERT INTO petcare.tips VALUES (21, 1, 1, 'Shedding Control', 'Use de-shedding tools during seasonal coat changes to minimize loose fur around your home.', true, '2026-02-12 18:42:54.217953+05:30');
-INSERT INTO petcare.tips VALUES (22, 1, NULL, 'Hydration Check', 'Monitor your pet''s water intake daily to quickly detect any unusual changes in behavior or health.', true, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO petcare.tips VALUES (1, 1, NULL, 'Pet Health Tip', 'Ensure your pet stays hydrated! Fresh water should always be available, especially after exercise.', false, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO petcare.tips VALUES (2, 1, 1, 'Grooming Tip', 'Regular brushing helps prevent matting and keeps your pets coat healthy and shiny.', false, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO petcare.tips VALUES (3, 1, 2, 'Vet Visit Tip', 'Keep a folder of your pets medical history and vaccination records for quick reference during vet visits.', false, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO petcare.tips VALUES (4, 2, NULL, 'Business Tip', 'Respond to booking requests within 2 hours to increase your chance of confirmation by 40%.', false, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO petcare.tips VALUES (5, 2, NULL, 'Profile Tip', 'Adding high-quality photos of your workplace builds trust with potential pet owners.', false, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO petcare.tips VALUES (11, 2, NULL, 'Marketing Strategy', 'Share before-and-after photos with owner permission to showcase your work on social media.', false, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO petcare.tips VALUES (10, 2, NULL, 'Customer Service', 'Send a follow-up message after each booking to gather feedback and improve your service quality.', false, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO petcare.tips VALUES (9, 1, 2, 'Medical Records', 'Take photos of vaccination certificates and store them digitally for easy access during emergencies.', false, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO petcare.tips VALUES (8, 1, 1, 'Coat Care Basics', 'Brush your pet at least twice a week to reduce shedding and distribute natural oils throughout their coat.', false, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO petcare.tips VALUES (7, 1, NULL, 'Nutrition Essentials', 'Feed your pet at consistent times each day to establish a healthy routine and prevent digestive issues.', false, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO petcare.tips VALUES (13, 1, NULL, 'Exercise Routine', 'Ensure your pet gets at least 30 minutes of physical activity daily to maintain a healthy weight and mental well-being.', false, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO petcare.tips VALUES (14, 1, 1, 'Dental Care Tip', 'Brush your pet''s teeth regularly using pet-safe toothpaste to prevent plaque buildup and bad breath.', false, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO petcare.tips VALUES (15, 1, 2, 'Vaccination Reminder', 'Stay up to date with your pet''s vaccination schedule to protect them from common infectious diseases.', false, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO petcare.tips VALUES (16, 2, NULL, 'Client Retention Tip', 'Offer loyalty discounts to repeat customers to encourage long-term relationships and steady bookings.', false, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO petcare.tips VALUES (17, 2, NULL, 'Scheduling Tip', 'Use automated reminders to reduce no-shows and keep your daily appointments organized.', false, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO petcare.tips VALUES (18, 2, 1, 'Advanced Grooming Tip', 'Always use breed-specific grooming techniques to ensure the best results and comfort for the pet.', false, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO petcare.tips VALUES (19, 2, NULL, 'Hygiene Standard', 'Maintain a clean workspace by disinfecting tables and drying areas after every session.', false, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO petcare.tips VALUES (20, 2, NULL, 'Online Presence', 'Keep your business profile updated with accurate service details and pricing information.', false, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO petcare.tips VALUES (21, 1, 1, 'Shedding Control', 'Use de-shedding tools during seasonal coat changes to minimize loose fur around your home.', false, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO petcare.tips VALUES (22, 1, NULL, 'Hydration Check', 'Monitor your pet''s water intake daily to quickly detect any unusual changes in behavior or health.', false, '2026-02-12 18:42:54.217953+05:30');
 INSERT INTO petcare.tips VALUES (6, 2, 1, 'Pro Groomer Tip', 'Always check for skin irritations or lumps during grooming and inform the owner immediately.', false, '2026-02-12 18:42:54.217953+05:30');
-INSERT INTO petcare.tips VALUES (12, 2, 1, 'Safety Protocol', 'Sanitize all grooming tools between clients to prevent cross-contamination and maintain hygiene standards.', true, '2026-02-12 18:42:54.217953+05:30');
+INSERT INTO petcare.tips VALUES (12, 2, 1, 'Safety Protocol', 'Sanitize all grooming tools between clients to prevent cross-contamination and maintain hygiene standards.', false, '2026-02-12 18:42:54.217953+05:30');
 
 
 --
@@ -1460,8 +1502,37 @@ ALTER TABLE ONLY petcare.saved_providers
 -- Name: user_roles user_roles_pkey; Type: CONSTRAINT; Schema: petcare; Owner: postgres
 --
 
-ALTER TABLE ONLY petcare.user_roles
-    ADD CONSTRAINT user_roles_pkey PRIMARY KEY (id);
+CREATE TABLE petcare.system_configurations (
+    id integer NOT NULL,
+    key character varying(100) NOT NULL,
+    value text NOT NULL,
+    description text,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+ALTER TABLE petcare.system_configurations OWNER TO postgres;
+
+CREATE SEQUENCE petcare.system_configurations_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+ALTER TABLE petcare.system_configurations_id_seq OWNER TO postgres;
+
+ALTER TABLE SEQUENCE petcare.system_configurations_id_seq OWNED BY petcare.system_configurations.id;
+
+ALTER TABLE ONLY petcare.system_configurations ALTER COLUMN id SET DEFAULT nextval('petcare.system_configurations_id_seq'::regclass);
+
+ALTER TABLE ONLY petcare.system_configurations
+    ADD CONSTRAINT system_configurations_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY petcare.system_configurations
+    ADD CONSTRAINT system_configurations_key_key UNIQUE (key);
+
+INSERT INTO petcare.system_configurations (id, key, value, description) VALUES (1, 'hide_tips_management', 'false', 'If true, Tips Management will be hidden for all users');
 
 
 --

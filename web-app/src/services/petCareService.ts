@@ -396,6 +396,20 @@ export const reviewService = {
   }
 };
 
+export const systemConfigService = {
+  getConfigurations: async (): Promise<any[]> => {
+    const response = await api.get('/SystemConfigurations');
+    return response.data;
+  },
+  getConfiguration: async (key: string): Promise<any> => {
+    const response = await api.get(`/SystemConfigurations/${key}`);
+    return response.data;
+  },
+  updateConfiguration: async (key: string, value: string): Promise<void> => {
+    await api.put(`/SystemConfigurations/${key}`, { value });
+  }
+};
+
 export const tipService = {
   getTips: async (serviceTypeId?: number, includeInactive: boolean = false): Promise<Tip[]> => {
     let url = `/Tips?includeInactive=${includeInactive}`;

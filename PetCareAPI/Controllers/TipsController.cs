@@ -25,6 +25,20 @@ namespace PetCareAPI.Controllers
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null) return Unauthorized();
+
+            // Check if tips are hidden globally
+            var hideTipsConfig = await _context.SystemConfigurations
+                .FirstOrDefaultAsync(c => c.Key == "hide_tips_management");
+            
+            if (hideTipsConfig?.Value?.ToLower() == "true")
+            {
+                // If user is superadmin, they can still see it for management
+                var userCheck = await _context.Users.FindAsync(int.Parse(userIdClaim.Value));
+                if (userCheck?.RoleId != 4) // Assuming 4 is superadmin
+                {
+                    return Ok(new List<Tip>()); // Return empty list
+                }
+            }
             
             int userId = int.Parse(userIdClaim.Value);
             var user = await _context.Users.FindAsync(userId);
@@ -115,14 +129,14 @@ namespace PetCareAPI.Controllers
         [Authorize]
         public async Task<ActionResult<Tip>> GetRandomTip([FromQuery] int? serviceTypeId = null)
         {
-            var tips = await GetTips(serviceTypeId);
-            var tipsList = tips.Value?.ToList();
+            var tipsResult = await GetTips(serviceTypeId);
+            var tipsList = (tipsResult.Result as OkObjectResult)?.Value as List<Tip>;
             
             if (tipsList == null || !tipsList.Any())
                 return NotFound("No tips found");
 
             var random = new Random();
-            return tipsList[random.Next(tipsList.Count)];
+            return Ok(tipsList[random.Next(tipsList.Count)]);
         }
     }
 }

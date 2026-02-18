@@ -593,7 +593,7 @@ export default function ProfileOwnerScreen() {
               </View>
             </TouchableOpacity>
 
-            <TouchableOpacity className="bg-card rounded-xl border border-border">
+            {/* <TouchableOpacity className="bg-card rounded-xl border border-border">
               <View className="flex-row items-center justify-between p-4">
                 <View className="flex-row items-center flex-1">
                   <Bell color={isDark ? '#f8fafc' : '#1e293b'} size={20} />
@@ -601,7 +601,7 @@ export default function ProfileOwnerScreen() {
                 </View>
                 <ChevronRight color={isDark ? '#94a3b8' : '#475569'} size={20} />
               </View>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
             <TouchableOpacity className="bg-card rounded-xl border border-border">
               <View className="flex-row items-center justify-between p-4">
@@ -613,7 +613,7 @@ export default function ProfileOwnerScreen() {
               </View>
             </TouchableOpacity>
 
-            <TouchableOpacity className="bg-card rounded-xl border border-border">
+            {/* <TouchableOpacity className="bg-card rounded-xl border border-border">
               <View className="flex-row items-center justify-between p-4">
                 <View className="flex-row items-center flex-1">
                   <HelpCircle color={isDark ? '#f8fafc' : '#1e293b'} size={20} />
@@ -621,7 +621,7 @@ export default function ProfileOwnerScreen() {
                 </View>
                 <ChevronRight color={isDark ? '#94a3b8' : '#475569'} size={20} />
               </View>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
             <TouchableOpacity 
               onPress={handleLogout}

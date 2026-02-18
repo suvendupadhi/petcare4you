@@ -408,16 +408,19 @@ export default function AppointmentsOwnerScreen() {
                 className="bg-card rounded-2xl border border-border overflow-hidden"
               >
                 {/* Status Banner */}
-                <View className={`${statusConfig.bg} px-4 py-2 flex-row items-center gap-2`}>
-                  <StatusIcon color={statusConfig.color.includes('green') ? (isDark ? '#4ade80' : '#16a34a') : statusConfig.color.includes('yellow') ? (isDark ? '#facc15' : '#ca8a04') : statusConfig.color.includes('red') ? (isDark ? '#f87171' : '#dc2626') : (isDark ? '#94a3b8' : '#475569')} size={16} />
-                  <Text className={`${statusConfig.color} font-semibold text-sm`}>
-                    {statusConfig.label}
-                  </Text>
+                <View className={`${statusConfig.bg} px-4 py-2 flex-row items-center justify-between`}>
+                  <View className="flex-row items-center gap-2">
+                    <StatusIcon color={statusConfig.color.includes('green') ? (isDark ? '#4ade80' : '#16a34a') : statusConfig.color.includes('yellow') ? (isDark ? '#facc15' : '#ca8a04') : statusConfig.color.includes('red') ? (isDark ? '#f87171' : '#dc2626') : (isDark ? '#94a3b8' : '#475569')} size={16} />
+                    <Text className={`${statusConfig.color} font-semibold text-sm`}>
+                      {statusConfig.label}
+                    </Text>
+                  </View>
+                  <Text className="text-muted-foreground text-xs font-medium">ID: #{appointment.id}</Text>
                 </View>
 
                 <View className="p-4">
                   {/* Provider Info */}
-                  <View className="flex-row items-start justify-between mb-3">
+                  <View className="flex-row items-center justify-between mb-3">
                     <View className="flex-1">
                       <Text className="text-lg font-bold text-foreground mb-1">
                         {appointment.provider?.companyName || 'Service Provider'}
@@ -434,42 +437,46 @@ export default function AppointmentsOwnerScreen() {
                     </View>
                   </View>
 
+                  <View className="h-px bg-border my-2" />
+
                   {/* Service & Pet */}
-                  <View className="flex-row items-center gap-2 mb-3">
-                    <PawPrint color={isDark ? '#fb923c' : '#ea580c'} size={16} />
-                    <Text className="text-foreground font-medium">
-                      {appointment.provider?.serviceType?.name || 'Service'} • {appointment.petName}
-                    </Text>
+                  <View className="flex-row items-center justify-between mb-3">
+                    <View className="flex-row items-center gap-2">
+                      <PawPrint color={isDark ? '#fb923c' : '#ea580c'} size={14} />
+                      <Text className="text-muted-foreground text-sm font-medium">
+                        {appointment.provider?.serviceType?.name || 'Service'} • {appointment.petName}
+                      </Text>
+                    </View>
                   </View>
 
                   {/* Date & Time */}
                   <View className="flex-row items-center gap-4 mb-3">
                     <View className="flex-row items-center gap-2">
                       <Calendar color={isDark ? '#94a3b8' : '#475569'} size={16} />
-                      <Text className="text-muted-foreground">{formatDate(appointment.appointmentDate)}</Text>
+                      <Text className="text-muted-foreground font-medium">{formatDate(appointment.appointmentDate)}</Text>
                     </View>
-                    <View className="flex-row items-center gap-2">
-                      <Clock color={isDark ? '#94a3b8' : '#475569'} size={16} />
-                      <Text className="text-muted-foreground">
+                    <View className="bg-primary/5 border border-primary/20 px-3 py-1 rounded-lg flex-row items-center gap-2">
+                      <Clock color={isDark ? '#fb923c' : '#ea580c'} size={14} />
+                      <Text className="text-primary font-bold text-xs">
                         {formatTime(appointment.startTime)} - {formatTime(appointment.endTime)}
                       </Text>
                     </View>
                   </View>
 
-                  {/* Location */}
-                  <View className="flex-row items-start gap-2 mb-3">
-                    <MapPin color={isDark ? '#94a3b8' : '#475569'} size={16} />
-                    <Text className="text-muted-foreground flex-1">
-                      {appointment.provider?.address}, {appointment.provider?.city}
-                    </Text>
-                  </View>
-
-                  {/* Contact */}
-                  <View className="flex-row items-center gap-2 mb-4">
-                    <Phone color={isDark ? '#94a3b8' : '#475569'} size={16} />
-                    <Text className="text-muted-foreground">
-                      {appointment.provider?.user?.phoneNumber || 'N/A'}
-                    </Text>
+                  {/* Location & Contact */}
+                  <View className="flex-row items-center gap-4 mb-4">
+                    <View className="flex-row items-center gap-2">
+                      <MapPin color={isDark ? '#94a3b8' : '#475569'} size={16} />
+                      <Text className="text-muted-foreground text-sm flex-1" numberOfLines={1}>
+                        {appointment.provider?.city}
+                      </Text>
+                    </View>
+                    <View className="flex-row items-center gap-2">
+                      <Phone color={isDark ? '#94a3b8' : '#475569'} size={16} />
+                      <Text className="text-muted-foreground text-sm">
+                        {appointment.provider?.user?.phoneNumber || 'N/A'}
+                      </Text>
+                    </View>
                   </View>
 
                   {/* Action Buttons */}

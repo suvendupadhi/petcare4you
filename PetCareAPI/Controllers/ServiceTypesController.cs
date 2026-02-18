@@ -23,6 +23,7 @@ namespace PetCareAPI.Controllers
         public async Task<ActionResult<IEnumerable<ServiceType>>> GetServiceTypes()
         {
             return await _context.ServiceTypes
+                .Where(s => s.IsActive)
                 .OrderBy(s => s.Name)
                 .ToListAsync();
         }

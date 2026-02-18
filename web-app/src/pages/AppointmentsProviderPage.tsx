@@ -86,70 +86,71 @@ export default function AppointmentsProviderPage() {
         {loading ? (
           <div className="h-64 flex items-center justify-center text-slate-400">Loading schedule...</div>
         ) : filteredAppointments.length > 0 ? (
-          <div className="grid grid-cols-1 gap-4">
-            {filteredAppointments.map((app) => (
-              <div 
-                key={app.id} 
-                className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:border-orange-200 transition-all group flex flex-col md:flex-row md:items-center gap-6"
-              >
-                <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 border border-slate-100 flex-shrink-0">
-                  <Calendar size={32} />
-                </div>
-                
-                <div className="flex-1 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-bold text-slate-900">
-                      {app.owner?.firstName} {app.owner?.lastName}
-                    </h3>
-                    <StatusBadge status={app.status} />
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="flex items-center gap-2 text-sm text-slate-500">
-                      <Calendar size={16} />
-                      <span className="font-medium">{new Date(app.appointmentDate).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-slate-500">
-                      <Clock size={16} />
-                      <span className="font-medium">{formatTime(app.startTime)} - {formatTime(app.endTime)}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-slate-500">
-                      <User size={16} />
-                      <span className="font-medium truncate">{app.petName} ({app.petType})</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4 pl-6 md:border-l border-slate-100">
-                  <div className="flex items-center gap-2">
-                    {app.status === 1 && (
-                      <>
-                        <button 
-                          onClick={() => handleStatusUpdate(app.id, 2)}
-                          className="p-2 text-green-600 hover:bg-green-50 rounded-xl transition-colors border border-transparent hover:border-green-100"
-                          title="Approve"
-                        >
-                          <CheckCircle size={24} />
-                        </button>
-                        <button 
-                          onClick={() => handleStatusUpdate(app.id, 3)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-colors border border-transparent hover:border-red-100"
-                          title="Decline"
-                        >
-                          <XCircle size={24} />
-                        </button>
-                      </>
-                    )}
-                    <button 
-                      onClick={() => navigate(`/appointment-detail/${app.id}`)}
-                      className="px-4 py-2 text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
-                    >
-                      Details
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50/50 border-b border-slate-100">
+                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Client & Pet</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Date & Time</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredAppointments.map((app) => (
+                    <tr key={app.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 font-bold">
+                            {app.owner?.firstName[0]}
+                          </div>
+                          <div>
+                            <div className="text-sm font-bold text-slate-900">{app.owner?.firstName} {app.owner?.lastName}</div>
+                            <div className="text-xs text-slate-500">{app.petName} ({app.petType})</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-medium text-slate-700">{new Date(app.appointmentDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                        <div className="text-xs text-slate-500">{formatTime(app.startTime)} - {formatTime(app.endTime)}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <StatusBadge status={app.status} />
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          {app.status === 1 && (
+                            <>
+                              <button 
+                                onClick={() => handleStatusUpdate(app.id, 2)}
+                                className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                title="Approve"
+                              >
+                                <CheckCircle size={18} />
+                              </button>
+                              <button 
+                                onClick={() => handleStatusUpdate(app.id, 3)}
+                                className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Decline"
+                              >
+                                <XCircle size={18} />
+                              </button>
+                            </>
+                          )}
+                          <button 
+                            onClick={() => navigate(`/appointment-detail/${app.id}`)}
+                            className="px-3 py-1 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors"
+                          >
+                            Details
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         ) : (
           <div className="bg-white p-16 rounded-3xl border border-dashed border-slate-200 text-center space-y-4">
@@ -174,7 +175,7 @@ function StatusBadge({ status }: { status: number }) {
   };
   const config = configs[status] || { label: 'Unknown', color: 'bg-slate-50 text-slate-400 border-slate-100' };
   return (
-    <span className={`px-3 py-1 rounded-full text-[10px] font-bold border uppercase tracking-widest ${config.color}`}>
+    <span className={`px-2 py-1 rounded-md text-[10px] font-bold border uppercase tracking-wide ${config.color}`}>
       {config.label}
     </span>
   );

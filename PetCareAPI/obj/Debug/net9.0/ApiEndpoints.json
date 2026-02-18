@@ -1303,6 +1303,73 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "PetCareAPI.Controllers.SystemConfigurationsController",
+    "Method": "GetConfigurations",
+    "RelativePath": "api/SystemConfigurations",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[PetCareAPI.Models.SystemConfiguration, PetCareAPI, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "PetCareAPI.Controllers.SystemConfigurationsController",
+    "Method": "GetConfiguration",
+    "RelativePath": "api/SystemConfigurations/{key}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "key",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "PetCareAPI.Models.SystemConfiguration",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "PetCareAPI.Controllers.SystemConfigurationsController",
+    "Method": "UpdateConfiguration",
+    "RelativePath": "api/SystemConfigurations/{key}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "key",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "PetCareAPI.Controllers.UpdateConfigDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "PetCareAPI.Controllers.TipsController",
     "Method": "GetTips",
     "RelativePath": "api/Tips",

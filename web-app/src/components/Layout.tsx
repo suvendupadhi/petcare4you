@@ -11,9 +11,10 @@ import {
   MessageSquare,
   Search,
   CreditCard,
-  Lightbulb
+  Lightbulb,
+  ShieldCheck
 } from 'lucide-react';
-import { authService, notificationService } from '../services/petCareService';
+import { authService, notificationService, systemConfigService } from '../services/petCareService';
 import { useAuth } from '../context/AuthContext';
 
 interface LayoutProps {
@@ -27,8 +28,23 @@ export default function Layout({ children, userType: propUserType }: LayoutProps
   const location = useLocation();
   const userType = propUserType || (user?.roleId === 1 ? 'owner' : 'provider') || 'owner';
   const [unreadCount, setUnreadCount] = React.useState(0);
+  const [hideTips, setHideTips] = React.useState(false);
 
   React.useEffect(() => {
+    const fetchConfigs = async () => {
+      try {
+        const configs = await systemConfigService.getConfigurations();
+        const hideTipsConfig = configs.find(c => c.key === 'hide_tips_management');
+        if (hideTipsConfig?.value?.toLowerCase() === 'true' && user?.roleId !== 4) {
+          setHideTips(true);
+        }
+      } catch (error) {
+        console.error('Error fetching configs:', error);
+      }
+    };
+
+    fetchConfigs();
+    
     const fetchUnreadCount = async () => {
       try {
         const count = await notificationService.getUnreadCount();
@@ -60,7 +76,8 @@ export default function Layout({ children, userType: propUserType }: LayoutProps
   ];
 
   const commonItems = [
-    { icon: Lightbulb, label: 'Tips', path: '/tips-management' },
+    ...(hideTips ? [] : [{ icon: Lightbulb, label: 'Tips', path: '/tips-management' }]),
+    ...(user?.roleId === 4 ? [{ icon: ShieldCheck, label: 'Admin Config', path: '/admin-config' }] : []),
     { icon: Settings, label: 'Settings', path: '/settings' },
   ];
 
@@ -129,7 +146,8 @@ export default function Layout({ children, userType: propUserType }: LayoutProps
              commonItems.find(i => i.path === location.pathname)?.label || 
              'PetCare'}
           </h2>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-6">
+            <p className="text-sm font-bold text-slate-900 hidden md:block">Have issue? Send Feedback.</p>
             <button 
               onClick={() => navigate('/notifications')}
               className={`p-2 transition-colors relative ${
@@ -145,7 +163,13 @@ export default function Layout({ children, userType: propUserType }: LayoutProps
                 </span>
               )}
             </button>
-            <div className="w-8 h-8 rounded-full bg-slate-200 border border-slate-300" />
+            <button 
+              onClick={handleLogout}
+              className="w-10 h-10 rounded-full bg-red-50 border border-red-100 flex items-center justify-center text-red-600 hover:bg-red-100 transition-colors shadow-sm"
+              title="Logout"
+            >
+              <LogOut size={18} />
+            </button>
           </div>
         </header>
 

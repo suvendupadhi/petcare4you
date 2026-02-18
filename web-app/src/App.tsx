@@ -20,6 +20,7 @@ import NotificationsPage from './pages/NotificationsPage';
 import SettingsPage from './pages/SettingsPage';
 import TipsManagementPage from './pages/TipsManagementPage';
 import AppointmentDetailPage from './pages/AppointmentDetailPage';
+import SuperAdminConfigPage from './pages/SuperAdminConfigPage';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { token, isLoading } = useAuth();
@@ -82,6 +83,7 @@ function Root() {
         <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
         <Route path="/tips-management" element={<ProtectedRoute><TipsManagementPage /></ProtectedRoute>} />
+        <Route path="/admin-config" element={<ProtectedRoute><SuperAdminConfigPage /></ProtectedRoute>} />
         
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

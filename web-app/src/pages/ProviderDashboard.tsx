@@ -15,13 +15,16 @@ import {
   appointmentService, 
   paymentService, 
   tipService,
+  systemConfigService,
   Appointment, 
   RevenueSummary,
   Tip
 } from '../services/petCareService';
+import { useAuth } from '../context/AuthContext';
 
 export default function ProviderDashboard() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [revenue, setRevenue] = useState<RevenueSummary | null>(null);
   const [tip, setTip] = useState<Tip | null>(null);
@@ -30,14 +33,23 @@ export default function ProviderDashboard() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [appData, revData, tipData] = await Promise.all([
+        const [appData, revData, configs] = await Promise.all([
           appointmentService.getProviderAppointments(),
           paymentService.getRevenueSummary(),
-          tipService.getRandomTip()
+          systemConfigService.getConfigurations()
         ]);
         setAppointments(appData.slice(0, 5));
         setRevenue(revData);
-        setTip(tipData);
+
+        const hideTipsConfig = configs.find(c => c.key === 'hide_tips_management');
+        if (hideTipsConfig?.value?.toLowerCase() !== 'true' || user?.roleId === 4) {
+          try {
+            const tipData = await tipService.getRandomTip();
+            setTip(tipData);
+          } catch (e) {
+            console.log('No tips available');
+          }
+        }
       } catch (error) {
         console.error('Error loading provider data:', error);
       } finally {
@@ -101,13 +113,14 @@ export default function ProviderDashboard() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <StatCard 
             icon={<DollarSign size={24} />} 
             label="Total Revenue" 
             value={`$${revenue?.totalRevenue || 0}`} 
             color="bg-green-50 text-green-600"
             subtext={`${revenue?.monthlyRevenue || 0} this month`}
+            onClick={() => navigate('/payment-invoice')}
           />
           <StatCard 
             icon={<Calendar size={24} />} 
@@ -115,27 +128,34 @@ export default function ProviderDashboard() {
             value={revenue?.totalAppointments?.toString() || '0'} 
             color="bg-blue-50 text-blue-600"
             subtext={`${revenue?.completedAppointments || 0} completed`}
-          />
-          <StatCard 
-            icon={<TrendingUp size={24} />} 
-            label="Growth Rate" 
-            value={`${revenue?.growthRate || 0}%`} 
-            color="bg-purple-50 text-purple-600"
-            subtext="Compared to last month"
-          />
-          <StatCard 
-            icon={<Clock size={24} />} 
-            label="Avg. Revenue" 
-            value={`$${revenue?.averageRevenuePerAppointment?.toFixed(0) || 0}`} 
-            color="bg-orange-50 text-orange-600"
-            subtext="Per appointment"
+            onClick={() => navigate('/appointments-provider')}
           />
         </div>
 
-        {/* Main Sections */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Recent Appointments */}
-          <div className="lg:col-span-2 space-y-4">
+        {/* Quick Actions Row */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+          <h2 className="text-lg font-bold text-slate-800 mb-4">Quick Actions</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <ActionButton 
+              icon={<Clock size={18} />} 
+              label="Update Availability" 
+              onClick={() => navigate('/manage-availability')} 
+            />
+            <ActionButton 
+              icon={<Briefcase size={18} />} 
+              label="My Services" 
+              onClick={() => navigate('/profile-provider')} 
+            />
+            {/* <ActionButton 
+              icon={<Users size={18} />} 
+              label="Client List" 
+              onClick={() => {}} 
+            /> */}
+          </div>
+        </div>
+
+        {/* Recent Booking Requests */}
+        <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold text-slate-800">Recent Booking Requests</h2>
               <button 
@@ -223,53 +243,41 @@ export default function ProviderDashboard() {
                 </table>
               </div>
             </div>
-          </div>
-
-          {/* Side Column - Quick Actions & Tips */}
-          <div className="space-y-6">
-            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
-              <h2 className="text-lg font-bold text-slate-800">Quick Actions</h2>
-              <div className="grid grid-cols-1 gap-3">
-                <ActionButton 
-                  icon={<Clock size={18} />} 
-                  label="Update Availability" 
-                  onClick={() => navigate('/manage-availability')} 
-                />
-                <ActionButton 
-                  icon={<Briefcase size={18} />} 
-                  label="My Services" 
-                  onClick={() => navigate('/profile-provider')} 
-                />
-                <ActionButton 
-                  icon={<Users size={18} />} 
-                  label="Client List" 
-                  onClick={() => {}} 
-                />
-              </div>
-            </div>
-
-            {tip && (
-              <div className="bg-orange-600 p-6 rounded-2xl shadow-lg text-white">
-                <h3 className="font-bold mb-2">{tip.title} 🚀</h3>
-                <p className="text-sm text-orange-100 mb-4">{tip.content}</p>
-                <button 
-                  onClick={() => navigate('/profile-provider')}
-                  className="w-full py-2 bg-white text-orange-600 rounded-xl font-bold text-sm hover:bg-orange-50 transition-colors"
-                >
-                  Boost Profile
-                </button>
-              </div>
-            )}
-          </div>
         </div>
+
+        {/* Tips Section */}
+        {tip && (
+          <div className="bg-orange-600 p-8 rounded-2xl shadow-lg text-white relative overflow-hidden mt-8">
+            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <TrendingUp size={20} className="text-orange-200" />
+                  <h3 className="font-bold text-xl">{tip.title} 🚀</h3>
+                </div>
+                <p className="text-orange-50 leading-relaxed max-w-2xl">{tip.content}</p>
+              </div>
+              <button 
+                onClick={() => navigate('/profile-provider')}
+                className="px-6 py-3 bg-white text-orange-600 rounded-xl font-bold text-sm hover:bg-orange-50 transition-all shadow-md active:scale-95 self-start md:self-center"
+              >
+                Boost Profile
+              </button>
+            </div>
+            {/* Decorative background element */}
+            <div className="absolute -right-8 -bottom-8 bg-orange-500/20 w-64 h-64 rounded-full" />
+          </div>
+        )}
       </div>
     </Layout>
   );
 }
 
-function StatCard({ icon, label, value, color, subtext }: { icon: any, label: string, value: string, color: string, subtext: string }) {
+function StatCard({ icon, label, value, color, subtext, onClick }: { icon: any, label: string, value: string, color: string, subtext: string, onClick?: () => void }) {
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-3">
+    <div 
+      onClick={onClick}
+      className={`bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-3 ${onClick ? 'cursor-pointer hover:border-orange-200 transition-all' : ''}`}
+    >
       <div className={`w-12 h-12 ${color} rounded-xl flex items-center justify-center`}>
         {icon}
       </div>

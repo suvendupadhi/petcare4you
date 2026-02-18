@@ -320,6 +320,36 @@ export default function ProviderDashboard() {
           </View>
         </Modal>
 
+        {/* Quick Actions */}
+        <View className="px-6 mb-6">
+          <Text className="text-foreground text-lg font-semibold mb-3">Quick Actions</Text>
+          <View className="flex-row gap-3">
+            <TouchableOpacity 
+              className="flex-1 bg-primary rounded-2xl p-4 items-center shadow-sm"
+              onPress={() => router.push('/manage-availability')}
+            >
+              <Calendar color="#ffffff" size={24} />
+              <Text className="text-primary-foreground font-semibold text-center mt-2">Availability</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              className="flex-1 bg-card border border-border rounded-2xl p-4 items-center shadow-sm"
+              onPress={() => router.push('/appointments-provider')}
+            >
+              <Clock color={isDark ? '#fb923c' : '#2563eb'} size={24} />
+              <Text className="text-foreground font-semibold text-center mt-2">Bookings</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              className="flex-1 bg-card border border-border rounded-2xl p-4 items-center shadow-sm"
+              onPress={() => router.push('/payment-invoice')}
+            >
+              <DollarSign color={isDark ? '#fb923c' : '#2563eb'} size={24} />
+              <Text className="text-foreground font-semibold text-center mt-2">Payments</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* Revenue Summary Cards */}
         <View className="px-6 mb-6">
           <Text className="text-foreground text-lg font-semibold mb-3">Revenue Summary</Text>
@@ -363,36 +393,6 @@ export default function ProviderDashboard() {
                 <Text className="text-muted-foreground text-xs mt-1">Pending</Text>
               </View>
             </View>
-          </View>
-        </View>
-
-        {/* Quick Actions */}
-        <View className="px-6 mb-6">
-          <Text className="text-foreground text-lg font-semibold mb-3">Quick Actions</Text>
-          <View className="flex-row gap-3">
-            <TouchableOpacity 
-              className="flex-1 bg-primary rounded-2xl p-4 items-center"
-              onPress={() => router.push('/manage-availability')}
-            >
-              <Calendar color="#ffffff" size={24} />
-              <Text className="text-primary-foreground font-semibold text-center mt-2">Manage Availability</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              className="flex-1 bg-card border border-border rounded-2xl p-4 items-center"
-              onPress={() => router.push('/appointments-provider')}
-            >
-              <Clock color={isDark ? '#fb923c' : '#2563eb'} size={24} />
-              <Text className="text-foreground font-semibold text-center mt-2">All Bookings</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              className="flex-1 bg-card border border-border rounded-2xl p-4 items-center"
-              onPress={() => router.push('/payment-invoice')}
-            >
-              <DollarSign color={isDark ? '#fb923c' : '#2563eb'} size={24} />
-              <Text className="text-foreground font-semibold text-center mt-2">Payments</Text>
-            </TouchableOpacity>
           </View>
         </View>
 
@@ -539,22 +539,22 @@ export default function ProviderDashboard() {
                 <Text className="text-foreground text-xl font-bold">{revenue?.completedAppointments || 0}</Text>
                 <Text className="text-muted-foreground text-[10px] mt-1">Completed</Text>
               </View>
-              <View className="w-px h-8 bg-border" />
-              <View className="items-center flex-1">
+              {/* <View className="w-px h-8 bg-border" /> */}
+              {/* <View className="items-center flex-1">
                 <View className="flex-row items-center gap-1">
                   <Text className={`text-xl font-bold ${(revenue?.growthRate || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {(revenue?.growthRate || 0).toFixed(1)}%
                   </Text>
                 </View>
                 <Text className="text-muted-foreground text-[10px] mt-1">Growth</Text>
-              </View>
+              </View> */}
             </View>
-            <View className="pt-4 border-t border-border">
+            {/* <View className="pt-4 border-t border-border">
               <View className="flex-row justify-between items-center">
                 <Text className="text-muted-foreground text-sm">Avg. Revenue per Booking</Text>
                 <Text className="text-foreground font-bold">${(revenue?.averageRevenuePerAppointment || 0).toFixed(2)}</Text>
               </View>
-            </View>
+            </View> */}
           </View>
         </View>
 

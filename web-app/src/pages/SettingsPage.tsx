@@ -16,9 +16,11 @@ import {
 import Layout from '../components/Layout';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/petCareService';
+import { useAuth } from '../context/AuthContext';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
@@ -61,7 +63,12 @@ export default function SettingsPage() {
     {
       title: 'Account Settings',
       items: [
-        { icon: User, label: 'Personal Information', sub: 'Update your name and contact details' },
+        { 
+          icon: User, 
+          label: 'Personal Information', 
+          sub: 'Update your name and contact details',
+          action: () => navigate(user?.roleId === 1 ? '/profile-owner' : '/profile-provider')
+        },
         { 
           icon: Lock, 
           label: 'Security & Password', 
@@ -95,12 +102,38 @@ export default function SettingsPage() {
           <p className="text-slate-500">Manage your account and app experience.</p>
         </div>
 
+        {/* {sections.map((section) => (
+          <div key={section.title} className="space-y-4">
+            <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest px-4">{section.title}</h2>
+            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden divide-y divide-slate-50">
+              {section.items.map((item) => (
+                <button 
+                  key={item.label}
+                  onClick={item.action}
+                  className="w-full p-6 flex items-center justify-between hover:bg-slate-50 transition-all text-left group"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="p-2.5 bg-slate-50 text-slate-400 group-hover:text-orange-600 rounded-xl transition-colors">
+                      <item.icon size={20} />
+                    </div>
+                    <div>
+                      <div className="text-sm font-bold text-slate-900">{item.label}</div>
+                      <div className="text-xs text-slate-500 font-medium mt-0.5">{item.sub}</div>
+                    </div>
+                  </div>
+                  <ChevronRight size={18} className="text-slate-300" />
+                </button>
+              ))}
+            </div>
+          </div>
+        ))} */}
+
         <div className="space-y-8">
-          {sections.map((section) => (
+          {sections.filter(s => s.title !== 'Preferences' && s.title !== 'Support').map((section) => (
             <div key={section.title} className="space-y-4">
               <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest px-4">{section.title}</h2>
               <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden divide-y divide-slate-50">
-                {section.items.map((item) => (
+                {section.items.filter(i => i.label !== 'Notification Preferences').map((item) => (
                   <button 
                     key={item.label}
                     onClick={item.action}
@@ -121,6 +154,10 @@ export default function SettingsPage() {
               </div>
             </div>
           ))}
+
+          <div className="px-4 py-2">
+             <p className="text-slate-900 font-bold">Have issue? Send Feedback.</p>
+          </div>
         </div>
 
         <div className="pt-4">

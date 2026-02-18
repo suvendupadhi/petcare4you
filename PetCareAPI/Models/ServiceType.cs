@@ -9,5 +9,6 @@ namespace PetCareAPI.Models
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string IconName { get; set; } = string.Empty; // For frontend icons
+        public bool IsActive { get; set; } = true;
     }
 }

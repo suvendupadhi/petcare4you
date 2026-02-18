@@ -108,7 +108,7 @@ export default function HelpSupportScreen() {
             </TouchableOpacity>
           </View>
 
-          <Text className="text-lg font-bold text-foreground mb-4">Frequently Asked Questions</Text>
+          {/* <Text className="text-lg font-bold text-foreground mb-4">Frequently Asked Questions</Text>
           
           <View className="gap-3 mb-8">
             {faqs.map((faq, index) => (
@@ -117,9 +117,11 @@ export default function HelpSupportScreen() {
                 <Text className="text-muted-foreground text-sm">{faq.a}</Text>
               </View>
             ))}
-          </View>
+          </View> */}
 
-          <Text className="text-lg font-bold text-foreground mb-4">Resources</Text>
+          <Text className="text-lg font-bold text-foreground mb-4">Have issue? Send Feedback.</Text>
+
+          {/* <Text className="text-lg font-bold text-foreground mb-4">Resources</Text>
 
           <View className="bg-card rounded-2xl border border-border overflow-hidden">
             <TouchableOpacity className="p-4 border-b border-border flex-row items-center justify-between">
@@ -145,7 +147,7 @@ export default function HelpSupportScreen() {
               </View>
               <ChevronRight className="text-muted-foreground" size={20} />
             </TouchableOpacity>
-          </View>
+          </View> */}
         </View>
       </ScrollView>
     </SafeAreaView>

@@ -288,7 +288,7 @@ export default function AppointmentsProviderScreen() {
 
                 <View className="p-4">
                   {/* Client Info */}
-                  <View className="flex-row items-start justify-between mb-3">
+                  <View className="flex-row items-center justify-between mb-3">
                     <View className="flex-1">
                       <Text className="text-lg font-bold text-foreground mb-1">
                         {appointment.owner?.firstName} {appointment.owner?.lastName}

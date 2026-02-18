@@ -85,7 +85,7 @@ export default function PaymentInvoicePage() {
         </div>
 
         {/* Financial Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <SummaryCard 
             label="Total Earnings" 
             value={`$${revenue?.totalRevenue || 0}`} 
@@ -94,15 +94,8 @@ export default function PaymentInvoicePage() {
             icon={<DollarSign size={20} />}
           />
           <SummaryCard 
-            label="Pending Payouts" 
-            value={`$${revenue?.pendingRevenue || 0}`} 
-            color="text-orange-600"
-            bgColor="bg-orange-50"
-            icon={<Clock size={20} />}
-          />
-          <SummaryCard 
             label="Total Transactions" 
-            value={payments.length.toString()} 
+            value={payments.filter(p => p.status === 6).length.toString()} 
             color="text-blue-600"
             bgColor="bg-blue-50"
             icon={<CreditCard size={20} />}
@@ -117,14 +110,6 @@ export default function PaymentInvoicePage() {
               <p className="text-sm text-slate-500 font-medium mt-1">Showing all completed service records.</p>
             </div>
             <div className="flex items-center gap-3">
-              <div className="relative">
-                <Filter className="absolute left-3 top-2.5 text-slate-400" size={16} />
-                <select className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 focus:outline-none focus:ring-2 focus:ring-orange-500 appearance-none min-w-[140px]">
-                  <option>All Status</option>
-                  <option>Paid</option>
-                  <option>Pending</option>
-                </select>
-              </div>
             </div>
           </div>
           
@@ -140,7 +125,7 @@ export default function PaymentInvoicePage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {payments.length > 0 ? payments.map((pay) => (
+                {payments.filter(p => p.status === 6).length > 0 ? payments.filter(p => p.status === 6).map((pay) => (
                   <tr key={pay.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-3">

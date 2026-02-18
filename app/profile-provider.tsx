@@ -919,7 +919,7 @@ export default function ProfileProviderScreen() {
                       </View>
                     </TouchableOpacity>
 
-                    <TouchableOpacity 
+                    {/* <TouchableOpacity 
                       onPress={() => router.push('/notifications')}
                       className="bg-card rounded-xl border border-border"
                     >
@@ -930,7 +930,7 @@ export default function ProfileProviderScreen() {
                         </View>
                         <ChevronRight color={isDark ? '#94a3b8' : '#475569'} size={20} />
                       </View>
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
 
                     <TouchableOpacity 
                       onPress={() => router.push('/privacy-security')}
@@ -945,7 +945,7 @@ export default function ProfileProviderScreen() {
                       </View>
                     </TouchableOpacity>
 
-                    <TouchableOpacity 
+                    {/* <TouchableOpacity 
                       onPress={() => router.push('/help-support')}
                       className="bg-card rounded-xl border border-border"
                     >
@@ -956,7 +956,7 @@ export default function ProfileProviderScreen() {
                         </View>
                         <ChevronRight color={isDark ? '#94a3b8' : '#475569'} size={20} />
                       </View>
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
                   </View>
                 </View>
               </View>
