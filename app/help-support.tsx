@@ -1,25 +1,44 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Linking, Platform, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Linking, Platform, Alert, Modal, TextInput, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ArrowLeft, HelpCircle, MessageSquare, Mail, Phone, ExternalLink, ChevronRight, FileText, LogOut, Home } from 'lucide-react-native';
+import { ArrowLeft, MessageSquare, Mail, Phone, ChevronRight, LogOut, Home, X, Send } from 'lucide-react-native';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { authService, userService, User } from '@/services/petCareService';
+import { authService, userService, User, feedbackService } from '@/services/petCareService';
 import { USER_ROLE } from '@/constants/status';
 
 export default function HelpSupportScreen() {
   const [user, setUser] = useState<User | null>(null);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [feedbackForm, setFeedbackForm] = useState({
+    subject: '',
+    message: ''
+  });
 
   useEffect(() => {
     userService.getCurrentUser().then(setUser).catch(console.error);
   }, []);
 
-  const faqs = [
-    { q: 'How do I set my availability?', a: 'Go to your Business Profile and tap "Edit" next to Business Hours to manage your time slots.' },
-    { q: 'How do I receive payments?', a: 'Clients pay through the app. You can manage your payout settings in the Payments & Invoices section.' },
-    { q: 'Can I offer multiple services?', a: 'Yes! You can add and price different services in the "Services & Pricing" section of your profile.' },
-    { q: 'What happens if I cancel a booking?', a: 'Cancellations may affect your rating. Please refer to our cancellation policy for more details.' },
-  ];
+  const handleFeedbackSubmit = async () => {
+    if (!feedbackForm.subject.trim() || !feedbackForm.message.trim()) {
+      Alert.alert('Error', 'Please fill in both subject and message');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      await feedbackService.submitFeedback(feedbackForm);
+      setShowFeedbackModal(false);
+      setFeedbackForm({ subject: '', message: '' });
+      Alert.alert('Success', 'Thank you for your feedback!');
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      Alert.alert('Error', 'Failed to submit feedback. Please try again later.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const handleContactSupport = (type: 'email' | 'phone') => {
     const url = type === 'email' ? 'mailto:support@petcare.com' : 'tel:+15551234567';
@@ -108,48 +127,88 @@ export default function HelpSupportScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* <Text className="text-lg font-bold text-foreground mb-4">Frequently Asked Questions</Text>
-          
-          <View className="gap-3 mb-8">
-            {faqs.map((faq, index) => (
-              <View key={index} className="bg-card border border-border rounded-2xl p-4">
-                <Text className="text-foreground font-semibold mb-2">{faq.q}</Text>
-                <Text className="text-muted-foreground text-sm">{faq.a}</Text>
+          <TouchableOpacity 
+            onPress={() => setShowFeedbackModal(true)}
+            className="bg-card border border-border p-4 rounded-2xl flex-row items-center justify-between"
+          >
+            <View className="flex-row items-center gap-3">
+              <View className="bg-primary/10 p-2 rounded-full">
+                <MessageSquare className="text-primary" size={20} />
               </View>
-            ))}
-          </View> */}
-
-          <Text className="text-lg font-bold text-foreground mb-4">Have issue? Send Feedback.</Text>
-
-          {/* <Text className="text-lg font-bold text-foreground mb-4">Resources</Text>
-
-          <View className="bg-card rounded-2xl border border-border overflow-hidden">
-            <TouchableOpacity className="p-4 border-b border-border flex-row items-center justify-between">
-              <View className="flex-row items-center gap-3">
-                <FileText className="text-muted-foreground" size={20} />
-                <Text className="text-foreground font-medium">Business Guide</Text>
-              </View>
-              <ExternalLink className="text-muted-foreground" size={18} />
-            </TouchableOpacity>
-
-            <TouchableOpacity className="p-4 border-b border-border flex-row items-center justify-between">
-              <View className="flex-row items-center gap-3">
-                <HelpCircle className="text-muted-foreground" size={20} />
-                <Text className="text-foreground font-medium">Community Forum</Text>
-              </View>
-              <ExternalLink className="text-muted-foreground" size={18} />
-            </TouchableOpacity>
-
-            <TouchableOpacity className="p-4 flex-row items-center justify-between">
-              <View className="flex-row items-center gap-3">
-                <MessageSquare className="text-muted-foreground" size={20} />
-                <Text className="text-foreground font-medium">Live Chat</Text>
-              </View>
-              <ChevronRight className="text-muted-foreground" size={20} />
-            </TouchableOpacity>
-          </View> */}
+              <Text className="text-lg font-bold text-foreground">Have issue? Send Feedback.</Text>
+            </View>
+            <ChevronRight className="text-muted-foreground" size={20} />
+          </TouchableOpacity>
         </View>
       </ScrollView>
+
+      <Modal
+        visible={showFeedbackModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowFeedbackModal(false)}
+      >
+        <View className="flex-1 justify-end bg-black/50">
+          <View className="bg-background rounded-t-[32px] p-6 pb-12 h-[80%]">
+            <View className="flex-row items-center justify-between mb-6">
+              <Text className="text-2xl font-bold text-foreground">Send Feedback</Text>
+              <TouchableOpacity 
+                onPress={() => setShowFeedbackModal(false)}
+                className="bg-card p-2 rounded-full"
+              >
+                <X className="text-foreground" size={24} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <View className="gap-6">
+                <View>
+                  <Text className="text-foreground font-semibold mb-2">Subject</Text>
+                  <TextInput
+                    className="bg-card border border-border rounded-xl p-4 text-foreground"
+                    placeholder="Briefly describe the issue"
+                    placeholderTextColor="#9ca3af"
+                    value={feedbackForm.subject}
+                    onChangeText={(text) => setFeedbackForm(prev => ({ ...prev, subject: text }))}
+                  />
+                </View>
+
+                <View>
+                  <Text className="text-foreground font-semibold mb-2">Message</Text>
+                  <TextInput
+                    className="bg-card border border-border rounded-xl p-4 text-foreground min-h-[150px]"
+                    placeholder="Tell us more about what's going on..."
+                    placeholderTextColor="#9ca3af"
+                    multiline
+                    textAlignVertical="top"
+                    value={feedbackForm.message}
+                    onChangeText={(text) => setFeedbackForm(prev => ({ ...prev, message: text }))}
+                  />
+                </View>
+
+                <TouchableOpacity 
+                  onPress={handleFeedbackSubmit}
+                  disabled={submitting}
+                  className={`bg-primary p-4 rounded-xl flex-row items-center justify-center gap-2 ${submitting ? 'opacity-70' : ''}`}
+                >
+                  {submitting ? (
+                    <ActivityIndicator color="white" size="small" />
+                  ) : (
+                    <>
+                      <Send color="white" size={20} />
+                      <Text className="text-white font-bold text-lg">Submit Feedback</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+
+                <Text className="text-muted-foreground text-center text-sm px-4">
+                  Your feedback helps us improve PetCare. We may contact you if we need more information.
+                </Text>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }

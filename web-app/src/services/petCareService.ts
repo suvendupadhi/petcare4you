@@ -410,6 +410,12 @@ export const systemConfigService = {
   }
 };
 
+export const feedbackService = {
+  submitFeedback: async (feedbackData: { subject: string; message: string }): Promise<void> => {
+    await api.post('/Feedbacks', feedbackData);
+  }
+};
+
 export const tipService = {
   getTips: async (serviceTypeId?: number, includeInactive: boolean = false): Promise<Tip[]> => {
     let url = `/Tips?includeInactive=${includeInactive}`;

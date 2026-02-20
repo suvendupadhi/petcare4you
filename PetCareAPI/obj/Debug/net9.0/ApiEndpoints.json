@@ -312,6 +312,22 @@
     ]
   },
   {
+    "ContainingType": "PetCareAPI.Controllers.FeedbacksController",
+    "Method": "CreateFeedback",
+    "RelativePath": "api/Feedbacks",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "feedbackDto",
+        "Type": "PetCareAPI.Controllers.FeedbackCreateDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "PetCareAPI.Controllers.NotificationsController",
     "Method": "GetUserNotifications",
     "RelativePath": "api/Notifications",

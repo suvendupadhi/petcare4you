@@ -115,9 +115,22 @@ namespace PetCareAPI.Services
             var email = forgotPasswordDto.Email.ToLower().Trim();
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email);
             
-            // In a real application, we would generate a token, save it to the database with an expiration, 
-            // and send an email to the user. For this implementation, we'll just check if the user exists.
-            return user != null;
+            if (user == null)
+                return false;
+
+            // Generate a 6-digit reset token
+            var token = new Random().Next(100000, 999999).ToString();
+            user.PasswordResetToken = token;
+            user.ResetTokenExpiry = DateTime.UtcNow.AddHours(1);
+
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+
+            // Mock SMTP - Send email with token
+            await SendEmailAsync(user.Email, "Reset Your Password", 
+                $"Your password reset token is: {token}. It will expire in 1 hour.");
+
+            return true;
         }
 
         public async Task<bool> ResetPasswordAsync(ResetPasswordDto resetPasswordDto)
@@ -128,12 +141,44 @@ namespace PetCareAPI.Services
             if (user == null)
                 return false;
 
-            // In a real application, we would validate the token here.
+            // Validate token and expiry
+            if (user.PasswordResetToken != resetPasswordDto.Token || 
+                user.ResetTokenExpiry < DateTime.UtcNow)
+            {
+                return false;
+            }
             
             user.PasswordHash = BC.HashPassword(resetPasswordDto.NewPassword);
+            user.PasswordResetToken = null; // Clear token after success
+            user.ResetTokenExpiry = null;
+
             _context.Users.Update(user);
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        private async Task SendEmailAsync(string toEmail, string subject, string body)
+        {
+            // MOCK SMTP SETUP
+            // In a production environment, this would be replaced with actual SMTP logic using MailKit or similar.
+            /*
+            using var client = new SmtpClient();
+            await client.ConnectAsync(_configuration["Smtp:Host"], int.Parse(_configuration["Smtp:Port"]), SecureSocketOptions.StartTls);
+            await client.AuthenticateAsync(_configuration["Smtp:Username"], _configuration["Smtp:Password"]);
+            
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress("PetCare Services", "no-reply@petcare.com"));
+            message.To.Add(new MailboxAddress("", toEmail));
+            message.Subject = subject;
+            message.Body = new TextPart("plain") { Text = body };
+            
+            await client.SendAsync(message);
+            await client.DisconnectAsync(true);
+            */
+
+            // Log the email to console for development/testing
+            Console.WriteLine($"[MOCK EMAIL] To: {toEmail}, Subject: {subject}, Body: {body}");
+            await Task.CompletedTask;
         }
 
         public async Task<bool> ChangePasswordAsync(int userId, ChangePasswordDto changePasswordDto)

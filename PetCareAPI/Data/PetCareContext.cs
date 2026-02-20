@@ -27,6 +27,7 @@ namespace PetCareAPI.Data
         public DbSet<SavedProvider> SavedProviders { get; set; } = null!;
         public DbSet<Review> Reviews { get; set; } = null!;
         public DbSet<Tip> Tips { get; set; } = null!;
+        public DbSet<Feedback> Feedbacks { get; set; } = null!;
         public DbSet<SystemConfiguration> SystemConfigurations { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -187,6 +188,16 @@ namespace PetCareAPI.Data
                 .HasForeignKey(r => r.ProviderId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<Feedback>().ToTable("feedbacks");
+            modelBuilder.Entity<Feedback>()
+                .Property(f => f.Id)
+                .ValueGeneratedOnAdd();
+            modelBuilder.Entity<Feedback>()
+                .HasOne(f => f.User)
+                .WithMany()
+                .HasForeignKey(f => f.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // Other mappings
             modelBuilder.Entity<ServiceType>().ToTable("service_types");
             modelBuilder.Entity<UserRole>().ToTable("user_roles");
@@ -194,6 +205,10 @@ namespace PetCareAPI.Data
             modelBuilder.Entity<StatusMaster>().ToTable("status_master");
             modelBuilder.Entity<Tip>().ToTable("tips");
             modelBuilder.Entity<Notification>().ToTable("notifications");
+            modelBuilder.Entity<SystemConfiguration>().ToTable("system_configurations");
+            modelBuilder.Entity<SystemConfiguration>()
+                .Property(sc => sc.Id)
+                .ValueGeneratedOnAdd();
 
             // Force all table and column names to snake_case for PostgreSQL compatibility
             foreach (var entity in modelBuilder.Model.GetEntityTypes())

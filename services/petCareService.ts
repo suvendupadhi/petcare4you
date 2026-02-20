@@ -431,6 +431,12 @@ export const tipService = {
   }
 };
 
+export const feedbackService = {
+  submitFeedback: async (feedbackData: { subject: string; message: string }): Promise<void> => {
+    return await api.post('/feedbacks', feedbackData);
+  }
+};
+
 const RECENT_PROVIDERS_KEY = 'recent_providers';
 
 export const recentProviderService = {

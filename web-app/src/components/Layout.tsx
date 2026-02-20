@@ -12,23 +12,36 @@ import {
   Search,
   CreditCard,
   Lightbulb,
-  ShieldCheck
+  ShieldCheck,
+  X,
+  Send,
 } from 'lucide-react';
-import { authService, notificationService, systemConfigService } from '../services/petCareService';
+import { authService, notificationService, systemConfigService, feedbackService } from '../services/petCareService';
 import { useAuth } from '../context/AuthContext';
 
 interface LayoutProps {
   children: React.ReactNode;
   userType?: 'owner' | 'provider';
+  showFeedback?: boolean;
 }
 
-export default function Layout({ children, userType: propUserType }: LayoutProps) {
+export default function Layout({ children, userType: propUserType, showFeedback = false }: LayoutProps) {
   const navigate = useNavigate();
   const { logout, user } = useAuth();
   const location = useLocation();
   const userType = propUserType || (user?.roleId === 1 ? 'owner' : 'provider') || 'owner';
   const [unreadCount, setUnreadCount] = React.useState(0);
   const [hideTips, setHideTips] = React.useState(false);
+  const [isFeedbackOpen, setIsFeedbackOpen] = React.useState(showFeedback);
+  const [feedbackData, setFeedbackData] = React.useState({
+    subject: '',
+    message: ''
+  });
+  const [submittingFeedback, setSubmittingFeedback] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsFeedbackOpen(showFeedback);
+  }, [showFeedback]);
 
   React.useEffect(() => {
     const fetchConfigs = async () => {
@@ -58,6 +71,26 @@ export default function Layout({ children, userType: propUserType }: LayoutProps
     const interval = setInterval(fetchUnreadCount, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  const handleFeedbackSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!feedbackData.subject.trim() || !feedbackData.message.trim()) {
+      alert('Please fill in both subject and message');
+      return;
+    }
+
+    setSubmittingFeedback(true);
+    try {
+      await feedbackService.submitFeedback(feedbackData);
+      alert('Thank you for your feedback!');
+      setIsFeedbackOpen(false);
+      setFeedbackData({ subject: '', message: '' });
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Failed to submit feedback');
+    } finally {
+      setSubmittingFeedback(false);
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -147,7 +180,12 @@ export default function Layout({ children, userType: propUserType }: LayoutProps
              'PetCare'}
           </h2>
           <div className="flex items-center gap-6">
-            <p className="text-sm font-bold text-slate-900 hidden md:block">Have issue? Send Feedback.</p>
+            <button 
+              onClick={() => setIsFeedbackOpen(true)}
+              className="text-sm font-bold text-slate-900 hidden md:block hover:text-orange-600 transition-colors"
+            >
+              Have issue? Send Feedback.
+            </button>
             <button 
               onClick={() => navigate('/notifications')}
               className={`p-2 transition-colors relative ${
@@ -177,6 +215,69 @@ export default function Layout({ children, userType: propUserType }: LayoutProps
           {children}
         </div>
       </main>
+
+      {/* Feedback Modal */}
+      {isFeedbackOpen && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-orange-50">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="text-orange-600" size={20} />
+                <h3 className="font-bold text-slate-900">Send Feedback</h3>
+              </div>
+              <button 
+                onClick={() => setIsFeedbackOpen(false)}
+                className="text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleFeedbackSubmit} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Subject</label>
+                <input
+                  type="text"
+                  required
+                  value={feedbackData.subject}
+                  onChange={(e) => setFeedbackData({ ...feedbackData, subject: e.target.value })}
+                  placeholder="What is this about?"
+                  className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all outline-none"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Message</label>
+                <textarea
+                  required
+                  rows={4}
+                  value={feedbackData.message}
+                  onChange={(e) => setFeedbackData({ ...feedbackData, message: e.target.value })}
+                  placeholder="Tell us more about the issue or suggestion..."
+                  className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all outline-none resize-none"
+                />
+              </div>
+              
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={submittingFeedback}
+                  className="w-full bg-orange-600 text-white py-3 rounded-xl font-bold hover:bg-orange-700 transition-all shadow-lg shadow-orange-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {submittingFeedback ? (
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <Send size={18} />
+                      Submit Feedback
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

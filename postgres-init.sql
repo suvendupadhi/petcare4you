@@ -702,6 +702,47 @@ ALTER SEQUENCE petcare.tips_id_seq OWNED BY petcare.tips.id;
 
 
 --
+-- TOC entry 250 (class 1259 OID 27500)
+-- Name: feedbacks; Type: TABLE; Schema: petcare; Owner: postgres
+--
+
+CREATE TABLE petcare.feedbacks (
+    id integer NOT NULL,
+    user_id integer NOT NULL,
+    subject character varying(200) NOT NULL,
+    message text NOT NULL,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE petcare.feedbacks OWNER TO postgres;
+
+--
+-- TOC entry 249 (class 1259 OID 27499)
+-- Name: feedbacks_id_seq; Type: SEQUENCE; Schema: petcare; Owner: postgres
+--
+
+CREATE SEQUENCE petcare.feedbacks_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE petcare.feedbacks_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 5380 (class 0 OID 0)
+-- Dependencies: 249
+-- Name: feedbacks_id_seq; Type: SEQUENCE OWNED BY; Schema: petcare; Owner: postgres
+--
+
+ALTER SEQUENCE petcare.feedbacks_id_seq OWNED BY petcare.feedbacks.id;
+
+
+--
 -- TOC entry 237 (class 1259 OID 18689)
 -- Name: user_roles; Type: TABLE; Schema: petcare; Owner: postgres
 --
@@ -758,7 +799,9 @@ CREATE TABLE petcare.users (
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     role_id integer NOT NULL,
     address character varying(255),
-    profile_image_url character varying(500)
+    profile_image_url character varying(500),
+    password_reset_token character varying(100),
+    reset_token_expiry timestamp with time zone
 );
 
 
@@ -907,6 +950,14 @@ ALTER TABLE ONLY petcare.status_master ALTER COLUMN id SET DEFAULT nextval('petc
 --
 
 ALTER TABLE ONLY petcare.tips ALTER COLUMN id SET DEFAULT nextval('petcare.tips_id_seq'::regclass);
+
+
+--
+-- TOC entry 5100 (class 2288 OID 0)
+-- Name: feedbacks id; Type: DEFAULT; Schema: petcare; Owner: postgres
+--
+
+ALTER TABLE ONLY petcare.feedbacks ALTER COLUMN id SET DEFAULT nextval('petcare.feedbacks_id_seq'::regclass);
 
 
 --
@@ -1489,6 +1540,15 @@ ALTER TABLE ONLY petcare.tips
 
 
 --
+-- TOC entry 5200 (class 2606 OID 27508)
+-- Name: feedbacks feedbacks_pkey; Type: CONSTRAINT; Schema: petcare; Owner: postgres
+--
+
+ALTER TABLE ONLY petcare.feedbacks
+    ADD CONSTRAINT feedbacks_pkey PRIMARY KEY (id);
+
+
+--
 -- TOC entry 5138 (class 2606 OID 26919)
 -- Name: saved_providers uk_user_provider; Type: CONSTRAINT; Schema: petcare; Owner: postgres
 --
@@ -1849,5 +1909,14 @@ ALTER TABLE ONLY petcare.tips
 
 ALTER TABLE ONLY petcare.tips
     ADD CONSTRAINT tips_user_role_id_fkey FOREIGN KEY (user_role_id) REFERENCES petcare.user_roles(id);
+
+
+--
+-- TOC entry 5250 (class 2606 OID 27513)
+-- Name: feedbacks feedbacks_user_id_fkey; Type: FK CONSTRAINT; Schema: petcare; Owner: postgres
+--
+
+ALTER TABLE ONLY petcare.feedbacks
+    ADD CONSTRAINT feedbacks_user_id_fkey FOREIGN KEY (user_id) REFERENCES petcare.users(id) ON DELETE CASCADE;
 
 
