@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { AuthProvider, useAuth, setGlobalLogout } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
 import LoginPage from './pages/LoginPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
@@ -94,9 +95,11 @@ function Root() {
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Root />
-      </Router>
+      <ToastProvider>
+        <Router>
+          <Root />
+        </Router>
+      </ToastProvider>
     </AuthProvider>
   );
 }

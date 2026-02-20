@@ -16,7 +16,8 @@ CREATE TABLE petcare.appointments (
     status integer NOT NULL,
     pet_id integer,
     pet_name character varying(100) DEFAULT 'Unknown'::character varying,
-    pet_type character varying(50) DEFAULT 'Other'::character varying
+    pet_type character varying(50) DEFAULT 'Other'::character varying,
+    decline_reason text
 );
 
 

@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { PawPrint, Lock, Key, ArrowLeft, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { authService } from '../services/petCareService';
+import { useToast } from '../context/ToastContext';
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { showToast } = useToast();
   const [email, setEmail] = useState(location.state?.email || '');
   const [token, setToken] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -17,12 +19,12 @@ export default function ResetPasswordPage() {
     e.preventDefault();
     
     if (!email || !newPassword || !confirmPassword) {
-      alert('Please fill in all fields');
+      showToast('Please fill in all fields', 'error');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      alert('Passwords do not match');
+      showToast('Passwords do not match', 'error');
       return;
     }
 
@@ -30,8 +32,9 @@ export default function ResetPasswordPage() {
     try {
       await authService.resetPassword({ email, token, newPassword });
       setSuccess(true);
+      showToast('Password reset successfully', 'success');
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Password reset failed. Please check your token.');
+      showToast(error.response?.data?.message || 'Password reset failed. Please check your token.', 'error');
     } finally {
       setLoading(false);
     }

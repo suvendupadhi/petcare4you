@@ -2,13 +2,21 @@ import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import { tipService, serviceTypeService, Tip, ServiceType } from '../services/petCareService';
 import { Plus, Edit2, Trash2, Check, X, Info } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
+import ConfirmationModal from '../components/ConfirmationModal';
 
 export default function TipsManagementPage() {
+  const { showToast } = useToast();
   const [tips, setTips] = useState<Tip[]>([]);
   const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTip, setEditingTip] = useState<Tip | null>(null);
+  
+  // Modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [tipToDelete, setTipToDelete] = useState<number | null>(null);
+
   const [formData, setFormData] = useState<Partial<Tip>>({
     title: '',
     content: '',
@@ -70,21 +78,30 @@ export default function TipsManagementPage() {
       }
       setIsModalOpen(false);
       fetchData();
+      showToast(`Tip ${editingTip ? 'updated' : 'created'} successfully`, 'success');
     } catch (error) {
       console.error('Error saving tip:', error);
-      alert('Failed to save tip');
+      showToast('Failed to save tip', 'error');
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (window.confirm('Are you sure you want to delete this tip?')) {
-      try {
-        await tipService.deleteTip(id);
-        fetchData();
-      } catch (error) {
-        console.error('Error deleting tip:', error);
-        alert('Failed to delete tip');
-      }
+  const handleDelete = (id: number) => {
+    setTipToDelete(id);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!tipToDelete) return;
+    try {
+      await tipService.deleteTip(tipToDelete);
+      fetchData();
+      showToast('Tip deleted successfully', 'success');
+    } catch (error) {
+      console.error('Error deleting tip:', error);
+      showToast('Failed to delete tip', 'error');
+    } finally {
+      setShowDeleteModal(false);
+      setTipToDelete(null);
     }
   };
 
@@ -275,6 +292,17 @@ export default function TipsManagementPage() {
           </div>
         )}
       </div>
+
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        title="Delete Tip"
+        message="Are you sure you want to delete this pet care tip? This cannot be undone."
+        confirmLabel="Delete"
+        cancelLabel="Keep"
+        onConfirm={confirmDelete}
+        onCancel={() => setShowDeleteModal(false)}
+        type="danger"
+      />
     </Layout>
   );
 }

@@ -17,6 +17,7 @@ export const APPOINTMENT_STATUS = {
   CONFIRMED: 2,
   COMPLETED: 3,
   CANCELLED: 4,
+  DECLINED: 8,
 };
 
 export const PAYMENT_STATUS = {
@@ -31,6 +32,7 @@ export const getStatusLabel = (statusId: number) => {
     case APPOINTMENT_STATUS.CONFIRMED: return 'Confirmed';
     case APPOINTMENT_STATUS.COMPLETED: return 'Completed';
     case APPOINTMENT_STATUS.CANCELLED: return 'Cancelled';
+    case APPOINTMENT_STATUS.DECLINED: return 'Declined';
     case PAYMENT_STATUS.PENDING: return 'Pending';
     case PAYMENT_STATUS.COMPLETED: return 'Completed';
     case PAYMENT_STATUS.FAILED: return 'Failed';

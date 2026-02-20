@@ -4,9 +4,11 @@ import { PawPrint, User, Mail, Lock, MapPin, Building2, DollarSign, ArrowRight }
 import { authService, serviceTypeService, ServiceType } from '../services/petCareService';
 import CountryCodePicker from '../components/CountryCodePicker';
 import { countries, Country } from '../constants/countries';
+import { useToast } from '../context/ToastContext';
 
 export default function RegisterProviderPage() {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
   const [selectedCountry, setSelectedCountry] = useState<Country>(countries[0]);
@@ -81,10 +83,10 @@ export default function RegisterProviderPage() {
         city: formData.city,
         address: formData.address
       });
-      alert('Registration successful! Please login.');
+      showToast('Registration successful! Please login.', 'success');
       navigate('/');
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Registration failed');
+      showToast(error.response?.data?.message || 'Registration failed', 'error');
     } finally {
       setLoading(false);
     }

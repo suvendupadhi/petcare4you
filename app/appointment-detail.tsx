@@ -194,6 +194,13 @@ export default function AppointmentDetailScreen() {
           bg: 'bg-red-50',
           label: 'Cancelled'
         };
+      case APPOINTMENT_STATUS.DECLINED:
+        return {
+          icon: XCircle,
+          color: 'text-red-700',
+          bg: 'bg-red-100',
+          label: 'Declined'
+        };
       default:
         return {
           icon: AlertCircle,
@@ -382,6 +389,19 @@ export default function AppointmentDetailScreen() {
             </Text>
           </View>
         </View>
+
+        {/* Decline Reason (if applicable) */}
+        {appointment.status === APPOINTMENT_STATUS.DECLINED && appointment.declineReason && (
+          <View className="mx-6 mt-4 p-4 bg-red-50 border border-red-100 rounded-xl">
+            <View className="flex-row items-center gap-2 mb-1">
+              <AlertCircle color={isDark ? '#f87171' : '#dc2626'} size={18} />
+              <Text className="text-red-800 font-bold">Reason for Decline</Text>
+            </View>
+            <Text className="text-red-700 leading-relaxed">
+              {appointment.declineReason}
+            </Text>
+          </View>
+        )}
 
         {/* Date & Time Card */}
         <View className="mx-6 mt-4 bg-card rounded-2xl border border-border p-5">

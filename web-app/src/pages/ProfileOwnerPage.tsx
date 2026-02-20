@@ -23,12 +23,20 @@ import {
   PetType, 
   Breed 
 } from '../services/petCareService';
+import { useToast } from '../context/ToastContext';
+import ConfirmationModal from '../components/ConfirmationModal';
 
 export default function ProfileOwnerPage() {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [profile, setProfile] = useState<UserType | null>(null);
   const [pets, setPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [petToDelete, setPetToDelete] = useState<number | null>(null);
+
   const [editMode, setEditMode] = useState(false);
   const [editForm, setEditForm] = useState({
     firstName: '',
@@ -128,9 +136,9 @@ export default function ProfileOwnerPage() {
       await userService.updateProfile(editForm);
       setEditMode(false);
       loadData();
-      alert('Profile updated successfully');
+      showToast('Profile updated successfully', 'success');
     } catch (error) {
-      alert('Failed to update profile');
+      showToast('Failed to update profile', 'error');
     }
   };
 
@@ -151,20 +159,28 @@ export default function ProfileOwnerPage() {
         medicalNotes: '' 
       });
       if (dogType) handlePetTypeChange(dogType.id);
-      alert('Pet added successfully!');
+      showToast('Pet added successfully!', 'success');
     } catch (error) {
-      alert('Failed to add pet');
+      showToast('Failed to add pet', 'error');
     }
   };
 
-  const handleDeletePet = async (id: number) => {
-    if (window.confirm('Are you sure you want to remove this pet?')) {
-      try {
-        await petService.deletePet(id);
-        loadData();
-      } catch (error) {
-        alert('Failed to delete pet');
-      }
+  const handleDeletePet = (id: number) => {
+    setPetToDelete(id);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeletePet = async () => {
+    if (!petToDelete) return;
+    try {
+      await petService.deletePet(petToDelete);
+      loadData();
+      showToast('Pet removed successfully', 'success');
+    } catch (error) {
+      showToast('Failed to delete pet', 'error');
+    } finally {
+      setShowDeleteModal(false);
+      setPetToDelete(null);
     }
   };
 
@@ -431,6 +447,17 @@ export default function ProfileOwnerPage() {
           </div>
         </div>
       )}
+
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        title="Remove Pet"
+        message="Are you sure you want to remove this pet? This action cannot be undone."
+        confirmLabel="Remove"
+        cancelLabel="Keep"
+        onConfirm={confirmDeletePet}
+        onCancel={() => setShowDeleteModal(false)}
+        type="danger"
+      />
     </Layout>
   );
 }

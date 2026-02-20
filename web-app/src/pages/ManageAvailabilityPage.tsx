@@ -10,13 +10,20 @@ import {
 } from 'lucide-react';
 import Layout from '../components/Layout';
 import { availabilityService, Availability } from '../services/petCareService';
+import { useToast } from '../context/ToastContext';
+import ConfirmationModal from '../components/ConfirmationModal';
 
 export default function ManageAvailabilityPage() {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
   
+  // Modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [slotToDelete, setSlotToDelete] = useState<number | null>(null);
+
   // Form state for new slot
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [startTime, setStartTime] = useState("09:00");
@@ -47,7 +54,7 @@ export default function ManageAvailabilityPage() {
       setAvailabilities(data);
     } catch (error) {
       console.error('Error loading availability:', error);
-      alert('Failed to load availability');
+      showToast('Failed to load availability', 'error');
     } finally {
       setLoading(false);
     }
@@ -72,24 +79,33 @@ export default function ManageAvailabilityPage() {
         isBooked: false
       });
       
-      alert('Availability slot added successfully!');
+      showToast('Availability slot added successfully!', 'success');
       loadAvailability();
     } catch (error) {
       console.error('Error adding availability:', error);
-      alert('Failed to add availability');
+      showToast('Failed to add availability', 'error');
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDeleteSlot = async (id: number) => {
-    if (!window.confirm('Are you sure you want to delete this availability slot?')) return;
+  const handleDeleteSlot = (id: number) => {
+    setSlotToDelete(id);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!slotToDelete) return;
     
     try {
-      await availabilityService.deleteAvailability(id);
-      setAvailabilities(prev => prev.filter(a => a.id !== id));
+      await availabilityService.deleteAvailability(slotToDelete);
+      setAvailabilities(prev => prev.filter(a => a.id !== slotToDelete));
+      showToast('Availability slot deleted', 'success');
     } catch (error) {
-      alert('Failed to delete availability');
+      showToast('Failed to delete availability', 'error');
+    } finally {
+      setShowDeleteModal(false);
+      setSlotToDelete(null);
     }
   };
 
@@ -227,6 +243,17 @@ export default function ManageAvailabilityPage() {
           </div>
         </div>
       </div>
+
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        title="Delete Availability Slot"
+        message="Are you sure you want to delete this availability slot? This cannot be undone."
+        confirmLabel="Delete"
+        cancelLabel="Keep"
+        onConfirm={confirmDelete}
+        onCancel={() => setShowDeleteModal(false)}
+        type="danger"
+      />
     </Layout>
   );
 }

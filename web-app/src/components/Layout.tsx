@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { authService, notificationService, systemConfigService, feedbackService } from '../services/petCareService';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -28,6 +29,7 @@ interface LayoutProps {
 export default function Layout({ children, userType: propUserType, showFeedback = false }: LayoutProps) {
   const navigate = useNavigate();
   const { logout, user } = useAuth();
+  const { showToast } = useToast();
   const location = useLocation();
   const userType = propUserType || (user?.roleId === 1 ? 'owner' : 'provider') || 'owner';
   const [unreadCount, setUnreadCount] = React.useState(0);
@@ -75,18 +77,18 @@ export default function Layout({ children, userType: propUserType, showFeedback 
   const handleFeedbackSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!feedbackData.subject.trim() || !feedbackData.message.trim()) {
-      alert('Please fill in both subject and message');
+      showToast('Please fill in both subject and message', 'error');
       return;
     }
 
     setSubmittingFeedback(true);
     try {
       await feedbackService.submitFeedback(feedbackData);
-      alert('Thank you for your feedback!');
+      showToast('Thank you for your feedback!', 'success');
       setIsFeedbackOpen(false);
       setFeedbackData({ subject: '', message: '' });
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Failed to submit feedback');
+      showToast(error.response?.data?.message || 'Failed to submit feedback', 'error');
     } finally {
       setSubmittingFeedback(false);
     }
@@ -101,6 +103,7 @@ export default function Layout({ children, userType: propUserType, showFeedback 
     { icon: Search, label: 'Find Providers', path: '/search-providers' },
     { icon: Calendar, label: 'My Bookings', path: '/appointments-owner' },
     { icon: PawPrint, label: 'My Pets', path: '/profile-owner' },
+    { icon: CreditCard, label: 'Payments', path: '/payment-invoice' },
   ] : [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/provider-dashboard' },
     { icon: Calendar, label: 'Bookings', path: '/appointments-provider' },

@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { CreditCard, DollarSign, Download, ExternalLink, Filter, Calendar, User, Clock, FileText, CheckCircle, AlertCircle } from 'lucide-react';
+import { CreditCard, DollarSign, Download, ExternalLink, Filter, Calendar, User, Clock, FileText, CheckCircle, AlertCircle, Building2 } from 'lucide-react';
 import Layout from '../components/Layout';
 import { paymentService, Payment, RevenueSummary } from '../services/petCareService';
 import PaymentModal from '../components/PaymentModal';
+import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function PaymentInvoicePage() {
+  const { showToast } = useToast();
+  const { user } = useAuth();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [revenue, setRevenue] = useState<RevenueSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -12,15 +16,33 @@ export default function PaymentInvoicePage() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [invoiceLoading, setInvoiceLoading] = useState<number | null>(null);
 
+  const isOwner = user?.roleId === 1;
+
   const loadData = async () => {
     try {
       setLoading(true);
-      const [payData, revData] = await Promise.all([
-        paymentService.getProviderPayments(),
-        paymentService.getRevenueSummary()
-      ]);
-      setPayments(payData);
-      setRevenue(revData);
+      if (isOwner) {
+        const payData = await paymentService.getOwnerPayments();
+        setPayments(payData);
+        // Calculate simple revenue summary for owners
+        setRevenue({
+          totalRevenue: payData.filter(p => p.status === 6).reduce((sum, p) => sum + p.amount, 0),
+          pendingRevenue: payData.filter(p => p.status === 5).reduce((sum, p) => sum + p.amount, 0),
+          monthlyRevenue: 0,
+          weeklyRevenue: 0,
+          growthRate: 0,
+          totalAppointments: payData.length,
+          completedAppointments: payData.filter(p => p.status === 6).length,
+          averageRevenuePerAppointment: 0
+        });
+      } else {
+        const [payData, revData] = await Promise.all([
+          paymentService.getProviderPayments(),
+          paymentService.getRevenueSummary()
+        ]);
+        setPayments(payData);
+        setRevenue(revData);
+      }
     } catch (error) {
       console.error('Error loading payment data:', error);
     } finally {
@@ -30,7 +52,7 @@ export default function PaymentInvoicePage() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [user]);
 
   const handleGenerateInvoice = async (paymentId: number) => {
     setInvoiceLoading(paymentId);
@@ -45,7 +67,7 @@ export default function PaymentInvoicePage() {
       link.parentNode?.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      alert('Failed to generate invoice');
+      showToast('Failed to generate invoice', 'error');
     } finally {
       setInvoiceLoading(null);
     }
@@ -60,7 +82,7 @@ export default function PaymentInvoicePage() {
     setShowPaymentModal(false);
     setSelectedPayment(null);
     loadData(); // Refresh totals and list
-    alert('Payment successful!');
+    showToast('Payment successful!', 'success');
   };
 
   if (loading) return (
@@ -71,12 +93,12 @@ export default function PaymentInvoicePage() {
   );
 
   return (
-    <Layout userType="provider">
+    <Layout userType={isOwner ? 'owner' : 'provider'}>
       <div className="space-y-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Payments & Invoices 💼</h1>
-            <p className="text-slate-500">Track your business earnings and manage client billing.</p>
+            <p className="text-slate-500">{isOwner ? 'Track your service payments and invoices.' : 'Track your business earnings and manage client billing.'}</p>
           </div>
           <div className="flex items-center gap-2 text-xs font-bold text-slate-400 bg-white px-4 py-2 rounded-xl border border-slate-100 shadow-sm uppercase tracking-widest">
             <Calendar size={14} className="text-orange-600" />
@@ -87,7 +109,7 @@ export default function PaymentInvoicePage() {
         {/* Financial Summary */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <SummaryCard 
-            label="Total Earnings" 
+            label={isOwner ? "Total Spent" : "Total Earnings"} 
             value={`$${revenue?.totalRevenue || 0}`} 
             color="text-green-600"
             bgColor="bg-green-50"
@@ -95,7 +117,7 @@ export default function PaymentInvoicePage() {
           />
           <SummaryCard 
             label="Total Transactions" 
-            value={payments.filter(p => p.status === 6).length.toString()} 
+            value={payments.length.toString()} 
             color="text-blue-600"
             bgColor="bg-blue-50"
             icon={<CreditCard size={20} />}
@@ -107,7 +129,7 @@ export default function PaymentInvoicePage() {
           <div className="p-8 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/50">
             <div>
               <h2 className="text-xl font-bold text-slate-800">Transaction History</h2>
-              <p className="text-sm text-slate-500 font-medium mt-1">Showing all completed service records.</p>
+              <p className="text-sm text-slate-500 font-medium mt-1">Showing all pending and completed service records.</p>
             </div>
             <div className="flex items-center gap-3">
             </div>
@@ -118,14 +140,14 @@ export default function PaymentInvoicePage() {
               <thead>
                 <tr className="bg-white border-b border-slate-50">
                   <th className="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-widest">Date</th>
-                  <th className="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-widest">Client</th>
+                  <th className="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-widest">{isOwner ? 'Provider' : 'Client'}</th>
                   <th className="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-widest">Service Time</th>
                   <th className="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-widest">Amount</th>
                   <th className="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-widest text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {payments.filter(p => p.status === 6).length > 0 ? payments.filter(p => p.status === 6).map((pay) => (
+                {payments.length > 0 ? payments.map((pay) => (
                   <tr key={pay.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-3">
@@ -140,11 +162,19 @@ export default function PaymentInvoicePage() {
                     </td>
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-xs">
-                          {pay.appointment?.owner?.firstName[0]}{pay.appointment?.owner?.lastName[0]}
+                        <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-xs overflow-hidden">
+                          {isOwner ? (
+                            pay.appointment?.provider?.profileImageUrl ? (
+                              <img src={pay.appointment.provider.profileImageUrl} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <Building2 size={14} />
+                            )
+                          ) : (
+                            `${pay.appointment?.owner?.firstName[0]}${pay.appointment?.owner?.lastName[0]}`
+                          )}
                         </div>
                         <div className="text-sm font-bold text-slate-900">
-                          {pay.appointment?.owner?.firstName} {pay.appointment?.owner?.lastName}
+                          {isOwner ? pay.appointment?.provider?.companyName : `${pay.appointment?.owner?.firstName} ${pay.appointment?.owner?.lastName}`}
                         </div>
                       </div>
                     </td>
@@ -196,7 +226,7 @@ export default function PaymentInvoicePage() {
                         <FileText size={48} className="opacity-10" />
                         <div className="space-y-1">
                           <p className="font-bold text-slate-600">No transactions yet</p>
-                          <p className="text-xs font-medium">Complete appointments will appear here for billing.</p>
+                          <p className="text-sm text-slate-400">Your payment history will appear here.</p>
                         </div>
                       </div>
                     </td>

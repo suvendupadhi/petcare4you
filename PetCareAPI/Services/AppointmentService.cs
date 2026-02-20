@@ -127,7 +127,7 @@ namespace PetCareAPI.Services
             return appointment;
         }
 
-        public async Task<bool> UpdateStatusAsync(int appointmentId, int status)
+        public async Task<bool> UpdateStatusAsync(int appointmentId, int status, string? reason = null)
         {
             var appointment = await _context.Appointments
                 .Include(a => a.Provider)
@@ -140,20 +140,32 @@ namespace PetCareAPI.Services
             appointment.Status = status;
             appointment.UpdatedAt = DateTime.UtcNow;
 
+            if (status == StatusConstants.Appointment.Declined && !string.IsNullOrEmpty(reason))
+            {
+                appointment.DeclineReason = reason;
+            }
+
             // Create notification for owner/provider based on status change
             string statusName = status switch
             {
                 StatusConstants.Appointment.Confirmed => "Confirmed",
                 StatusConstants.Appointment.Completed => "Completed",
                 StatusConstants.Appointment.Cancelled => "Cancelled",
+                StatusConstants.Appointment.Declined => "Declined",
                 _ => "Updated"
             };
+
+            string message = $"Your booking for {appointment.PetName} on {appointment.AppointmentDate:MMM dd, yyyy} has been {statusName.ToLower()}.";
+            if (status == StatusConstants.Appointment.Declined && !string.IsNullOrEmpty(reason))
+            {
+                message += $" Reason: {reason}";
+            }
 
             var notification = new Notification
             {
                 UserId = appointment.OwnerId, // Notify owner
                 Title = $"Booking {statusName}",
-                Message = $"Your booking for {appointment.PetName} on {appointment.AppointmentDate:MMM dd, yyyy} has been {statusName.ToLower()}.",
+                Message = message,
                 Type = "StatusChange",
                 ReferenceId = appointment.Id.ToString(),
                 IsRead = false,
@@ -161,24 +173,35 @@ namespace PetCareAPI.Services
             };
             _context.Notifications.Add(notification);
             
-            // If completed, create a payment record
-            if (status == StatusConstants.Appointment.Completed)
+            // If confirmed or completed, ensure a payment record exists
+            if (status == StatusConstants.Appointment.Confirmed || status == StatusConstants.Appointment.Completed)
             {
-                var payment = new Payment
+                var existingPayment = await _context.Payments.FirstOrDefaultAsync(p => p.AppointmentId == appointment.Id);
+                if (existingPayment == null)
                 {
-                    AppointmentId = appointment.Id,
-                    UserId = appointment.OwnerId,
-                    Amount = appointment.TotalPrice,
-                    Status = StatusConstants.Payment.Pending,
-                    CreatedAt = DateTime.UtcNow
-                };
-                _context.Payments.Add(payment);
+                    var payment = new Payment
+                    {
+                        AppointmentId = appointment.Id,
+                        UserId = appointment.OwnerId,
+                        Amount = appointment.TotalPrice,
+                        Status = StatusConstants.Payment.Pending,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    _context.Payments.Add(payment);
+                }
             }
 
-            // If cancelled, also notify provider and unbook slot
-            if (status == StatusConstants.Appointment.Cancelled)
+            // If cancelled or declined, also notify provider and unbook slot
+            if (status == StatusConstants.Appointment.Cancelled || status == StatusConstants.Appointment.Declined)
             {
-                if (appointment.Provider != null)
+                // Remove pending payment if it exists
+                var pendingPayment = await _context.Payments.FirstOrDefaultAsync(p => p.AppointmentId == appointment.Id && p.Status == StatusConstants.Payment.Pending);
+                if (pendingPayment != null)
+                {
+                    _context.Payments.Remove(pendingPayment);
+                }
+
+                if (appointment.Provider != null && status == StatusConstants.Appointment.Cancelled)
                 {
                     var providerNotification = new Notification
                     {
@@ -278,6 +301,13 @@ namespace PetCareAPI.Services
             appointment.Description = updatedAppointment.Description;
             appointment.TotalPrice = updatedAppointment.TotalPrice;
             appointment.UpdatedAt = DateTime.UtcNow;
+
+            // Update pending payment amount if it exists
+            var payment = await _context.Payments.FirstOrDefaultAsync(p => p.AppointmentId == appointmentId && p.Status == StatusConstants.Payment.Pending);
+            if (payment != null)
+            {
+                payment.Amount = updatedAppointment.TotalPrice;
+            }
 
             await _context.SaveChangesAsync();
             return appointment;

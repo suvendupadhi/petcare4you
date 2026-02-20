@@ -30,16 +30,16 @@ namespace PetCareAPI.Controllers
             var provider = await _context.Providers.FirstOrDefaultAsync(p => p.UserId == userId);
             if (provider == null) return NotFound("Provider profile not found");
 
-            // Sync missing payment records for completed appointments
-            var completedAppointmentsWithoutPayment = await _context.Appointments
+            // Sync missing payment records for confirmed/completed appointments
+            var appointmentsWithoutPayment = await _context.Appointments
                 .Where(a => a.ProviderId == provider.Id && 
-                           a.Status == StatusConstants.Appointment.Completed &&
+                           (a.Status == StatusConstants.Appointment.Confirmed || a.Status == StatusConstants.Appointment.Completed) &&
                            !_context.Payments.Any(p => p.AppointmentId == a.Id))
                 .ToListAsync();
 
-            if (completedAppointmentsWithoutPayment.Any())
+            if (appointmentsWithoutPayment.Any())
             {
-                foreach (var app in completedAppointmentsWithoutPayment)
+                foreach (var app in appointmentsWithoutPayment)
                 {
                     _context.Payments.Add(new Payment
                     {
@@ -113,11 +113,34 @@ namespace PetCareAPI.Controllers
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             
+            // Sync missing payment records for confirmed/completed appointments
+            var appointmentsWithoutPayment = await _context.Appointments
+                .Where(a => a.OwnerId == userId && 
+                           (a.Status == StatusConstants.Appointment.Confirmed || a.Status == StatusConstants.Appointment.Completed) &&
+                           !_context.Payments.Any(p => p.AppointmentId == a.Id))
+                .ToListAsync();
+
+            if (appointmentsWithoutPayment.Any())
+            {
+                foreach (var app in appointmentsWithoutPayment)
+                {
+                    _context.Payments.Add(new Payment
+                    {
+                        AppointmentId = app.Id,
+                        UserId = userId,
+                        Amount = app.TotalPrice,
+                        Status = StatusConstants.Payment.Pending,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
+                await _context.SaveChangesAsync();
+            }
+
             var payments = await _context.Payments
                 .Include(p => p.Appointment)
                     .ThenInclude(a => a.Provider)
                 .Where(p => p.UserId == userId)
-                .OrderByDescending(p => p.PaymentDate)
+                .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
 
             return payments;

@@ -256,6 +256,13 @@ export default function AppointmentsOwnerScreen() {
           bg: 'bg-red-50',
           label: 'Cancelled'
         };
+      case APPOINTMENT_STATUS.DECLINED:
+        return {
+          icon: XCircle,
+          color: 'text-red-700',
+          bg: 'bg-red-100',
+          label: 'Declined'
+        };
       default:
         return {
           icon: AlertCircle,
@@ -271,7 +278,9 @@ export default function AppointmentsOwnerScreen() {
   );
   
   const pastAppointments = appointments.filter(apt => 
-    apt.status === APPOINTMENT_STATUS.COMPLETED || apt.status === APPOINTMENT_STATUS.CANCELLED
+    apt.status === APPOINTMENT_STATUS.COMPLETED || 
+    apt.status === APPOINTMENT_STATUS.CANCELLED || 
+    apt.status === APPOINTMENT_STATUS.DECLINED
   );
 
   const displayAppointments = activeTab === 'upcoming' ? upcomingAppointments : pastAppointments;

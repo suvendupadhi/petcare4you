@@ -14,15 +14,23 @@ import {
   AlertCircle
 } from 'lucide-react';
 import Layout from '../components/Layout';
+import ConfirmationModal from '../components/ConfirmationModal';
 import { appointmentService, Appointment } from '../services/petCareService';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 export default function AppointmentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [appointment, setAppointment] = useState<Appointment | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Modal states
+  const [showDeclineModal, setShowDeclineModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [declineReason, setDeclineReason] = useState('');
 
   const isOwner = user?.roleId === 1;
   const isProvider = user?.roleId === 2;
@@ -35,6 +43,7 @@ export default function AppointmentDetailPage() {
         setAppointment(data);
       } catch (error) {
         console.error('Error loading appointment details:', error);
+        showToast('Failed to load appointment details', 'error');
       } finally {
         setLoading(false);
       }
@@ -42,16 +51,32 @@ export default function AppointmentDetailPage() {
     loadData();
   }, [id]);
 
-  const handleStatusUpdate = async (status: number) => {
+  const handleStatusUpdate = async (status: number, reason?: string) => {
     if (!id) return;
+    
     try {
-      await appointmentService.updateStatus(parseInt(id), status);
+      await appointmentService.updateStatus(parseInt(id), status, reason);
       const data = await appointmentService.getAppointment(parseInt(id));
       setAppointment(data);
-      alert('Status updated successfully');
+      showToast('Status updated successfully', 'success');
     } catch (error) {
-      alert('Failed to update status');
+      showToast('Failed to update status', 'error');
     }
+  };
+
+  const confirmDecline = async () => {
+    if (!declineReason.trim()) {
+      showToast('A reason is required to decline.', 'warning');
+      return;
+    }
+    await handleStatusUpdate(8, declineReason);
+    setShowDeclineModal(false);
+    setDeclineReason('');
+  };
+
+  const confirmCancel = async () => {
+    await handleStatusUpdate(4);
+    setShowCancelModal(false);
   };
 
   if (loading) return <div className="flex items-center justify-center h-screen">Loading details...</div>;
@@ -96,6 +121,18 @@ export default function AppointmentDetailPage() {
                 </div>
                 <StatusBadge status={appointment.status} />
               </div>
+
+              {appointment.status === 8 && appointment.declineReason && (
+                <div className="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-start gap-3">
+                  <AlertCircle className="text-red-600 mt-0.5" size={20} />
+                  <div>
+                    <h4 className="text-sm font-bold text-red-800 uppercase tracking-wider mb-1">Reason for Decline</h4>
+                    <p className="text-red-700 leading-relaxed font-medium">
+                      {appointment.declineReason}
+                    </p>
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <DetailSection icon={<Calendar size={20} />} label="Date" value={new Date(appointment.appointmentDate).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })} />
@@ -155,7 +192,7 @@ export default function AppointmentDetailPage() {
                     Approve Booking
                   </button>
                   <button 
-                    onClick={() => handleStatusUpdate(3)}
+                    onClick={() => setShowDeclineModal(true)}
                     className="w-full py-3 bg-white border border-red-200 text-red-600 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-red-50 transition-all"
                   >
                     <XCircle size={20} />
@@ -169,7 +206,7 @@ export default function AppointmentDetailPage() {
                     This booking is confirmed. Prepare for your appointment!
                   </div>
                   <button 
-                    onClick={() => handleStatusUpdate(4)}
+                    onClick={() => handleStatusUpdate(3)}
                     className="w-full py-3 bg-slate-900 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition-all shadow-lg"
                   >
                     Mark as Completed
@@ -181,11 +218,7 @@ export default function AppointmentDetailPage() {
                     Wait for your appointment or contact the provider for more details.
                   </div>
                   <button 
-                    onClick={() => {
-                      if(window.confirm('Are you sure you want to cancel this booking?')) {
-                        handleStatusUpdate(3);
-                      }
-                    }}
+                    onClick={() => setShowCancelModal(true)}
                     className="w-full py-3 bg-white border border-red-200 text-red-600 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-red-50 transition-all"
                   >
                     <XCircle size={20} />
@@ -214,6 +247,58 @@ export default function AppointmentDetailPage() {
           </div>
         </div>
       </div>
+
+      <ConfirmationModal
+        isOpen={showCancelModal}
+        title="Cancel Appointment"
+        message="Are you sure you want to cancel this booking? This action cannot be undone."
+        confirmLabel="Yes, Cancel"
+        cancelLabel="No, Keep It"
+        onConfirm={confirmCancel}
+        onCancel={() => setShowCancelModal(false)}
+        type="danger"
+      />
+
+      {showDeclineModal && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div className="flex flex-col items-center text-center space-y-4">
+              <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center text-red-600">
+                <XCircle size={32} />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-2xl font-bold text-slate-900">Decline Appointment</h3>
+                <p className="text-slate-500">Please provide a reason for declining this request.</p>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <textarea
+                value={declineReason}
+                onChange={(e) => setDeclineReason(e.target.value)}
+                placeholder="Enter reason here..."
+                className="w-full h-32 px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all resize-none"
+              />
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 mt-8">
+              <button
+                onClick={() => setShowDeclineModal(false)}
+                className="flex-1 px-6 py-3 text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDecline}
+                disabled={!declineReason.trim()}
+                className="flex-1 px-6 py-3 text-sm font-bold text-white bg-orange-600 hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-all shadow-lg shadow-orange-600/20"
+              >
+                Confirm Decline
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }
@@ -234,8 +319,9 @@ function StatusBadge({ status }: { status: number }) {
   const configs: Record<number, { label: string, color: string, icon: any }> = {
     1: { label: 'Pending Request', color: 'bg-orange-50 text-orange-600 border-orange-100', icon: <Clock4 size={14} /> },
     2: { label: 'Confirmed', color: 'bg-green-50 text-green-600 border-green-100', icon: <CheckCircle size={14} /> },
-    3: { label: 'Cancelled', color: 'bg-red-50 text-red-600 border-red-100', icon: <XCircle size={14} /> },
-    4: { label: 'Completed', color: 'bg-blue-50 text-blue-600 border-blue-100', icon: <CheckCircle size={14} /> },
+    3: { label: 'Completed', color: 'bg-blue-50 text-blue-600 border-blue-100', icon: <CheckCircle size={14} /> },
+    4: { label: 'Cancelled', color: 'bg-red-50 text-red-600 border-red-100', icon: <XCircle size={14} /> },
+    8: { label: 'Declined', color: 'bg-red-100 text-red-700 border-red-200', icon: <XCircle size={14} /> },
   };
   const config = configs[status] || { label: 'Unknown', color: 'bg-slate-50 text-slate-400 border-slate-100', icon: <AlertCircle size={14} /> };
   return (

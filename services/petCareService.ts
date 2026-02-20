@@ -79,6 +79,7 @@ export interface Appointment {
   petName: string;
   petType: string;
   description: string;
+  declineReason?: string;
   totalPrice: number;
   provider?: Provider;
   owner?: User;
@@ -196,8 +197,8 @@ export const appointmentService = {
   updateAppointment: async (id: number, appointmentData: any): Promise<Appointment> => {
     return await api.put(`/appointments/${id}`, appointmentData);
   },
-  updateStatus: async (id: number, status: number): Promise<void> => {
-    return await api.patch(`/appointments/${id}/status`, { status });
+  updateStatus: async (id: number, status: number, reason?: string): Promise<void> => {
+    return await api.patch(`/appointments/${id}/status`, { status, reason });
   }
 };
 

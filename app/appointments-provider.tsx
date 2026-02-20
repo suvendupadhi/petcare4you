@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Platform, useColorScheme } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Platform, useColorScheme, Modal, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { 
@@ -29,6 +29,10 @@ export default function AppointmentsProviderScreen() {
   const [loading, setLoading] = useState(true);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
+  const [declineModalVisible, setDeclineModalVisible] = useState(false);
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState<number | null>(null);
+  const [declineReason, setDeclineReason] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     loadAppointments();
@@ -51,15 +55,45 @@ export default function AppointmentsProviderScreen() {
     }
   };
 
-  const handleUpdateStatus = async (appointmentId: number, newStatus: number) => {
+  const openDeclineModal = (id: number) => {
+    setSelectedAppointmentId(id);
+    setDeclineReason('');
+    setDeclineModalVisible(true);
+  };
+
+  const handleDecline = async () => {
+    if (!selectedAppointmentId) return;
+    if (!declineReason.trim()) {
+      if (Platform.OS === 'web') {
+        window.alert('Please provide a reason for declining.');
+      } else {
+        Alert.alert('Error', 'Please provide a reason for declining.');
+      }
+      return;
+    }
+
     try {
-      await appointmentService.updateStatus(appointmentId, newStatus);
+      setSubmitting(true);
+      await handleUpdateStatus(selectedAppointmentId, APPOINTMENT_STATUS.DECLINED, declineReason);
+      setDeclineModalVisible(false);
+      setSelectedAppointmentId(null);
+      setDeclineReason('');
+    } catch (error) {
+      console.error('Error declining appointment:', error);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleUpdateStatus = async (appointmentId: number, newStatus: number, reason?: string) => {
+    try {
+      await appointmentService.updateStatus(appointmentId, newStatus, reason);
       
       // Update local state
       setAppointments(prev => 
         prev.map(apt => 
           apt.id === appointmentId 
-            ? { ...apt, status: newStatus }
+            ? { ...apt, status: newStatus, declineReason: reason }
             : apt
         )
       );
@@ -74,6 +108,7 @@ export default function AppointmentsProviderScreen() {
       } else {
         Alert.alert('Error', `Failed to update appointment status`);
       }
+      throw error;
     }
   };
 
@@ -138,6 +173,13 @@ export default function AppointmentsProviderScreen() {
           bg: 'bg-red-50',
           label: 'Cancelled'
         };
+      case APPOINTMENT_STATUS.DECLINED:
+        return {
+          icon: XCircle,
+          color: 'text-red-700',
+          bg: 'bg-red-100',
+          label: 'Declined'
+        };
       default:
         return {
           icon: AlertCircle,
@@ -153,7 +195,9 @@ export default function AppointmentsProviderScreen() {
   );
   
   const pastAppointments = appointments.filter(apt => 
-    apt.status === APPOINTMENT_STATUS.COMPLETED || apt.status === APPOINTMENT_STATUS.CANCELLED
+    apt.status === APPOINTMENT_STATUS.COMPLETED || 
+    apt.status === APPOINTMENT_STATUS.CANCELLED || 
+    apt.status === APPOINTMENT_STATUS.DECLINED
   );
 
   const displayAppointments = activeTab === 'upcoming' ? upcomingAppointments : pastAppointments;
@@ -347,7 +391,7 @@ export default function AppointmentsProviderScreen() {
                           <TouchableOpacity
                             onPress={(e) => {
                               e.stopPropagation();
-                              handleUpdateStatus(appointment.id, APPOINTMENT_STATUS.CANCELLED);
+                              openDeclineModal(appointment.id);
                             }}
                             className="flex-1 bg-muted py-3 rounded-xl flex-row items-center justify-center gap-2"
                           >
@@ -388,6 +432,51 @@ export default function AppointmentsProviderScreen() {
           })
         )}
       </ScrollView>
+
+      {/* Decline Reason Modal */}
+      <Modal
+        visible={declineModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setDeclineModalVisible(false)}
+      >
+        <View className="flex-1 justify-center items-center bg-black/50 px-6">
+          <View className="bg-card w-full rounded-3xl p-6 border border-border">
+            <Text className="text-xl font-bold text-foreground mb-2">Decline Appointment</Text>
+            <Text className="text-muted-foreground mb-4">Please provide a reason for declining this booking request.</Text>
+            
+            <TextInput
+              className="bg-muted text-foreground p-4 rounded-xl min-h-[100] text-base mb-6"
+              placeholder="Enter reason here..."
+              placeholderTextColor={isDark ? '#94a3b8' : '#64748b'}
+              multiline={true}
+              textAlignVertical="top"
+              value={declineReason}
+              onChangeText={setDeclineReason}
+            />
+
+            <View className="flex-row gap-3">
+              <TouchableOpacity
+                onPress={() => setDeclineModalVisible(false)}
+                className="flex-1 bg-muted py-4 rounded-xl items-center"
+              >
+                <Text className="text-muted-foreground font-semibold">Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleDecline}
+                disabled={submitting}
+                className="flex-1 bg-primary py-4 rounded-xl items-center"
+              >
+                {submitting ? (
+                  <ActivityIndicator color="#ffffff" size="small" />
+                ) : (
+                  <Text className="text-primary-foreground font-semibold">Confirm Decline</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }

@@ -21,14 +21,21 @@ import {
   Tip
 } from '../services/petCareService';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 export default function ProviderDashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [revenue, setRevenue] = useState<RevenueSummary | null>(null);
   const [tip, setTip] = useState<Tip | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Decline Modal state
+  const [showDeclineModal, setShowDeclineModal] = useState(false);
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState<number | null>(null);
+  const [declineReason, setDeclineReason] = useState('');
 
   useEffect(() => {
     const loadData = async () => {
@@ -59,14 +66,37 @@ export default function ProviderDashboard() {
     loadData();
   }, []);
 
-  const handleStatusUpdate = async (id: number, status: number) => {
+  const handleStatusUpdate = async (id: number, status: number, reason?: string) => {
+    if (status === 8 && !reason) {
+      setSelectedAppointmentId(id);
+      setDeclineReason('');
+      setShowDeclineModal(true);
+      return;
+    }
+
     try {
-      await appointmentService.updateStatus(id, status);
+      await appointmentService.updateStatus(id, status, reason);
+      showToast(`Appointment ${status === 2 ? 'confirmed' : 'updated'}`, 'success');
       // Reload appointments
       const appData = await appointmentService.getProviderAppointments();
       setAppointments(appData.slice(0, 5));
     } catch (error) {
-      alert('Failed to update status');
+      showToast('Failed to update status', 'error');
+    }
+  };
+
+  const confirmDecline = async () => {
+    if (!selectedAppointmentId || !declineReason.trim()) return;
+    
+    try {
+      await appointmentService.updateStatus(selectedAppointmentId, 8, declineReason);
+      showToast('Appointment declined', 'success');
+      setShowDeclineModal(false);
+      // Reload appointments
+      const appData = await appointmentService.getProviderAppointments();
+      setAppointments(appData.slice(0, 5));
+    } catch (error) {
+      showToast('Failed to decline appointment', 'error');
     }
   };
 
@@ -215,7 +245,7 @@ export default function ProviderDashboard() {
                                   <CheckCircle size={18} />
                                 </button>
                                 <button 
-                                  onClick={() => handleStatusUpdate(app.id, 3)}
+                                  onClick={() => handleStatusUpdate(app.id, 8)}
                                   className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                   title="Decline"
                                 >
@@ -268,6 +298,47 @@ export default function ProviderDashboard() {
           </div>
         )}
       </div>
+
+      {showDeclineModal && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div className="flex flex-col items-center text-center space-y-4">
+              <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center text-red-600">
+                <XCircle size={32} />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-2xl font-bold text-slate-900">Decline Appointment</h3>
+                <p className="text-slate-500">Please provide a reason for declining this request.</p>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <textarea
+                value={declineReason}
+                onChange={(e) => setDeclineReason(e.target.value)}
+                placeholder="Enter reason here..."
+                className="w-full h-32 px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all resize-none"
+              />
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 mt-8">
+              <button
+                onClick={() => setShowDeclineModal(false)}
+                className="flex-1 px-6 py-3 text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDecline}
+                disabled={!declineReason.trim()}
+                className="flex-1 px-6 py-3 text-sm font-bold text-white bg-orange-600 hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-all shadow-lg shadow-orange-600/20"
+              >
+                Confirm Decline
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }
@@ -294,8 +365,9 @@ function StatusBadge({ status }: { status: number }) {
   const configs: Record<number, { label: string, color: string }> = {
     1: { label: 'Pending', color: 'bg-orange-50 text-orange-600 border-orange-100' },
     2: { label: 'Confirmed', color: 'bg-green-50 text-green-600 border-green-100' },
-    3: { label: 'Cancelled', color: 'bg-red-50 text-red-600 border-red-100' },
-    4: { label: 'Completed', color: 'bg-blue-50 text-blue-600 border-blue-100' },
+    3: { label: 'Completed', color: 'bg-blue-50 text-blue-600 border-blue-100' },
+    4: { label: 'Cancelled', color: 'bg-red-50 text-red-600 border-red-100' },
+    8: { label: 'Declined', color: 'bg-red-100 text-red-700 border-red-200' },
   };
   const config = configs[status] || { label: 'Unknown', color: 'bg-slate-50 text-slate-400 border-slate-100' };
   return (

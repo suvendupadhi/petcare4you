@@ -29,10 +29,12 @@ import {
   Review,
   Appointment
 } from '../services/petCareService';
+import { useToast } from '../context/ToastContext';
 
 export default function ProviderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [provider, setProvider] = useState<Provider | null>(null);
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
   const [pets, setPets] = useState<Pet[]>([]);
@@ -95,7 +97,7 @@ export default function ProviderDetailPage() {
 
   const handleBooking = async () => {
     if (!selectedSlot || !selectedPet || !provider) {
-      alert('Please select a time slot and a pet');
+      showToast('Please select a time slot and a pet', 'error');
       return;
     }
 
@@ -110,10 +112,10 @@ export default function ProviderDetailPage() {
         description: description,
         totalPrice: provider.hourlyRate, // Basic calculation
       });
-      alert('Booking request sent successfully!');
+      showToast('Booking request sent successfully!', 'success');
       navigate('/appointments-owner');
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Failed to create booking');
+      showToast(error.response?.data?.message || 'Failed to create booking', 'error');
     } finally {
       setBookingLoading(false);
     }
@@ -131,7 +133,7 @@ export default function ProviderDetailPage() {
         comment: userComment
       });
       
-      alert('Review submitted successfully!');
+      showToast('Review submitted successfully!', 'success');
       setCanReview(false);
       setUserComment('');
       // Reload provider and reviews
@@ -143,7 +145,7 @@ export default function ProviderDetailPage() {
       setReviews(reviewsData);
     } catch (error) {
       console.error('Error submitting review:', error);
-      alert('Failed to submit review');
+      showToast('Failed to submit review', 'error');
     } finally {
       setSubmittingReview(false);
     }

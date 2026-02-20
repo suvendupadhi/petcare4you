@@ -2833,6 +2833,10 @@
             "type": "string",
             "nullable": true
           },
+          "declineReason": {
+            "type": "string",
+            "nullable": true
+          },
           "totalPrice": {
             "type": "number",
             "format": "double"
@@ -3771,6 +3775,10 @@
           "status": {
             "type": "integer",
             "format": "int32"
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false

@@ -8,6 +8,7 @@ import {
   useElements,
 } from '@stripe/react-stripe-js';
 import { paymentService, stripeService, Payment } from '../services/petCareService';
+import { useToast } from '../context/ToastContext';
 
 // Initialize stripe
 const stripePromise = loadStripe('pk_test_placeholder'); // Replace with your key
@@ -96,6 +97,7 @@ const CheckoutForm = ({ payment, onSuccess }: { payment: Payment, onSuccess: () 
 };
 
 export default function PaymentModal({ payment, onClose, onSuccess }: PaymentModalProps) {
+  const { showToast } = useToast();
   const [method, setMethod] = useState<'selection' | 'card' | 'cash'>('selection');
   const [cashAmount, setCashAmount] = useState(payment.amount.toString());
   const [loading, setLoading] = useState(false);
@@ -104,9 +106,10 @@ export default function PaymentModal({ payment, onClose, onSuccess }: PaymentMod
     setLoading(true);
     try {
       await paymentService.payCash(payment.id, parseFloat(cashAmount));
+      showToast('Cash payment recorded successfully', 'success');
       onSuccess();
     } catch (error) {
-      alert('Failed to record cash payment');
+      showToast('Failed to record cash payment', 'error');
     } finally {
       setLoading(false);
     }

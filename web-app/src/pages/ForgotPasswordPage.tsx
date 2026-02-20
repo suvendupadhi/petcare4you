@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PawPrint, Mail, ArrowLeft, ArrowRight } from 'lucide-react';
 import { authService } from '../services/petCareService';
+import { useToast } from '../context/ToastContext';
 
 export default function ForgotPasswordPage() {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -12,7 +14,7 @@ export default function ForgotPasswordPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) {
-      alert('Please enter your email');
+      showToast('Please enter your email', 'error');
       return;
     }
 
@@ -21,7 +23,7 @@ export default function ForgotPasswordPage() {
       await authService.forgotPassword(email);
       setSubmitted(true);
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Something went wrong');
+      showToast(error.response?.data?.message || 'Something went wrong', 'error');
     } finally {
       setLoading(false);
     }

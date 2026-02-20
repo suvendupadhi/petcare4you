@@ -110,6 +110,14 @@ export default function AppointmentsOwnerPage() {
                       <span className="font-medium truncate">{app.petName} ({app.petType})</span>
                     </div>
                   </div>
+
+                  {app.status === 8 && app.declineReason && (
+                    <div className="bg-red-50 p-3 rounded-xl border border-red-100 mt-2">
+                      <p className="text-xs text-red-700 font-medium italic truncate">
+                        "Reason: {app.declineReason}"
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-4 pl-6 md:border-l border-slate-100">
@@ -146,8 +154,9 @@ function StatusBadge({ status }: { status: number }) {
   const configs: Record<number, { label: string, color: string }> = {
     1: { label: 'Pending', color: 'bg-orange-50 text-orange-600 border-orange-100' },
     2: { label: 'Confirmed', color: 'bg-green-50 text-green-600 border-green-100' },
-    3: { label: 'Cancelled', color: 'bg-red-50 text-red-600 border-red-100' },
-    4: { label: 'Completed', color: 'bg-blue-50 text-blue-600 border-blue-100' },
+    3: { label: 'Completed', color: 'bg-blue-50 text-blue-600 border-blue-100' },
+    4: { label: 'Cancelled', color: 'bg-red-50 text-red-600 border-red-100' },
+    8: { label: 'Declined', color: 'bg-red-100 text-red-700 border-red-200' },
   };
   const config = configs[status] || { label: 'Unknown', color: 'bg-slate-50 text-slate-400 border-slate-100' };
   return (

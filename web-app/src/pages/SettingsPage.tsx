@@ -19,10 +19,12 @@ import Layout from '../components/Layout';
 import { useNavigate } from 'react-router-dom';
 import { authService, feedbackService } from '../services/petCareService';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [feedbackData, setFeedbackData] = useState({
@@ -47,7 +49,7 @@ export default function SettingsPage() {
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      alert('New passwords do not match');
+      showToast('New passwords do not match', 'error');
       return;
     }
 
@@ -57,11 +59,11 @@ export default function SettingsPage() {
         currentPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword
       });
-      alert('Password changed successfully');
+      showToast('Password changed successfully', 'success');
       setIsChangePasswordOpen(false);
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Failed to change password');
+      showToast(error.response?.data?.message || 'Failed to change password', 'error');
     } finally {
       setLoading(false);
     }
@@ -70,18 +72,18 @@ export default function SettingsPage() {
   const handleFeedbackSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!feedbackData.subject.trim() || !feedbackData.message.trim()) {
-      alert('Please fill in both subject and message');
+      showToast('Please fill in both subject and message', 'error');
       return;
     }
 
     setSubmittingFeedback(true);
     try {
       await feedbackService.submitFeedback(feedbackData);
-      alert('Thank you for your feedback!');
+      showToast('Thank you for your feedback!', 'success');
       setIsFeedbackOpen(false);
       setFeedbackData({ subject: '', message: '' });
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Failed to submit feedback');
+      showToast(error.response?.data?.message || 'Failed to submit feedback', 'error');
     } finally {
       setSubmittingFeedback(false);
     }

@@ -71,7 +71,7 @@ namespace PetCareAPI.Controllers
         [HttpPatch("{id}/status")]
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] StatusUpdateDto statusDto)
         {
-            var result = await _appointmentService.UpdateStatusAsync(id, statusDto.Status);
+            var result = await _appointmentService.UpdateStatusAsync(id, statusDto.Status, statusDto.Reason);
             if (!result) return NotFound();
 
             return NoContent();
@@ -85,6 +85,7 @@ namespace PetCareAPI.Controllers
         public class StatusUpdateDto
         {
             public int Status { get; set; }
+            public string? Reason { get; set; }
         }
     }
 }

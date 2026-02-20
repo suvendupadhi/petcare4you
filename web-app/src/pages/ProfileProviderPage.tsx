@@ -26,15 +26,22 @@ import {
   ProviderService, 
   ServiceType 
 } from '../services/petCareService';
+import { useToast } from '../context/ToastContext';
+import ConfirmationModal from '../components/ConfirmationModal';
 
 export default function ProfileProviderPage() {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [profile, setProfile] = useState<User | null>(null);
   const [provider, setProvider] = useState<Provider | null>(null);
   const [services, setServices] = useState<ProviderService[]>([]);
   const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
   const [loading, setLoading] = useState(true);
   
+  // Modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [serviceToDelete, setServiceToDelete] = useState<number | null>(null);
+
   // Edit Business state
   const [editMode, setEditMode] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -122,9 +129,9 @@ export default function ProfileProviderPage() {
       await providerService.updateProvider(provider.id, editForm);
       setEditMode(false);
       loadData();
-      alert('Business profile updated successfully');
+      showToast('Business profile updated successfully', 'success');
     } catch (error) {
-      alert('Failed to update business profile');
+      showToast('Failed to update business profile', 'error');
     }
   };
 
@@ -147,21 +154,29 @@ export default function ProfileProviderPage() {
       setShowServiceModal(false);
       setServiceErrors({});
       loadData();
-      alert('Service saved successfully!');
+      showToast('Service saved successfully!', 'success');
     } catch (error) {
       console.error('Error saving service:', error);
-      alert('Failed to save service');
+      showToast('Failed to save service', 'error');
     }
   };
 
-  const handleDeleteService = async (id: number) => {
-    if (window.confirm('Are you sure you want to remove this service?')) {
-      try {
-        await providerServicePricingService.deleteService(id);
-        loadData();
-      } catch (error) {
-        alert('Failed to delete service');
-      }
+  const handleDeleteService = (id: number) => {
+    setServiceToDelete(id);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteService = async () => {
+    if (!serviceToDelete) return;
+    try {
+      await providerServicePricingService.deleteService(serviceToDelete);
+      loadData();
+      showToast('Service removed successfully', 'success');
+    } catch (error) {
+      showToast('Failed to delete service', 'error');
+    } finally {
+      setShowDeleteModal(false);
+      setServiceToDelete(null);
     }
   };
 
@@ -450,6 +465,17 @@ export default function ProfileProviderPage() {
           </div>
         </div>
       )}
+
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        title="Remove Service"
+        message="Are you sure you want to remove this service? This cannot be undone."
+        confirmLabel="Remove"
+        cancelLabel="Keep"
+        onConfirm={confirmDeleteService}
+        onCancel={() => setShowDeleteModal(false)}
+        type="danger"
+      />
     </Layout>
   );
 }

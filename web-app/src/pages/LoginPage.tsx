@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { PawPrint, Mail, Lock, ArrowRight } from 'lucide-react';
 import { authService } from '../services/petCareService';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { showToast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -15,13 +17,14 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
-      alert('Please enter email and password');
+      showToast('Please enter email and password', 'warning');
       return;
     }
 
     setLoading(true);
     try {
       const result = await authService.login({ email, password });
+      showToast('Login successful!', 'success');
       
       // Update global auth state
       login(result.token, {
@@ -34,7 +37,7 @@ export default function LoginPage() {
 
       // Navigation is handled by AuthGuard in App.tsx
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Login failed');
+      showToast(error.response?.data?.message || 'Login failed', 'error');
     } finally {
       setLoading(false);
     }

@@ -4,9 +4,11 @@ import { PawPrint, User, Mail, Lock, MapPin, ArrowRight } from 'lucide-react';
 import { authService } from '../services/petCareService';
 import CountryCodePicker from '../components/CountryCodePicker';
 import { countries, Country } from '../constants/countries';
+import { useToast } from '../context/ToastContext';
 
 export default function RegisterOwnerPage() {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [selectedCountry, setSelectedCountry] = useState<Country>(countries[0]); // Default to US
@@ -58,10 +60,10 @@ export default function RegisterOwnerPage() {
         ...formData,
         phoneNumber: fullPhoneNumber
       });
-      alert('Registration successful! Please login.');
+      showToast('Registration successful! Please login.', 'success');
       navigate('/');
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Registration failed');
+      showToast(error.response?.data?.message || 'Registration failed', 'error');
     } finally {
       setLoading(false);
     }
