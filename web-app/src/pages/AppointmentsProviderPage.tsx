@@ -82,19 +82,19 @@ export default function AppointmentsProviderPage() {
           <div className="flex items-center gap-2 bg-white p-1 rounded-xl border border-slate-100 shadow-sm">
             <button 
               onClick={() => setFilterStatus('all')}
-              className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${filterStatus === 'all' ? 'bg-orange-600 text-white' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${filterStatus === 'all' ? 'bg-orange-600 text-white' : 'text-slate-500 hover:text-slate-700'}`}
             >
               All
             </button>
             <button 
               onClick={() => setFilterStatus(1)}
-              className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${filterStatus === 1 ? 'bg-orange-600 text-white' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${filterStatus === 1 ? 'bg-orange-600 text-white' : 'text-slate-500 hover:text-slate-700'}`}
             >
               Requests
             </button>
             <button 
               onClick={() => setFilterStatus(2)}
-              className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${filterStatus === 2 ? 'bg-orange-600 text-white' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all cursor-pointer ${filterStatus === 2 ? 'bg-orange-600 text-white' : 'text-slate-500 hover:text-slate-700'}`}
             >
               Confirmed
             </button>
@@ -142,14 +142,14 @@ export default function AppointmentsProviderPage() {
                             <>
                               <button 
                                 onClick={() => handleStatusUpdate(app.id, 2)}
-                                className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors cursor-pointer"
                                 title="Approve"
                               >
                                 <CheckCircle size={18} />
                               </button>
                               <button 
                                 onClick={() => openDeclineModal(app.id)}
-                                className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                                 title="Decline"
                               >
                                 <XCircle size={18} />
@@ -158,7 +158,7 @@ export default function AppointmentsProviderPage() {
                           )}
                           <button 
                             onClick={() => navigate(`/appointment-detail/${app.id}`)}
-                            className="px-3 py-1 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors"
+                            className="px-3 py-1 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors cursor-pointer"
                           >
                             Details
                           </button>
@@ -206,14 +206,14 @@ export default function AppointmentsProviderPage() {
             <div className="flex flex-col sm:flex-row gap-3 mt-8">
               <button
                 onClick={() => setShowDeclineModal(false)}
-                className="flex-1 px-6 py-3 text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all"
+                className="flex-1 px-6 py-3 text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmDecline}
                 disabled={!declineReason.trim()}
-                className="flex-1 px-6 py-3 text-sm font-bold text-white bg-orange-600 hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-all shadow-lg shadow-orange-600/20"
+                className="flex-1 px-6 py-3 text-sm font-bold text-white bg-orange-600 hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-all shadow-lg shadow-orange-600/20 cursor-pointer"
               >
                 Confirm Decline
               </button>

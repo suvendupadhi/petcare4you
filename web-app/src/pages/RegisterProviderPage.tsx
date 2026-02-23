@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { PawPrint, User, Mail, Lock, MapPin, Building2, DollarSign, ArrowRight } from 'lucide-react';
+import { User, Mail, Lock, MapPin, Building2, DollarSign, ArrowRight } from 'lucide-react';
+import dogLogo from '../assets/dog_img.jpeg';
 import { authService, serviceTypeService, ServiceType } from '../services/petCareService';
 import CountryCodePicker from '../components/CountryCodePicker';
 import { countries, Country } from '../constants/countries';
@@ -104,9 +105,7 @@ export default function RegisterProviderPage() {
       <div className="w-full max-w-3xl bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100">
         <div className="p-8">
           <div className="flex items-center gap-3 mb-8">
-            <div className="bg-orange-600 rounded-full p-3">
-              <PawPrint className="text-white" size={28} />
-            </div>
+            <img src={dogLogo} alt="PetCare" className="w-12 h-12 rounded-lg object-cover border border-orange-200" />
             <div>
               <h1 className="text-2xl font-bold text-slate-900">PetCare</h1>
               <p className="text-sm text-slate-500">Service Provider Registration</p>

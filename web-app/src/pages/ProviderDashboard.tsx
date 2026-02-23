@@ -129,13 +129,13 @@ export default function ProviderDashboard() {
           <div className="flex gap-3">
             <button 
               onClick={() => navigate('/appointments-provider')}
-              className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
+              className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-sm cursor-pointer"
             >
               All Bookings
             </button>
             <button 
               onClick={() => navigate('/profile-provider')}
-              className="px-4 py-2 bg-orange-600 rounded-xl text-sm font-bold text-white hover:bg-orange-700 transition-colors shadow-md"
+              className="px-4 py-2 bg-orange-600 rounded-xl text-sm font-bold text-white hover:bg-orange-700 transition-colors shadow-md cursor-pointer"
             >
               Edit Profile
             </button>
@@ -194,7 +194,7 @@ export default function ProviderDashboard() {
                 className={`text-sm font-bold ${
                   appointments.length === 0 
                     ? 'text-slate-300 cursor-not-allowed' 
-                    : 'text-orange-600 hover:underline'
+                    : 'text-orange-600 hover:underline cursor-pointer'
                 }`}
               >
                 View Schedule
@@ -239,14 +239,14 @@ export default function ProviderDashboard() {
                               <>
                                 <button 
                                   onClick={() => handleStatusUpdate(app.id, 2)}
-                                  className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                  className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors cursor-pointer"
                                   title="Approve"
                                 >
                                   <CheckCircle size={18} />
                                 </button>
                                 <button 
                                   onClick={() => handleStatusUpdate(app.id, 8)}
-                                  className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                  className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                                   title="Decline"
                                 >
                                   <XCircle size={18} />
@@ -255,7 +255,7 @@ export default function ProviderDashboard() {
                             )}
                             <button 
                               onClick={() => navigate(`/appointment-detail/${app.id}`)}
-                              className="px-3 py-1 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors"
+                              className="px-3 py-1 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors cursor-pointer"
                             >
                               Details
                             </button>
@@ -288,7 +288,7 @@ export default function ProviderDashboard() {
               </div>
               <button 
                 onClick={() => navigate('/profile-provider')}
-                className="px-6 py-3 bg-white text-orange-600 rounded-xl font-bold text-sm hover:bg-orange-50 transition-all shadow-md active:scale-95 self-start md:self-center"
+                className="px-6 py-3 bg-white text-orange-600 rounded-xl font-bold text-sm hover:bg-orange-50 transition-all shadow-md active:scale-95 self-start md:self-center cursor-pointer"
               >
                 Boost Profile
               </button>
@@ -324,14 +324,14 @@ export default function ProviderDashboard() {
             <div className="flex flex-col sm:flex-row gap-3 mt-8">
               <button
                 onClick={() => setShowDeclineModal(false)}
-                className="flex-1 px-6 py-3 text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all"
+                className="flex-1 px-6 py-3 text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmDecline}
                 disabled={!declineReason.trim()}
-                className="flex-1 px-6 py-3 text-sm font-bold text-white bg-orange-600 hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-all shadow-lg shadow-orange-600/20"
+                className="flex-1 px-6 py-3 text-sm font-bold text-white bg-orange-600 hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-all shadow-lg shadow-orange-600/20 cursor-pointer"
               >
                 Confirm Decline
               </button>
@@ -381,7 +381,7 @@ function ActionButton({ icon, label, onClick }: { icon: any, label: string, onCl
   return (
     <button 
       onClick={onClick}
-      className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-100 hover:border-orange-200 hover:bg-orange-50/50 hover:text-orange-600 transition-all text-left"
+      className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-100 hover:border-orange-200 hover:bg-orange-50/50 hover:text-orange-600 transition-all text-left cursor-pointer"
     >
       <span className="text-slate-400">{icon}</span>
       {label}

@@ -123,7 +123,7 @@ export default function PaymentModal({ payment, onClose, onSuccess }: PaymentMod
             <h3 className="text-xl font-bold text-slate-800">Complete Payment</h3>
             <p className="text-xs text-slate-500 font-medium">Invoice #{payment.id}</p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-white rounded-full transition-all shadow-sm border border-transparent hover:border-slate-100">
+          <button onClick={onClose} className="p-2 hover:bg-white rounded-full transition-all shadow-sm border border-transparent hover:border-slate-100 cursor-pointer">
             <X size={20} className="text-slate-400" />
           </button>
         </div>
@@ -135,7 +135,7 @@ export default function PaymentModal({ payment, onClose, onSuccess }: PaymentMod
               <div className="grid grid-cols-1 gap-3">
                 <button 
                   onClick={() => setMethod('card')}
-                  className="flex items-center gap-4 p-5 rounded-2xl border-2 border-slate-100 hover:border-orange-500 hover:bg-orange-50/50 transition-all group"
+                  className="flex items-center gap-4 p-5 rounded-2xl border-2 border-slate-100 hover:border-orange-500 hover:bg-orange-50/50 transition-all group cursor-pointer"
                 >
                   <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-all">
                     <CreditCard size={24} />
@@ -148,7 +148,7 @@ export default function PaymentModal({ payment, onClose, onSuccess }: PaymentMod
 
                 <button 
                   onClick={() => setMethod('cash')}
-                  className="flex items-center gap-4 p-5 rounded-2xl border-2 border-slate-100 hover:border-green-500 hover:bg-green-50/50 transition-all group"
+                  className="flex items-center gap-4 p-5 rounded-2xl border-2 border-slate-100 hover:border-green-500 hover:bg-green-50/50 transition-all group cursor-pointer"
                 >
                   <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-green-600 group-hover:bg-green-600 group-hover:text-white transition-all">
                     <DollarSign size={24} />
@@ -164,7 +164,7 @@ export default function PaymentModal({ payment, onClose, onSuccess }: PaymentMod
 
           {method === 'card' && (
             <div className="space-y-4">
-              <button onClick={() => setMethod('selection')} className="text-sm font-bold text-slate-400 hover:text-slate-600 flex items-center gap-1">← Change Method</button>
+              <button onClick={() => setMethod('selection')} className="text-sm font-bold text-slate-400 hover:text-slate-600 flex items-center gap-1 cursor-pointer">← Change Method</button>
               <Elements stripe={stripePromise}>
                 <CheckoutForm payment={payment} onSuccess={onSuccess} />
               </Elements>
@@ -173,7 +173,7 @@ export default function PaymentModal({ payment, onClose, onSuccess }: PaymentMod
 
           {method === 'cash' && (
             <div className="space-y-6">
-              <button onClick={() => setMethod('selection')} className="text-sm font-bold text-slate-400 hover:text-slate-600 flex items-center gap-1">← Change Method</button>
+              <button onClick={() => setMethod('selection')} className="text-sm font-bold text-slate-400 hover:text-slate-600 flex items-center gap-1 cursor-pointer">← Change Method</button>
               <div className="space-y-4">
                 <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 text-center">
                   <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Amount to Collect</div>
@@ -196,7 +196,7 @@ export default function PaymentModal({ payment, onClose, onSuccess }: PaymentMod
                 <button
                   onClick={handleCashPayment}
                   disabled={loading || parseFloat(cashAmount) <= 0}
-                  className="w-full py-4 bg-green-600 text-white rounded-2xl font-bold shadow-lg shadow-green-600/20 hover:bg-green-700 disabled:opacity-50"
+                  className="w-full py-4 bg-green-600 text-white rounded-2xl font-bold shadow-lg shadow-green-600/20 hover:bg-green-700 disabled:opacity-50 cursor-pointer"
                 >
                   {loading ? 'Processing...' : 'Confirm Cash Received'}
                 </button>

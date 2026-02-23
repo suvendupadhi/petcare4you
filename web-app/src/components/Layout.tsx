@@ -6,7 +6,6 @@ import {
   User, 
   Settings, 
   LogOut, 
-  PawPrint,
   Bell,
   MessageSquare,
   Search,
@@ -15,7 +14,9 @@ import {
   ShieldCheck,
   X,
   Send,
+  PawPrint,
 } from 'lucide-react';
+import dogLogo from '../assets/dog_img.jpeg';
 import { authService, notificationService, systemConfigService, feedbackService } from '../services/petCareService';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -103,7 +104,6 @@ export default function Layout({ children, userType: propUserType, showFeedback 
     { icon: Search, label: 'Find Providers', path: '/search-providers' },
     { icon: Calendar, label: 'My Bookings', path: '/appointments-owner' },
     { icon: PawPrint, label: 'My Pets', path: '/profile-owner' },
-    { icon: CreditCard, label: 'Payments', path: '/payment-invoice' },
   ] : [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/provider-dashboard' },
     { icon: Calendar, label: 'Bookings', path: '/appointments-provider' },
@@ -122,9 +122,7 @@ export default function Layout({ children, userType: propUserType, showFeedback 
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-slate-200 flex flex-col">
         <div className="p-6 flex items-center gap-3">
-          <div className="bg-orange-600 rounded-lg p-2">
-            <PawPrint className="text-white" size={20} />
-          </div>
+          <img src={dogLogo} alt="PetCare" className="w-10 h-10 rounded-lg object-cover border border-orange-200" />
           <span className="text-xl font-bold text-slate-900">PetCare</span>
         </div>
 
@@ -165,7 +163,7 @@ export default function Layout({ children, userType: propUserType, showFeedback 
         <div className="p-4 border-t border-slate-200">
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+            className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
           >
             <LogOut size={18} />
             Logout
@@ -185,13 +183,13 @@ export default function Layout({ children, userType: propUserType, showFeedback 
           <div className="flex items-center gap-6">
             <button 
               onClick={() => setIsFeedbackOpen(true)}
-              className="text-sm font-bold text-slate-900 hidden md:block hover:text-orange-600 transition-colors"
+              className="text-sm font-bold text-slate-900 hidden md:block hover:text-orange-600 transition-colors cursor-pointer"
             >
               Have issue? Send Feedback.
             </button>
             <button 
               onClick={() => navigate('/notifications')}
-              className={`p-2 transition-colors relative ${
+              className={`p-2 transition-colors relative cursor-pointer ${
                 location.pathname === '/notifications'
                   ? 'text-orange-600'
                   : 'text-slate-400 hover:text-slate-600'
@@ -206,7 +204,7 @@ export default function Layout({ children, userType: propUserType, showFeedback 
             </button>
             <button 
               onClick={handleLogout}
-              className="w-10 h-10 rounded-full bg-red-50 border border-red-100 flex items-center justify-center text-red-600 hover:bg-red-100 transition-colors shadow-sm"
+              className="w-10 h-10 rounded-full bg-red-50 border border-red-100 flex items-center justify-center text-red-600 hover:bg-red-100 transition-colors shadow-sm cursor-pointer"
               title="Logout"
             >
               <LogOut size={18} />
@@ -230,7 +228,7 @@ export default function Layout({ children, userType: propUserType, showFeedback 
               </div>
               <button 
                 onClick={() => setIsFeedbackOpen(false)}
-                className="text-slate-400 hover:text-slate-600 transition-colors"
+                className="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
               >
                 <X size={20} />
               </button>
@@ -265,7 +263,7 @@ export default function Layout({ children, userType: propUserType, showFeedback 
                 <button
                   type="submit"
                   disabled={submittingFeedback}
-                  className="w-full bg-orange-600 text-white py-3 rounded-xl font-bold hover:bg-orange-700 transition-all shadow-lg shadow-orange-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full bg-orange-600 text-white py-3 rounded-xl font-bold hover:bg-orange-700 transition-all shadow-lg shadow-orange-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {submittingFeedback ? (
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

@@ -239,7 +239,7 @@ export default function ProfileProviderPage() {
                 </div>
                 <button 
                   onClick={() => editMode ? handleSaveBusiness() : setEditMode(true)}
-                  className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all shadow-md ${
+                  className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all shadow-md cursor-pointer ${
                     editMode ? 'bg-green-600 text-white shadow-green-600/20' : 'bg-orange-600 text-white shadow-orange-600/20'
                   }`}
                 >
@@ -337,13 +337,13 @@ export default function ProfileProviderPage() {
                     <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-all">
                       <button 
                         onClick={() => { setEditingService(service); setServiceForm({ serviceTypeId: service.serviceTypeId, price: service.price, description: service.description || '' }); setShowServiceModal(true); }}
-                        className="p-2 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg"
+                        className="p-2 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg cursor-pointer"
                       >
                         <Edit size={16} />
                       </button>
                       <button 
                         onClick={() => handleDeleteService(service.id!)}
-                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
+                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg cursor-pointer"
                       >
                         <Trash2 size={16} />
                       </button>
@@ -406,7 +406,7 @@ export default function ProfileProviderPage() {
           <div className="bg-white rounded-3xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
             <div className="p-6 border-b border-slate-100 flex items-center justify-between">
               <h3 className="text-xl font-bold text-slate-800">{editingService ? 'Edit Service' : 'Add New Service'}</h3>
-              <button onClick={() => setShowServiceModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+              <button onClick={() => setShowServiceModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors cursor-pointer">
                 <X size={20} className="text-slate-500" />
               </button>
             </div>
@@ -450,14 +450,14 @@ export default function ProfileProviderPage() {
             <div className="p-6 bg-slate-50 border-t border-slate-100 flex gap-3">
               <button 
                 onClick={() => setShowServiceModal(false)}
-                className="flex-1 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50"
+                className="flex-1 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50 cursor-pointer"
               >
                 Cancel
               </button>
               <button 
                 onClick={handleAddService}
                 disabled={!serviceForm.serviceTypeId || !serviceForm.price}
-                className="flex-1 py-3 bg-orange-600 text-white rounded-xl font-bold shadow-lg shadow-orange-600/20 hover:bg-orange-700 disabled:opacity-50"
+                className="flex-1 py-3 bg-orange-600 text-white rounded-xl font-bold shadow-lg shadow-orange-600/20 hover:bg-orange-700 disabled:opacity-50 cursor-pointer"
               >
                 {editingService ? 'Save Changes' : 'Add Service'}
               </button>

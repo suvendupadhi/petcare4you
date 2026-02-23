@@ -8,7 +8,6 @@ import {
   ChevronRight, 
   Smartphone,
   Globe,
-  LogOut,
   X,
   Eye,
   EyeOff,
@@ -40,11 +39,6 @@ export default function SettingsPage() {
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  const handleLogout = () => {
-    authService.logout();
-    navigate('/');
-  };
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -167,7 +161,7 @@ export default function SettingsPage() {
                   <button 
                     key={item.label}
                     onClick={item.action}
-                    className="w-full p-6 flex items-center justify-between hover:bg-slate-50 transition-all text-left group"
+                    className="w-full p-6 flex items-center justify-between hover:bg-slate-50 transition-all text-left group cursor-pointer"
                   >
                     <div className="flex items-center gap-4">
                       <div className="p-2.5 bg-slate-50 text-slate-400 group-hover:text-orange-600 rounded-xl transition-colors">
@@ -187,7 +181,7 @@ export default function SettingsPage() {
 
           <button 
             onClick={() => setIsFeedbackOpen(true)}
-            className="w-full p-6 flex items-center justify-between hover:bg-slate-50 transition-all text-left group bg-white rounded-3xl border border-slate-100 shadow-sm"
+            className="w-full p-6 flex items-center justify-between hover:bg-slate-50 transition-all text-left group bg-white rounded-3xl border border-slate-100 shadow-sm cursor-pointer"
           >
             <div className="flex items-center gap-4">
               <div className="p-2.5 bg-orange-50 text-orange-600 rounded-xl">
@@ -201,16 +195,6 @@ export default function SettingsPage() {
             <ChevronRight size={18} className="text-slate-300" />
           </button>
         </div>
-
-        <div className="pt-4">
-          <button 
-            onClick={handleLogout}
-            className="w-full p-6 bg-red-50 text-red-600 rounded-3xl border border-red-100 font-bold flex items-center justify-center gap-2 hover:bg-red-100 transition-all"
-          >
-            <LogOut size={20} />
-            Sign Out of Your Account
-          </button>
-        </div>
       </div>
 
       {/* Change Password Modal */}
@@ -219,7 +203,7 @@ export default function SettingsPage() {
           <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center">
               <h2 className="text-2xl font-bold text-slate-900">Change Password</h2>
-              <button onClick={() => setIsChangePasswordOpen(false)} className="text-slate-400 hover:text-slate-600">
+              <button onClick={() => setIsChangePasswordOpen(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
                 <X size={24} />
               </button>
             </div>
@@ -238,7 +222,7 @@ export default function SettingsPage() {
                   <button
                     type="button"
                     onClick={() => setShowCurrent(!showCurrent)}
-                    className="absolute right-3 top-3.5 text-slate-400 hover:text-slate-600"
+                    className="absolute right-3 top-3.5 text-slate-400 hover:text-slate-600 cursor-pointer"
                   >
                     {showCurrent ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
@@ -258,7 +242,7 @@ export default function SettingsPage() {
                   <button
                     type="button"
                     onClick={() => setShowNew(!showNew)}
-                    className="absolute right-3 top-3.5 text-slate-400 hover:text-slate-600"
+                    className="absolute right-3 top-3.5 text-slate-400 hover:text-slate-600 cursor-pointer"
                   >
                     {showNew ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
@@ -279,14 +263,14 @@ export default function SettingsPage() {
                 <button
                   type="button"
                   onClick={() => setIsChangePasswordOpen(false)}
-                  className="flex-1 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors"
+                  className="flex-1 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 py-3 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-colors disabled:opacity-70"
+                  className="flex-1 py-3 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-colors disabled:opacity-70 cursor-pointer"
                 >
                   {loading ? 'Updating...' : 'Update Password'}
                 </button>
@@ -302,7 +286,7 @@ export default function SettingsPage() {
           <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center">
               <h2 className="text-2xl font-bold text-slate-900">Send Feedback</h2>
-              <button onClick={() => setIsFeedbackOpen(false)} className="text-slate-400 hover:text-slate-600">
+              <button onClick={() => setIsFeedbackOpen(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
                 <X size={24} />
               </button>
             </div>
@@ -333,14 +317,14 @@ export default function SettingsPage() {
                 <button
                   type="button"
                   onClick={() => setIsFeedbackOpen(false)}
-                  className="flex-1 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors"
+                  className="flex-1 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submittingFeedback}
-                  className="flex-1 py-3 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-colors disabled:opacity-70 flex items-center justify-center gap-2"
+                  className="flex-1 py-3 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-colors disabled:opacity-70 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {submittingFeedback ? 'Sending...' : (
                     <>

@@ -67,13 +67,13 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         <div className="flex flex-col sm:flex-row gap-3 mt-8">
           <button
             onClick={onCancel}
-            className="flex-1 px-6 py-3 text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all"
+            className="flex-1 px-6 py-3 text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all cursor-pointer"
           >
             {cancelLabel}
           </button>
           <button
             onClick={onConfirm}
-            className={`flex-1 px-6 py-3 text-sm font-bold text-white rounded-xl transition-all shadow-lg ${getButtonColor()}`}
+            className={`flex-1 px-6 py-3 text-sm font-bold text-white rounded-xl transition-all shadow-lg ${getButtonColor()} cursor-pointer`}
           >
             {confirmLabel}
           </button>

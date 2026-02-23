@@ -107,7 +107,7 @@ export default function OwnerDashboard() {
           </div>
           <button 
             onClick={() => navigate('/search-providers')}
-            className="bg-orange-600 p-6 rounded-2xl shadow-md flex items-center justify-center gap-3 text-white font-bold hover:bg-orange-700 transition-colors"
+            className="bg-orange-600 p-6 rounded-2xl shadow-md flex items-center justify-center gap-3 text-white font-bold hover:bg-orange-700 transition-colors cursor-pointer"
           >
             <Search size={24} />
             Find a Provider
@@ -139,7 +139,7 @@ export default function OwnerDashboard() {
                 className={`text-sm font-bold ${
                   upcomingAppointments.length === 0 
                     ? 'text-slate-300 cursor-not-allowed' 
-                    : 'text-orange-600 hover:underline'
+                    : 'text-orange-600 hover:underline cursor-pointer'
                 }`}
               >
                 View All
@@ -174,7 +174,7 @@ export default function OwnerDashboard() {
             <div className="pt-4 space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-bold text-slate-800">Recent Providers</h2>
-                <button onClick={() => navigate('/search-providers')} className="text-sm text-orange-600 font-bold hover:underline">Explore More</button>
+                <button onClick={() => navigate('/search-providers')} className="text-sm text-orange-600 font-bold hover:underline cursor-pointer">Explore More</button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {recentProviders.map(provider => (
@@ -215,7 +215,7 @@ export default function OwnerDashboard() {
             <div className="pt-4 space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-bold text-slate-800">Top Rated Providers</h2>
-                <button onClick={() => navigate('/search-providers')} className="text-sm text-orange-600 font-bold hover:underline">Browse All</button>
+                <button onClick={() => navigate('/search-providers')} className="text-sm text-orange-600 font-bold hover:underline cursor-pointer">Browse All</button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {featuredProviders.map(provider => (
@@ -257,7 +257,7 @@ export default function OwnerDashboard() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold text-slate-800">My Pets</h2>
-              <button onClick={() => navigate('/profile-owner')} className="bg-orange-50 text-orange-600 p-1.5 rounded-lg hover:bg-orange-100 transition-colors">
+              <button onClick={() => navigate('/profile-owner')} className="bg-orange-50 text-orange-600 p-1.5 rounded-lg hover:bg-orange-100 transition-colors cursor-pointer">
                 <PawPrint size={18} />
               </button>
             </div>
@@ -275,7 +275,7 @@ export default function OwnerDashboard() {
               ))}
               <button 
                 onClick={() => navigate('/profile-owner')}
-                className="w-full py-3 border-2 border-dashed border-slate-200 rounded-xl text-slate-400 text-sm font-bold hover:border-orange-300 hover:text-orange-500 transition-all"
+                className="w-full py-3 border-2 border-dashed border-slate-200 rounded-xl text-slate-400 text-sm font-bold hover:border-orange-300 hover:text-orange-500 transition-all cursor-pointer"
               >
                 + Add New Pet
               </button>

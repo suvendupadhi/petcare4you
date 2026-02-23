@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PawPrint, Mail, Lock, ArrowRight } from 'lucide-react';
+import { Mail, Lock, ArrowRight } from 'lucide-react';
+import dogLogo from '../assets/dog_img.jpeg';
 import { authService } from '../services/petCareService';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -48,9 +49,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100">
         <div className="p-8">
           <div className="flex items-center gap-3 mb-8">
-            <div className="bg-orange-600 rounded-full p-3">
-              <PawPrint className="text-white" size={28} />
-            </div>
+            <img src={dogLogo} alt="PetCare" className="w-12 h-12 rounded-lg object-cover border border-orange-200" />
             <div>
               <h1 className="text-2xl font-bold text-slate-900">PetCare</h1>
               <p className="text-sm text-slate-500">Connect Web</p>
@@ -63,7 +62,7 @@ export default function LoginPage() {
           <div className="flex gap-2 mb-8 p-1 bg-slate-100 rounded-xl">
             <button
               onClick={() => setUserType('owner')}
-              className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${
+              className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all cursor-pointer ${
                 userType === 'owner' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
               }`}
             >
@@ -71,7 +70,7 @@ export default function LoginPage() {
             </button>
             <button
               onClick={() => setUserType('provider')}
-              className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${
+              className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all cursor-pointer ${
                 userType === 'provider' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
               }`}
             >
@@ -110,7 +109,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => navigate('/forgot-password')}
-                  className="text-sm font-semibold text-orange-600 hover:text-orange-700"
+                  className="text-sm font-semibold text-orange-600 hover:text-orange-700 cursor-pointer"
                 >
                   Forgot Password?
                 </button>
@@ -120,7 +119,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-orange-600 text-white rounded-xl py-4 font-bold flex items-center justify-center gap-2 hover:bg-orange-700 transition-colors disabled:opacity-70"
+              className="w-full bg-orange-600 text-white rounded-xl py-4 font-bold flex items-center justify-center gap-2 hover:bg-orange-700 transition-colors disabled:opacity-70 cursor-pointer"
             >
               {loading ? 'Signing In...' : 'Sign In'}
               {!loading && <ArrowRight size={20} />}
@@ -132,7 +131,7 @@ export default function LoginPage() {
               New to PetCare?{' '}
               <button
                 onClick={() => navigate(userType === 'owner' ? '/register-owner' : '/register-provider')}
-                className="text-orange-600 font-bold hover:underline"
+                className="text-orange-600 font-bold hover:underline cursor-pointer"
               >
                 Create Account
               </button>

@@ -198,7 +198,7 @@ export default function ProfileOwnerPage() {
             </h2>
             <button 
               onClick={() => editMode ? handleSaveProfile() : setEditMode(true)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer ${
                 editMode ? 'bg-green-600 text-white shadow-lg shadow-green-600/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
@@ -299,7 +299,7 @@ export default function ProfileOwnerPage() {
             </h2>
             <button 
               onClick={() => setShowPetModal(true)}
-              className="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg shadow-orange-600/20 hover:bg-orange-700 transition-all"
+              className="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg shadow-orange-600/20 hover:bg-orange-700 transition-all cursor-pointer"
             >
               <Plus size={18} />
               Add Pet
@@ -321,7 +321,7 @@ export default function ProfileOwnerPage() {
                     <h3 className="text-lg font-bold text-slate-900">{pet.name}</h3>
                     <button 
                       onClick={() => handleDeletePet(pet.id)}
-                      className="p-1.5 text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                      className="p-1.5 text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 cursor-pointer"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -355,7 +355,7 @@ export default function ProfileOwnerPage() {
           <div className="bg-white rounded-3xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
             <div className="p-6 border-b border-slate-100 flex items-center justify-between">
               <h3 className="text-xl font-bold text-slate-800">Add New Pet</h3>
-              <button onClick={() => setShowPetModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+              <button onClick={() => setShowPetModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors cursor-pointer">
                 <X size={20} className="text-slate-500" />
               </button>
             </div>
@@ -433,13 +433,13 @@ export default function ProfileOwnerPage() {
             <div className="p-6 bg-slate-50 border-t border-slate-100 flex gap-3">
               <button 
                 onClick={() => setShowPetModal(false)}
-                className="flex-1 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50"
+                className="flex-1 py-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50 cursor-pointer"
               >
                 Cancel
               </button>
               <button 
                 onClick={handleAddPet}
-                className="flex-1 py-3 bg-orange-600 text-white rounded-xl font-bold shadow-lg shadow-orange-600/20 hover:bg-orange-700"
+                className="flex-1 py-3 bg-orange-600 text-white rounded-xl font-bold shadow-lg shadow-orange-600/20 hover:bg-orange-700 cursor-pointer"
               >
                 Add Pet
               </button>

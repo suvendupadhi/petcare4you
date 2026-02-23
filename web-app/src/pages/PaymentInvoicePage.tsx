@@ -192,7 +192,7 @@ export default function PaymentInvoicePage() {
                         <button 
                           onClick={() => handleGenerateInvoice(pay.id)}
                           disabled={invoiceLoading === pay.id}
-                          className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:border-orange-500 hover:text-orange-600 transition-all shadow-sm"
+                          className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:border-orange-500 hover:text-orange-600 transition-all shadow-sm cursor-pointer"
                         >
                           {invoiceLoading === pay.id ? (
                             <div className="animate-spin h-3 w-3 border-b-2 border-orange-600 rounded-full" />
@@ -210,7 +210,7 @@ export default function PaymentInvoicePage() {
                         ) : (
                           <button 
                             onClick={() => openPaymentModal(pay)}
-                            className="flex items-center gap-2 px-4 py-2 bg-orange-600 rounded-xl text-xs font-bold text-white hover:bg-orange-700 transition-all shadow-md shadow-orange-600/20"
+                            className="flex items-center gap-2 px-4 py-2 bg-orange-600 rounded-xl text-xs font-bold text-white hover:bg-orange-700 transition-all shadow-md shadow-orange-600/20 cursor-pointer"
                           >
                             <DollarSign size={14} />
                             Pay

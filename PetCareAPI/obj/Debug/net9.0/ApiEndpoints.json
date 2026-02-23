@@ -1005,6 +1005,26 @@
     ]
   },
   {
+    "ContainingType": "PetCareAPI.Controllers.ProviderServicesController",
+    "Method": "GetRecentProviders",
+    "RelativePath": "api/ProviderServices/recent",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[PetCareAPI.Models.Provider, PetCareAPI, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
     "ContainingType": "PetCareAPI.Controllers.ReviewsController",
     "Method": "CreateReview",
     "RelativePath": "api/Reviews",

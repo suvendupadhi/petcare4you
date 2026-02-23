@@ -118,7 +118,7 @@ export default function ManageAvailabilityPage() {
         <div className="flex items-center gap-4">
           <button 
             onClick={() => navigate(-1)}
-            className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+            className="p-2 hover:bg-slate-100 rounded-full transition-colors cursor-pointer"
           >
             <ArrowLeft size={24} className="text-slate-600" />
           </button>
@@ -144,7 +144,7 @@ export default function ManageAvailabilityPage() {
                     type="date"
                     value={selectedDate}
                     onChange={(e) => setSelectedDate(e.target.value)}
-                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none cursor-pointer"
                     required
                   />
                 </div>
@@ -156,7 +156,7 @@ export default function ManageAvailabilityPage() {
                       type="time"
                       value={startTime}
                       onChange={(e) => handleStartTimeChange(e.target.value)}
-                      className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                      className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none cursor-pointer"
                       required
                     />
                   </div>
@@ -166,7 +166,7 @@ export default function ManageAvailabilityPage() {
                       type="time"
                       value={endTime}
                       onChange={(e) => setEndTime(e.target.value)}
-                      className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none"
+                      className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none cursor-pointer"
                       required
                     />
                   </div>
@@ -175,7 +175,7 @@ export default function ManageAvailabilityPage() {
                 <button 
                   type="submit"
                   disabled={saving}
-                  className="w-full py-3 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-colors shadow-md disabled:opacity-50 mt-4 flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-colors shadow-md disabled:opacity-50 mt-4 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {saving ? 'Adding...' : (
                     <>
@@ -230,7 +230,7 @@ export default function ManageAvailabilityPage() {
                       <button 
                         onClick={() => handleDeleteSlot(slot.id)}
                         disabled={slot.isBooked}
-                        className={`p-2 rounded-lg transition-colors ${slot.isBooked ? 'text-slate-300 cursor-not-allowed' : 'text-red-500 hover:bg-red-50'}`}
+                        className={`p-2 rounded-lg transition-colors ${slot.isBooked ? 'text-slate-300 cursor-not-allowed' : 'text-red-500 hover:bg-red-50 cursor-pointer'}`}
                         title={slot.isBooked ? "Cannot delete booked slot" : "Delete slot"}
                       >
                         <Trash2 size={18} />
