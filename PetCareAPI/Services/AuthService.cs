@@ -3,6 +3,7 @@ using Microsoft.IdentityModel.Tokens;
 using PetCareAPI.Data;
 using PetCareAPI.Models;
 using PetCareAPI.Models.DTOs;
+using PetCareAPI.Constants;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -25,11 +26,12 @@ namespace PetCareAPI.Services
         {
             var email = loginDto.Email.ToLower().Trim();
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email);
-            //if (user == null || loginDto.Password != user.PasswordHash)
-            //    return null;
-
+            
             if (user == null || !BC.Verify(loginDto.Password, user.PasswordHash))
                 return null;
+
+            if (user.RowStatus != StatusConstants.RowStatus.Active)
+                return null; // Only active users can login
 
             var token = GenerateJwtToken(user);
             return new AuthResponseDto
@@ -64,7 +66,7 @@ namespace PetCareAPI.Services
                 await _context.SaveChangesAsync();
 
                 // If user is a provider, create provider profile
-                if (registerDto.RoleId == 2) // Assuming 2 is Provider role
+                if (registerDto.RoleId == StatusConstants.UserRole.Provider)
                 {
                     var provider = new Provider
                     {

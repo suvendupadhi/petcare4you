@@ -47,15 +47,6 @@ namespace PetCareAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<Availability>> CreateAvailability([FromBody] Availability availability)
         {
-            // Ensure UTC for PostgreSQL
-            availability.Date = DateTime.SpecifyKind(availability.Date, DateTimeKind.Utc);
-            availability.StartTime = DateTime.SpecifyKind(availability.StartTime, DateTimeKind.Utc);
-            availability.EndTime = DateTime.SpecifyKind(availability.EndTime, DateTimeKind.Utc);
-           
-            //availability.Date = availability.Date.ToUniversalTime();
-            //availability.StartTime = availability.StartTime.ToUniversalTime();
-            //availability.EndTime = availability.EndTime.ToUniversalTime();
-
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             var provider = await _context.Providers.FirstOrDefaultAsync(p => p.UserId == userId);
             if (provider == null) return NotFound("Provider profile not found");           

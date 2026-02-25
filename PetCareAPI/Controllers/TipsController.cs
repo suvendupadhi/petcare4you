@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using PetCareAPI.Data;
 using PetCareAPI.Models;
 using PetCareAPI.Models.DTOs;
+using PetCareAPI.Constants;
 using System.Security.Claims;
 
 namespace PetCareAPI.Controllers
@@ -48,7 +49,7 @@ namespace PetCareAPI.Controllers
             
             if (!includeInactive)
             {
-                query = query.Where(t => t.IsActive);
+                query = query.Where(t => t.RowStatus == StatusConstants.RowStatus.Active);
             }
 
             // Filter by user role (or global tips where UserRoleId is null)
@@ -84,7 +85,7 @@ namespace PetCareAPI.Controllers
                 Content = tipDto.Content,
                 UserRoleId = tipDto.UserRoleId,
                 ServiceTypeId = tipDto.ServiceTypeId,
-                IsActive = tipDto.IsActive,
+                RowStatus = tipDto.IsActive ? StatusConstants.RowStatus.Active : StatusConstants.RowStatus.Inactive,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -105,7 +106,7 @@ namespace PetCareAPI.Controllers
             tip.Content = tipDto.Content;
             tip.UserRoleId = tipDto.UserRoleId;
             tip.ServiceTypeId = tipDto.ServiceTypeId;
-            tip.IsActive = tipDto.IsActive;
+            tip.RowStatus = tipDto.IsActive ? StatusConstants.RowStatus.Active : StatusConstants.RowStatus.Inactive;
 
             await _context.SaveChangesAsync();
 

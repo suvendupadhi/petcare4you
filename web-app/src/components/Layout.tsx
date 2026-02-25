@@ -32,7 +32,7 @@ export default function Layout({ children, userType: propUserType, showFeedback 
   const { logout, user } = useAuth();
   const { showToast } = useToast();
   const location = useLocation();
-  const userType = propUserType || (user?.roleId === 1 ? 'owner' : 'provider') || 'owner';
+  const userType = propUserType || (user?.roleId === 4 ? 'owner' : 'provider') || 'owner';
   const [unreadCount, setUnreadCount] = React.useState(0);
   const [hideTips, setHideTips] = React.useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = React.useState(showFeedback);
@@ -51,7 +51,7 @@ export default function Layout({ children, userType: propUserType, showFeedback 
       try {
         const configs = await systemConfigService.getConfigurations();
         const hideTipsConfig = configs.find(c => c.key === 'hide_tips_management');
-        if (hideTipsConfig?.value?.toLowerCase() === 'true' && user?.roleId !== 4) {
+        if (hideTipsConfig?.value?.toLowerCase() === 'true' && (user?.roleId === 4 || user?.roleId === 3)) {
           setHideTips(true);
         }
       } catch (error) {
@@ -113,7 +113,7 @@ export default function Layout({ children, userType: propUserType, showFeedback 
 
   const commonItems = [
     ...(hideTips ? [] : [{ icon: Lightbulb, label: 'Tips', path: '/tips-management' }]),
-    ...(user?.roleId === 4 ? [{ icon: ShieldCheck, label: 'Admin Config', path: '/admin-config' }] : []),
+    ...(user?.roleId === 1 || user?.roleId === 2 ? [{ icon: ShieldCheck, label: 'Admin Config', path: '/admin-config' }] : []),
     { icon: Settings, label: 'Settings', path: '/settings' },
   ];
 

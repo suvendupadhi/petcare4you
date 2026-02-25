@@ -1581,7 +1581,7 @@
     "Parameters": [
       {
         "Name": "userUpdate",
-        "Type": "PetCareAPI.Models.User",
+        "Type": "PetCareAPI.Models.DTOs.UpdateProfileDto",
         "IsRequired": true
       }
     ],

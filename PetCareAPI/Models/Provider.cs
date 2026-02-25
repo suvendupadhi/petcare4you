@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace PetCareAPI.Models
 {
-    public class Provider
+    public class Provider : BaseEntity
     {
         public int Id { get; set; }
         public int UserId { get; set; }
@@ -20,6 +20,7 @@ namespace PetCareAPI.Models
         public string Description { get; set; } = string.Empty;
 
         [Range(0, 1000)]
+        [Column("hourly_rate")]
         public decimal HourlyRate { get; set; }
 
         public decimal Rating { get; set; } = 5.0m;
@@ -35,8 +36,13 @@ namespace PetCareAPI.Models
         public decimal? Latitude { get; set; }
         public decimal? Longitude { get; set; }
         public string? ProfileImageUrl { get; set; }
+        public string? BannerImageUrl { get; set; }
         public bool IsVerified { get; set; } = false;
+
+        [Column("stripe_account_id")]
         public string? StripeAccountId { get; set; }
+
+        [Column("is_stripe_connected")]
         public bool IsStripeConnected { get; set; } = false;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

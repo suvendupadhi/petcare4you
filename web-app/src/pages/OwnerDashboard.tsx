@@ -42,7 +42,7 @@ export default function OwnerDashboard() {
         setRecentProviders(recentData.length > 0 ? recentData.slice(0, 4) : providersData.slice(0, 4));
 
         const hideTipsConfig = configs.find(c => c.key === 'hide_tips_management');
-        if (hideTipsConfig?.value?.toLowerCase() !== 'true' || user?.roleId === 4) {
+        if (hideTipsConfig?.value?.toLowerCase() !== 'true' || (user?.roleId === 1 || user?.roleId === 2)) {
           try {
             const tipData = await tipService.getRandomTip();
             setCurrentTip(tipData);

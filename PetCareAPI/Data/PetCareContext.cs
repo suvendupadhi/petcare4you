@@ -1,5 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PetCareAPI.Models;
+using PetCareAPI.Constants;
 using System.Text.RegularExpressions;
 
 namespace PetCareAPI.Data
@@ -82,6 +85,26 @@ namespace PetCareAPI.Data
 
             // Provider Configuration
             modelBuilder.Entity<Provider>().ToTable("providers");
+            modelBuilder.Entity<Provider>()
+                .Property(p => p.HourlyRate)
+                .HasColumnName("hourly_rate");
+            
+            modelBuilder.Entity<Provider>()
+                .Property(p => p.StripeAccountId)
+                .HasColumnName("stripe_account_id");
+            
+            modelBuilder.Entity<Provider>()
+                .Property(p => p.IsStripeConnected)
+                .HasColumnName("is_stripe_connected");
+
+            modelBuilder.Entity<Provider>()
+                .Property(p => p.ProfileImageUrl)
+                .HasColumnName("profile_image_url");
+
+            modelBuilder.Entity<Provider>()
+                .Property(p => p.BannerImageUrl)
+                .HasColumnName("banner_image_url");
+
             modelBuilder.Entity<Provider>()
                 .HasOne(p => p.User)
                 .WithOne(u => u.Provider)
@@ -209,13 +232,21 @@ namespace PetCareAPI.Data
             modelBuilder.Entity<SystemConfiguration>()
                 .Property(sc => sc.Id)
                 .ValueGeneratedOnAdd();
+            
+            modelBuilder.Entity<SystemConfiguration>()
+                .Property(sc => sc.Key)
+                .HasColumnName("config_key");
+            
+            modelBuilder.Entity<SystemConfiguration>()
+                .Property(sc => sc.Value)
+                .HasColumnName("config_value");
 
             // Force all table and column names to snake_case for PostgreSQL compatibility
             foreach (var entity in modelBuilder.Model.GetEntityTypes())
             {
                 // Ensure schema is set for all entities
                 entity.SetSchema("petcare");
-                
+
                 // Set table name to snake_case
                 var tableName = entity.GetTableName();
                 if (!string.IsNullOrEmpty(tableName))
@@ -225,7 +256,34 @@ namespace PetCareAPI.Data
 
                 foreach (var property in entity.GetProperties())
                 {
-                    property.SetColumnName(ToSnakeCase(property.GetColumnName()));
+                    // Global DateTime UTC Converter
+                    if (property.ClrType == typeof(DateTime))
+                    {
+                        property.SetValueConverter(new ValueConverter<DateTime, DateTime>(
+                            v => v.Kind == DateTimeKind.Utc ? v : DateTime.SpecifyKind(v, DateTimeKind.Utc),
+                            v => v.Kind == DateTimeKind.Utc ? v : DateTime.SpecifyKind(v, DateTimeKind.Utc)));
+                    }
+                    else if (property.ClrType == typeof(DateTime?))
+                    {
+                        property.SetValueConverter(new ValueConverter<DateTime?, DateTime?>(
+                            v => v.HasValue ? (v.Value.Kind == DateTimeKind.Utc ? v : DateTime.SpecifyKind(v.Value, DateTimeKind.Utc)) : v,
+                            v => v.HasValue ? (v.Value.Kind == DateTimeKind.Utc ? v : DateTime.SpecifyKind(v.Value, DateTimeKind.Utc)) : v));
+                    }
+
+                    // Only apply snake_case if it doesn't have an explicit column name set via attribute
+                    var storeObjectIdentifier = StoreObjectIdentifier.Create(entity, StoreObjectType.Table);
+                    if (storeObjectIdentifier.HasValue)
+                    {
+                        var columnName = property.GetColumnName(storeObjectIdentifier.Value);
+                        if (columnName == property.Name) // It's using the default property name
+                        {
+                            property.SetColumnName(ToSnakeCase(columnName));
+                        }
+                    }
+                    else
+                    {
+                        property.SetColumnName(ToSnakeCase(property.GetColumnName()));
+                    }
                 }
 
                 foreach (var key in entity.GetKeys())
@@ -242,6 +300,44 @@ namespace PetCareAPI.Data
                 {
                     index.SetDatabaseName(ToSnakeCase(index.GetDatabaseName()));
                 }
+
+                // Global Query Filter for Soft Delete
+                if (typeof(BaseEntity).IsAssignableFrom(entity.ClrType))
+                {
+                    var parameter = System.Linq.Expressions.Expression.Parameter(entity.ClrType, "e");
+                    var property = System.Linq.Expressions.Expression.Property(parameter, nameof(BaseEntity.RowStatus));
+                    var constant = System.Linq.Expressions.Expression.Constant(StatusConstants.RowStatus.Deleted);
+                    var body = System.Linq.Expressions.Expression.NotEqual(property, constant);
+                    var lambda = System.Linq.Expressions.Expression.Lambda(body, parameter);
+
+                    modelBuilder.Entity(entity.ClrType).HasQueryFilter(lambda);
+                }
+            }
+        }
+
+        public override int SaveChanges()
+        {
+            HandleSoftDelete();
+            return base.SaveChanges();
+        }
+
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            HandleSoftDelete();
+            return base.SaveChangesAsync(cancellationToken);
+        }
+
+        private void HandleSoftDelete()
+        {
+            var entities = ChangeTracker.Entries()
+                .Where(e => e.State == EntityState.Deleted && e.Entity is BaseEntity);
+
+            foreach (var entity in entities)
+            {
+                entity.State = EntityState.Modified;
+                var baseEntity = (BaseEntity)entity.Entity;
+                baseEntity.RowStatus = StatusConstants.RowStatus.Deleted;
+                baseEntity.DeletedAt = DateTimeOffset.UtcNow;
             }
         }
 

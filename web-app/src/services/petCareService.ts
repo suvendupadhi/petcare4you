@@ -168,7 +168,7 @@ export const authService = {
     const response = await api.post('/Auth/login', credentials);
     if (response.data.token) {
       localStorage.setItem('auth_token', response.data.token);
-      localStorage.setItem('user_type', response.data.roleId === 1 ? 'owner' : 'provider');
+      localStorage.setItem('user_type', response.data.roleId === 4 ? 'owner' : 'provider');
     }
     return response.data;
   },

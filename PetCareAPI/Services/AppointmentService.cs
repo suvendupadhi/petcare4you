@@ -55,9 +55,9 @@ namespace PetCareAPI.Services
                 .Include(a => a.Owner)
                 .Include(a => a.Pet)
                     .ThenInclude(p => p!.PetType)
-                .Where(a => a.Provider!.UserId == userId)
+                .Where(a => a.ProviderId == provider.Id)
                 .OrderByDescending(a => a.AppointmentDate)
-                .Take(50) // or pass as parameter
+                .Take(50)
                 .ToListAsync();
 
             return appointments;
@@ -65,11 +65,6 @@ namespace PetCareAPI.Services
 
         public async Task<Appointment?> CreateAppointmentAsync(int userId, Appointment appointment)
         {
-            // Ensure UTC for PostgreSQL
-            appointment.AppointmentDate = DateTime.SpecifyKind(appointment.AppointmentDate.Date, DateTimeKind.Utc);
-            appointment.StartTime = DateTime.SpecifyKind(appointment.StartTime, DateTimeKind.Utc);
-            appointment.EndTime = DateTime.SpecifyKind(appointment.EndTime, DateTimeKind.Utc);
-
             // If PetId is provided, ensure PetName and PetType are populated from the Pet entity
             if (appointment.PetId.HasValue)
             {
@@ -232,11 +227,6 @@ namespace PetCareAPI.Services
 
         public async Task<Appointment?> UpdateAppointmentAsync(int appointmentId, Appointment updatedAppointment)
         {
-            // Ensure UTC for PostgreSQL
-            updatedAppointment.AppointmentDate = DateTime.SpecifyKind(updatedAppointment.AppointmentDate.Date, DateTimeKind.Utc);
-            updatedAppointment.StartTime = DateTime.SpecifyKind(updatedAppointment.StartTime, DateTimeKind.Utc);
-            updatedAppointment.EndTime = DateTime.SpecifyKind(updatedAppointment.EndTime, DateTimeKind.Utc);
-
             var appointment = await _context.Appointments.FindAsync(appointmentId);
             if (appointment == null) return null;
 

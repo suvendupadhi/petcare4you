@@ -2,7 +2,7 @@ using System;
 
 namespace PetCareAPI.Models
 {
-    public class StatusMaster
+    public class StatusMaster : BaseEntity
     {
         public int Id { get; set; }
         public string StatusName { get; set; } = string.Empty;

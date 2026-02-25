@@ -4,9 +4,11 @@ namespace PetCareAPI.Constants
     {
         public static class UserRole
         {
-            public const int Owner = 1;
-            public const int Provider = 2;
-            public const int Admin = 3;
+            public const int SuperAdmin = 1;
+            public const int Admin = 2;
+            public const int Provider = 3;
+            public const int Owner = 4;           
+            
         }
 
         public static class PetType
@@ -32,6 +34,13 @@ namespace PetCareAPI.Constants
             public const int Pending = 5;
             public const int Completed = 6;
             public const int Failed = 7;
+        }
+        public static class RowStatus
+        {
+            public const string Active = "a";
+            public const string Inactive = "i";
+            public const string Deleted = "d";
+            public const string Archived = "v";
         }
     }
 }

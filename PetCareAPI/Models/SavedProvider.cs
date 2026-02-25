@@ -2,7 +2,7 @@ using System;
 
 namespace PetCareAPI.Models
 {
-    public class SavedProvider
+    public class SavedProvider : BaseEntity
     {
         public int Id { get; set; }
         public int UserId { get; set; }

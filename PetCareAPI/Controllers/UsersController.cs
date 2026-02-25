@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PetCareAPI.Data;
 using PetCareAPI.Models;
+using PetCareAPI.Models.DTOs;
 using System.Security.Claims;
 
 namespace PetCareAPI.Controllers
@@ -68,7 +69,7 @@ namespace PetCareAPI.Controllers
         }
 
         [HttpPut("me")]
-        public async Task<IActionResult> UpdateProfile([FromBody] User userUpdate)
+        public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileDto userUpdate)
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             var user = await _context.Users.FindAsync(userId);
@@ -78,10 +79,17 @@ namespace PetCareAPI.Controllers
 
             user.FirstName = userUpdate.FirstName;
             user.LastName = userUpdate.LastName;
-            user.PhoneNumber = userUpdate.PhoneNumber;
+            user.PhoneNumber = userUpdate.PhoneNumber ?? string.Empty;
             user.Address = userUpdate.Address;
             user.ProfileImageUrl = userUpdate.ProfileImageUrl;
             user.UpdatedAt = DateTime.UtcNow;
+            
+            // Ensure any other date times are UTC
+            if (user.ResetTokenExpiry.HasValue)
+            {
+                user.ResetTokenExpiry = DateTime.SpecifyKind(user.ResetTokenExpiry.Value, DateTimeKind.Utc);
+            }
+            user.CreatedAt = DateTime.SpecifyKind(user.CreatedAt, DateTimeKind.Utc);
             
             await _context.SaveChangesAsync();
 

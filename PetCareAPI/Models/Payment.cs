@@ -2,7 +2,7 @@ using System;
 
 namespace PetCareAPI.Models
 {
-    public class Payment
+    public class Payment : BaseEntity
     {
         public int Id { get; set; }
         public int AppointmentId { get; set; }

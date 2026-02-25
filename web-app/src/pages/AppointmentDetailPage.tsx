@@ -32,8 +32,8 @@ export default function AppointmentDetailPage() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [declineReason, setDeclineReason] = useState('');
 
-  const isOwner = user?.roleId === 1;
-  const isProvider = user?.roleId === 2;
+  const isOwner = user?.roleId === 4;
+  const isProvider = user?.roleId === 3;
 
   useEffect(() => {
     const loadData = async () => {

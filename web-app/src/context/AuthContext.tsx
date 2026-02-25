@@ -16,6 +16,7 @@ interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   login: (token: string, user: User) => void;
+  updateUser: (user: Partial<User>) => void;
   logout: () => void;
 }
 
@@ -51,6 +52,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(USER_KEY, JSON.stringify(newUser));
   };
 
+  const updateUser = (updatedFields: Partial<User>) => {
+    setUser(prev => {
+      if (!prev) return null;
+      const newUser = { ...prev, ...updatedFields };
+      localStorage.setItem(USER_KEY, JSON.stringify(newUser));
+      return newUser;
+    });
+  };
+
   const logout = () => {
     setToken(null);
     setUser(null);
@@ -66,6 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         token,
         isLoading,
         login,
+        updateUser,
         logout,
       }}
     >

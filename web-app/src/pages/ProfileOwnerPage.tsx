@@ -23,11 +23,13 @@ import {
   PetType, 
   Breed 
 } from '../services/petCareService';
+import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import ConfirmationModal from '../components/ConfirmationModal';
 
 export default function ProfileOwnerPage() {
   const navigate = useNavigate();
+  const { updateUser } = useAuth();
   const { showToast } = useToast();
   const [profile, setProfile] = useState<UserType | null>(null);
   const [pets, setPets] = useState<Pet[]>([]);
@@ -134,6 +136,10 @@ export default function ProfileOwnerPage() {
     if (!validateProfile()) return;
     try {
       await userService.updateProfile(editForm);
+      updateUser({
+        firstName: editForm.firstName,
+        lastName: editForm.lastName
+      });
       setEditMode(false);
       loadData();
       showToast('Profile updated successfully', 'success');

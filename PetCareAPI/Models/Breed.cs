@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace PetCareAPI.Models
 {
-    public class Breed
+    public class Breed : BaseEntity
     {
         public int Id { get; set; }
         public int PetTypeId { get; set; }

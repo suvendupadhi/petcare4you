@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace PetCareAPI.Models
 {
-    public class Pet
+    public class Pet : BaseEntity
     {
         public int Id { get; set; }
         public int OwnerId { get; set; }

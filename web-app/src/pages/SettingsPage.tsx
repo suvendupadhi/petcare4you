@@ -91,7 +91,7 @@ export default function SettingsPage() {
           icon: User, 
           label: 'Personal Information', 
           sub: 'Update your name and contact details',
-          action: () => navigate(user?.roleId === 1 ? '/profile-owner' : '/profile-provider')
+          action: () => navigate(user?.roleId === 4 ? '/profile-owner' : '/profile-provider')
         },
         { 
           icon: Lock, 

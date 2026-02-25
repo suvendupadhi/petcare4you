@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PetCareAPI.Data;
 using PetCareAPI.Models;
+using PetCareAPI.Constants;
 using System.Security.Claims;
 
 namespace PetCareAPI.Controllers
@@ -49,6 +50,7 @@ namespace PetCareAPI.Controllers
             pet.OwnerId = GetUserId();
             pet.CreatedAt = DateTime.UtcNow;
             pet.UpdatedAt = DateTime.UtcNow;
+            pet.RowStatus = StatusConstants.RowStatus.Active;
 
             _context.Pets.Add(pet);
             await _context.SaveChangesAsync();
@@ -94,14 +96,14 @@ namespace PetCareAPI.Controllers
         [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<PetType>>> GetPetTypes()
         {
-            return await _context.PetTypes.Where(pt => pt.IsActive).ToListAsync();
+            return await _context.PetTypes.Where(pt => pt.RowStatus == StatusConstants.RowStatus.Active).ToListAsync();
         }
 
         [HttpGet("breeds/{typeId}")]
         [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<Breed>>> GetBreeds(int typeId)
         {
-            return await _context.Breeds.Where(b => b.PetTypeId == typeId).ToListAsync();
+            return await _context.Breeds.Where(b => b.PetTypeId == typeId && b.RowStatus == StatusConstants.RowStatus.Active).ToListAsync();
         }
 
         private int GetUserId()

@@ -2754,17 +2754,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/User"
+                "$ref": "#/components/schemas/UpdateProfileDto"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/User"
+                "$ref": "#/components/schemas/UpdateProfileDto"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/User"
+                "$ref": "#/components/schemas/UpdateProfileDto"
               }
             }
           }
@@ -2824,8 +2824,21 @@
   "components": {
     "schemas": {
       "Appointment": {
+        "required": [
+          "rowStatus"
+        ],
         "type": "object",
         "properties": {
+          "rowStatus": {
+            "maxLength": 1,
+            "minLength": 0,
+            "type": "string"
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "id": {
             "type": "integer",
             "format": "int32"
@@ -2903,8 +2916,21 @@
         "additionalProperties": false
       },
       "Availability": {
+        "required": [
+          "rowStatus"
+        ],
         "type": "object",
         "properties": {
+          "rowStatus": {
+            "maxLength": 1,
+            "minLength": 0,
+            "type": "string"
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "id": {
             "type": "integer",
             "format": "int32"
@@ -2939,8 +2965,21 @@
         "additionalProperties": false
       },
       "Breed": {
+        "required": [
+          "rowStatus"
+        ],
         "type": "object",
         "properties": {
+          "rowStatus": {
+            "maxLength": 1,
+            "minLength": 0,
+            "type": "string"
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "id": {
             "type": "integer",
             "format": "int32"
@@ -3056,8 +3095,21 @@
         "additionalProperties": false
       },
       "Notification": {
+        "required": [
+          "rowStatus"
+        ],
         "type": "object",
         "properties": {
+          "rowStatus": {
+            "maxLength": 1,
+            "minLength": 0,
+            "type": "string"
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "id": {
             "type": "integer",
             "format": "int32"
@@ -3096,8 +3148,21 @@
         "additionalProperties": false
       },
       "Payment": {
+        "required": [
+          "rowStatus"
+        ],
         "type": "object",
         "properties": {
+          "rowStatus": {
+            "maxLength": 1,
+            "minLength": 0,
+            "type": "string"
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "id": {
             "type": "integer",
             "format": "int32"
@@ -3159,10 +3224,21 @@
       "Pet": {
         "required": [
           "name",
-          "petTypeId"
+          "petTypeId",
+          "rowStatus"
         ],
         "type": "object",
         "properties": {
+          "rowStatus": {
+            "maxLength": 1,
+            "minLength": 0,
+            "type": "string"
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "id": {
             "type": "integer",
             "format": "int32"
@@ -3237,8 +3313,21 @@
         "additionalProperties": false
       },
       "PetType": {
+        "required": [
+          "rowStatus"
+        ],
         "type": "object",
         "properties": {
+          "rowStatus": {
+            "maxLength": 1,
+            "minLength": 0,
+            "type": "string"
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "id": {
             "type": "integer",
             "format": "int32"
@@ -3246,9 +3335,6 @@
           "name": {
             "type": "string",
             "nullable": true
-          },
-          "isActive": {
-            "type": "boolean"
           },
           "createdAt": {
             "type": "string",
@@ -3276,10 +3362,21 @@
           "address",
           "city",
           "companyName",
-          "description"
+          "description",
+          "rowStatus"
         ],
         "type": "object",
         "properties": {
+          "rowStatus": {
+            "maxLength": 1,
+            "minLength": 0,
+            "type": "string"
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "id": {
             "type": "integer",
             "format": "int32"
@@ -3333,6 +3430,10 @@
             "nullable": true
           },
           "profileImageUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "bannerImageUrl": {
             "type": "string",
             "nullable": true
           },
@@ -3404,8 +3505,21 @@
         "additionalProperties": false
       },
       "ProviderPhoto": {
+        "required": [
+          "rowStatus"
+        ],
         "type": "object",
         "properties": {
+          "rowStatus": {
+            "maxLength": 1,
+            "minLength": 0,
+            "type": "string"
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "id": {
             "type": "integer",
             "format": "int32"
@@ -3433,8 +3547,21 @@
         "additionalProperties": false
       },
       "ProviderService": {
+        "required": [
+          "rowStatus"
+        ],
         "type": "object",
         "properties": {
+          "rowStatus": {
+            "maxLength": 1,
+            "minLength": 0,
+            "type": "string"
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "id": {
             "type": "integer",
             "format": "int32"
@@ -3680,8 +3807,21 @@
         "additionalProperties": false
       },
       "Review": {
+        "required": [
+          "rowStatus"
+        ],
         "type": "object",
         "properties": {
+          "rowStatus": {
+            "maxLength": 1,
+            "minLength": 0,
+            "type": "string"
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "id": {
             "type": "integer",
             "format": "int32"
@@ -3733,8 +3873,21 @@
         "additionalProperties": false
       },
       "SavedProvider": {
+        "required": [
+          "rowStatus"
+        ],
         "type": "object",
         "properties": {
+          "rowStatus": {
+            "maxLength": 1,
+            "minLength": 0,
+            "type": "string"
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "id": {
             "type": "integer",
             "format": "int32"
@@ -3761,8 +3914,21 @@
         "additionalProperties": false
       },
       "ServiceType": {
+        "required": [
+          "rowStatus"
+        ],
         "type": "object",
         "properties": {
+          "rowStatus": {
+            "maxLength": 1,
+            "minLength": 0,
+            "type": "string"
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "id": {
             "type": "integer",
             "format": "int32"
@@ -3778,16 +3944,26 @@
           "iconName": {
             "type": "string",
             "nullable": true
-          },
-          "isActive": {
-            "type": "boolean"
           }
         },
         "additionalProperties": false
       },
       "StatusMaster": {
+        "required": [
+          "rowStatus"
+        ],
         "type": "object",
         "properties": {
+          "rowStatus": {
+            "maxLength": 1,
+            "minLength": 0,
+            "type": "string"
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "id": {
             "type": "integer",
             "format": "int32"
@@ -3822,23 +3998,42 @@
         "additionalProperties": false
       },
       "SystemConfiguration": {
+        "required": [
+          "key",
+          "rowStatus",
+          "value"
+        ],
         "type": "object",
         "properties": {
+          "rowStatus": {
+            "maxLength": 1,
+            "minLength": 0,
+            "type": "string"
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "id": {
             "type": "integer",
             "format": "int32"
           },
           "key": {
-            "type": "string",
-            "nullable": true
+            "minLength": 1,
+            "type": "string"
           },
           "value": {
-            "type": "string",
-            "nullable": true
+            "minLength": 1,
+            "type": "string"
           },
           "description": {
             "type": "string",
             "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
           },
           "updatedAt": {
             "type": "string",
@@ -3848,8 +4043,21 @@
         "additionalProperties": false
       },
       "Tip": {
+        "required": [
+          "rowStatus"
+        ],
         "type": "object",
         "properties": {
+          "rowStatus": {
+            "maxLength": 1,
+            "minLength": 0,
+            "type": "string"
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "id": {
             "type": "integer",
             "format": "int32"
@@ -3871,9 +4079,6 @@
           "content": {
             "type": "string",
             "nullable": true
-          },
-          "isActive": {
-            "type": "boolean"
           },
           "createdAt": {
             "type": "string",
@@ -3952,16 +4157,60 @@
         },
         "additionalProperties": false
       },
+      "UpdateProfileDto": {
+        "required": [
+          "firstName",
+          "lastName"
+        ],
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string"
+          },
+          "lastName": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "format": "tel",
+            "nullable": true
+          },
+          "address": {
+            "type": "string",
+            "nullable": true
+          },
+          "profileImageUrl": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "User": {
         "required": [
           "email",
           "firstName",
           "lastName",
           "passwordHash",
-          "phoneNumber"
+          "phoneNumber",
+          "rowStatus"
         ],
         "type": "object",
         "properties": {
+          "rowStatus": {
+            "maxLength": 1,
+            "minLength": 0,
+            "type": "string"
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "id": {
             "type": "integer",
             "format": "int32"
@@ -4005,9 +4254,6 @@
           "roleId": {
             "type": "integer",
             "format": "int32"
-          },
-          "isActive": {
-            "type": "boolean"
           },
           "passwordResetToken": {
             "type": "string",
@@ -4057,8 +4303,21 @@
         "additionalProperties": false
       },
       "UserRole": {
+        "required": [
+          "rowStatus"
+        ],
         "type": "object",
         "properties": {
+          "rowStatus": {
+            "maxLength": 1,
+            "minLength": 0,
+            "type": "string"
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
           "id": {
             "type": "integer",
             "format": "int32"

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PetCareAPI.Data;
 using PetCareAPI.Models;
+using PetCareAPI.Constants;
 
 namespace PetCareAPI.Controllers
 {
@@ -23,7 +24,7 @@ namespace PetCareAPI.Controllers
         public async Task<ActionResult<IEnumerable<ServiceType>>> GetServiceTypes()
         {
             return await _context.ServiceTypes
-                .Where(s => s.IsActive)
+                .Where(s => s.RowStatus == StatusConstants.RowStatus.Active)
                 .OrderBy(s => s.Name)
                 .ToListAsync();
         }

@@ -20,7 +20,7 @@ export default function RegisterOwnerPage() {
     password: '',
     phoneNumber: '',
     address: '',
-    roleId: 1, // Owner
+    roleId: 4, // Owner
   });
 
   const validate = () => {

@@ -1,7 +1,8 @@
 export const USER_ROLE = {
-  OWNER: 1,
-  PROVIDER: 2,
-  ADMIN: 3,
+  SUPER_ADMIN: 1,
+  ADMIN: 2,
+  PROVIDER: 3,
+  OWNER: 4,
 };
 
 export const PET_TYPE = {

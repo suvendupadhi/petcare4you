@@ -49,7 +49,7 @@ export default function ProviderDashboard() {
         setRevenue(revData);
 
         const hideTipsConfig = configs.find(c => c.key === 'hide_tips_management');
-        if (hideTipsConfig?.value?.toLowerCase() !== 'true' || user?.roleId === 4) {
+        if (hideTipsConfig?.value?.toLowerCase() !== 'true' || user?.roleId === 1 || user?.roleId === 2) {
           try {
             const tipData = await tipService.getRandomTip();
             setTip(tipData);

@@ -46,7 +46,7 @@ const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (token && user) {
-    const target = user.roleId === 1 ? '/owner-dashboard' : '/provider-dashboard';
+    const target = user.roleId === 4 ? '/owner-dashboard' : '/provider-dashboard';
     return <Navigate to={target} replace />;
   }
 

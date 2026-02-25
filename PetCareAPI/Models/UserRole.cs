@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace PetCareAPI.Models
 {
-    public class UserRole
+    public class UserRole : BaseEntity
     {
         public int Id { get; set; }
         public string RoleName { get; set; } = string.Empty;

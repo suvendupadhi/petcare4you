@@ -25,7 +25,7 @@ export default function RegisterProviderPage() {
     hourlyRate: 0,
     city: '',
     serviceTypeIds: [] as number[],
-    roleId: 2, // Provider
+    roleId: 3, // Provider
   });
 
   useEffect(() => {

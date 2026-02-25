@@ -83,9 +83,9 @@ namespace PetCareAPI.Controllers
                 UpdatedAt = DateTime.UtcNow
             };
 
-            if (providerDto.ServiceTypeIds.Any())
+            if (providerDto.ServiceTypeIds != null && providerDto.ServiceTypeIds.Any())
             {
-                foreach (var stId in providerDto.ServiceTypeIds)
+                foreach (var stId in providerDto.ServiceTypeIds.Distinct())
                 {
                     provider.ProviderServices.Add(new ProviderService 
                     { 
@@ -146,7 +146,7 @@ namespace PetCareAPI.Controllers
             foreach (var ps in toRemove) existing.ProviderServices.Remove(ps);
 
             // Add new ones
-            foreach (var stId in providerDto.ServiceTypeIds)
+            foreach (var stId in providerDto.ServiceTypeIds.Distinct())
             {
                 if (!currentServiceTypeIds.Contains(stId))
                 {
