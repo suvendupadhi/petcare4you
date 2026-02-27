@@ -13,7 +13,7 @@ import {
   Provider, 
   Appointment, 
   Tip 
-} from '../services/petCareService';
+} from '../services/petCare4YouService';
 import { useAuth } from '../context/AuthContext';
 
 export default function OwnerDashboard() {

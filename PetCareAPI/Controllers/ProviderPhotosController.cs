@@ -12,9 +12,9 @@ namespace PetCareAPI.Controllers
     [Authorize]
     public class ProviderPhotosController : ControllerBase
     {
-        private readonly PetCareContext _context;
+        private readonly PetCare4YouContext _context;
 
-        public ProviderPhotosController(PetCareContext context)
+        public ProviderPhotosController(PetCare4YouContext context)
         {
             _context = context;
         }

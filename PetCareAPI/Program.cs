@@ -26,7 +26,7 @@ namespace PetCareAPI
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "PetCare API", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "PetCare4You API", Version = "v1" });
                 
                 // JWT Authentication for Swagger
                 c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -55,7 +55,7 @@ namespace PetCareAPI
             });
 
             // Database
-            builder.Services.AddDbContext<PetCareContext>(options =>
+            builder.Services.AddDbContext<PetCare4YouContext>(options =>
                 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             // Services

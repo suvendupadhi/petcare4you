@@ -16,9 +16,9 @@ namespace PetCareAPI.Controllers
     [Authorize]
     public class PaymentsController : ControllerBase
     {
-        private readonly PetCareContext _context;
+        private readonly PetCare4YouContext _context;
 
-        public PaymentsController(PetCareContext context)
+        public PaymentsController(PetCare4YouContext context)
         {
             _context = context;
         }

@@ -28,7 +28,7 @@ import {
   ServiceType,
   Review,
   Appointment
-} from '../services/petCareService';
+} from '../services/petCare4YouService';
 import { useToast } from '../context/ToastContext';
 
 export default function ProviderDetailPage() {

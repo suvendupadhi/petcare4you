@@ -10,10 +10,10 @@ namespace PetCareAPI.Controllers
     [Route("api/[controller]")]
     public class WebhookController : ControllerBase
     {
-        private readonly PetCareContext _context;
+        private readonly PetCare4YouContext _context;
         private readonly IConfiguration _configuration;
 
-        public WebhookController(PetCareContext context, IConfiguration configuration)
+        public WebhookController(PetCare4YouContext context, IConfiguration configuration)
         {
             _context = context;
             _configuration = configuration;

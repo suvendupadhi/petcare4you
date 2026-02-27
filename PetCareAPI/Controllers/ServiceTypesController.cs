@@ -13,9 +13,9 @@ namespace PetCareAPI.Controllers
     [AllowAnonymous]
     public class ServiceTypesController : ControllerBase
     {
-        private readonly PetCareContext _context;
+        private readonly PetCare4YouContext _context;
 
-        public ServiceTypesController(PetCareContext context)
+        public ServiceTypesController(PetCare4YouContext context)
         {
             _context = context;
         }

@@ -128,7 +128,7 @@ export default function LoginScreen() {
             </View>
             <View>
               <Text className="text-3xl font-bold text-foreground">
-                PetCare
+                PetCare4You
               </Text>
               <Text className="text-sm text-muted-foreground">Connect</Text>
             </View>
@@ -326,7 +326,7 @@ export default function LoginScreen() {
           {/* Register Section */}
           <View className="bg-muted rounded-xl p-6 items-center">
             <Text className="text-foreground font-semibold text-base mb-2">
-              New to PetCare Connect?
+              New to PetCare4You Connect?
             </Text>
             <Text className="text-muted-foreground text-sm text-center mb-4">
               {userType === "owner"

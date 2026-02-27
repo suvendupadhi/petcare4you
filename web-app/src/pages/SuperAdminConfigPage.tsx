@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Settings, Save, AlertCircle, CheckCircle2 } from 'lucide-react';
 import Layout from '../components/Layout';
-import { systemConfigService } from '../services/petCareService';
+import { systemConfigService } from '../services/petCare4YouService';
 
 export default function SuperAdminConfigPage() {
   const [configs, setConfigs] = useState<any[]>([]);

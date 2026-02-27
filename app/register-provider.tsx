@@ -175,7 +175,7 @@ export default function RegisterProviderScreen() {
             Register Your Business
           </Text>
           <Text className="text-base text-muted-foreground">
-            Join PetCare Connect and grow your pet care business by reaching more clients
+            Join PetCare4You Connect and grow your pet care business by reaching more clients
           </Text>
         </View>
 

@@ -12,10 +12,10 @@ namespace PetCareAPI.Controllers
     [Route("api/[controller]")]
     public class ProvidersController : ControllerBase
     {
-        private readonly PetCareContext _context;
+        private readonly PetCare4YouContext _context;
         private readonly IWebHostEnvironment _environment;
 
-        public ProvidersController(PetCareContext context, IWebHostEnvironment environment)
+        public ProvidersController(PetCare4YouContext context, IWebHostEnvironment environment)
         {
             _context = context;
             _environment = environment;

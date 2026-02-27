@@ -15,7 +15,7 @@ vi.mock('react-router-dom', async () => {
 });
 
 // Mock authService
-vi.mock('../services/petCareService', () => ({
+vi.mock('../services/petCare4YouService', () => ({
   authService: {
     register: vi.fn(),
   },

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PawPrint, Mail, ArrowLeft, ArrowRight } from 'lucide-react';
-import { authService } from '../services/petCareService';
+import { authService } from '../services/petCare4YouService';
 import { useToast } from '../context/ToastContext';
 
 export default function ForgotPasswordPage() {
@@ -77,7 +77,7 @@ export default function ForgotPasswordPage() {
               <PawPrint className="text-white" size={28} />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">PetCare</h1>
+              <h1 className="text-2xl font-bold text-slate-900">PetCare4You</h1>
               <p className="text-sm text-slate-500">Connect Web</p>
             </div>
           </div>

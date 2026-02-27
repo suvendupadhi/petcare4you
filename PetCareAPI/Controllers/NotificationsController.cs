@@ -12,9 +12,9 @@ namespace PetCareAPI.Controllers
     [ApiController]
     public class NotificationsController : ControllerBase
     {
-        private readonly PetCareContext _context;
+        private readonly PetCare4YouContext _context;
 
-        public NotificationsController(PetCareContext context)
+        public NotificationsController(PetCare4YouContext context)
         {
             _context = context;
         }

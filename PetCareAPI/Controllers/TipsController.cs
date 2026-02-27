@@ -13,9 +13,9 @@ namespace PetCareAPI.Controllers
     [Route("api/[controller]")]
     public class TipsController : ControllerBase
     {
-        private readonly PetCareContext _context;
+        private readonly PetCare4YouContext _context;
 
-        public TipsController(PetCareContext context)
+        public TipsController(PetCare4YouContext context)
         {
             _context = context;
         }

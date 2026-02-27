@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, MapPin, Star, Filter, SlidersHorizontal, Building2 } from 'lucide-react';
 import Layout from '../components/Layout';
-import { providerService, serviceTypeService, Provider, ServiceType } from '../services/petCareService';
+import { providerService, serviceTypeService, Provider, ServiceType } from '../services/petCare4YouService';
 
 export default function SearchProvidersPage() {
   const navigate = useNavigate();

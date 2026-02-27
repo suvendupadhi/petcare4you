@@ -3874,9 +3874,9 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\W\\Asnet123\\petcare\\PetCareAPI\\PetCareAPI.csproj",
-      "projectName": "PetCareAPI",
-      "projectPath": "D:\\W\\Asnet123\\petcare\\PetCareAPI\\PetCareAPI.csproj",
+      "projectUniqueName": "D:\\W\\Asnet123\\petcare\\PetCareAPI\\PetCare4YouAPI.csproj",
+      "projectName": "PetCare4YouAPI",
+      "projectPath": "D:\\W\\Asnet123\\petcare\\PetCareAPI\\PetCare4YouAPI.csproj",
       "packagesPath": "C:\\Users\\suven\\.nuget\\packages\\",
       "outputPath": "D:\\W\\Asnet123\\petcare\\PetCareAPI\\obj\\",
       "projectStyle": "PackageReference",

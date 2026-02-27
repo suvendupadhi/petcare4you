@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
-import { tipService, serviceTypeService, Tip, ServiceType } from '../services/petCareService';
+import { tipService, serviceTypeService, Tip, ServiceType } from '../services/petCare4YouService';
 import { Plus, Edit2, Trash2, Check, X, Info } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import ConfirmationModal from '../components/ConfirmationModal';

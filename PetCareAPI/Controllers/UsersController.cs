@@ -13,10 +13,10 @@ namespace PetCareAPI.Controllers
     [Authorize]
     public class UsersController : ControllerBase
     {
-        private readonly PetCareContext _context;
+        private readonly PetCare4YouContext _context;
         private readonly IWebHostEnvironment _environment;
 
-        public UsersController(PetCareContext context, IWebHostEnvironment environment)
+        public UsersController(PetCare4YouContext context, IWebHostEnvironment environment)
         {
             _context = context;
             _environment = environment;

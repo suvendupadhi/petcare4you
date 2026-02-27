@@ -41,7 +41,7 @@ export default function HelpSupportScreen() {
   };
 
   const handleContactSupport = (type: 'email' | 'phone') => {
-    const url = type === 'email' ? 'mailto:support@petcare.com' : 'tel:+15551234567';
+    const url = type === 'email' ? 'mailto:support@petcare4you.com' : 'tel:+15551234567';
     if (Platform.OS === 'web') {
       window.open(url);
     } else {
@@ -202,7 +202,7 @@ export default function HelpSupportScreen() {
                 </TouchableOpacity>
 
                 <Text className="text-muted-foreground text-center text-sm px-4">
-                  Your feedback helps us improve PetCare. We may contact you if we need more information.
+                  Your feedback helps us improve PetCare4You. We may contact you if we need more information.
                 </Text>
               </View>
             </ScrollView>

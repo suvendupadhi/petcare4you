@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { CreditCard, DollarSign, Download, ExternalLink, Filter, Calendar, User, Clock, FileText, CheckCircle, AlertCircle, Building2 } from 'lucide-react';
 import Layout from '../components/Layout';
-import { paymentService, Payment, RevenueSummary } from '../services/petCareService';
+import { paymentService, Payment, RevenueSummary } from '../services/petCare4YouService';
 import PaymentModal from '../components/PaymentModal';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';

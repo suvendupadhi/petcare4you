@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Clock, MapPin, Building2, ChevronRight, Filter } from 'lucide-react';
 import Layout from '../components/Layout';
-import { appointmentService, Appointment } from '../services/petCareService';
+import { appointmentService, Appointment } from '../services/petCare4YouService';
 
 export default function AppointmentsOwnerPage() {
   const navigate = useNavigate();

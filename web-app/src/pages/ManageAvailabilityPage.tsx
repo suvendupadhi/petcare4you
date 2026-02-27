@@ -9,7 +9,7 @@ import {
   CalendarDays
 } from 'lucide-react';
 import Layout from '../components/Layout';
-import { availabilityService, Availability } from '../services/petCareService';
+import { availabilityService, Availability } from '../services/petCare4YouService';
 import { useToast } from '../context/ToastContext';
 import ConfirmationModal from '../components/ConfirmationModal';
 

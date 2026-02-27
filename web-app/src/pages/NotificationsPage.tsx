@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, CheckCircle, Info, Calendar, MessageSquare, Trash2 } from 'lucide-react';
 import Layout from '../components/Layout';
-import { notificationService } from '../services/petCareService';
+import { notificationService } from '../services/petCare4YouService';
 
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<any[]>([]);

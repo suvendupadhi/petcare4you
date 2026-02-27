@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import Layout from '../components/Layout';
 import ConfirmationModal from '../components/ConfirmationModal';
-import { appointmentService, Appointment } from '../services/petCareService';
+import { appointmentService, Appointment } from '../services/petCare4YouService';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 

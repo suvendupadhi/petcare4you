@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Clock, User, ChevronRight, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import Layout from '../components/Layout';
-import { appointmentService, Appointment } from '../services/petCareService';
+import { appointmentService, Appointment } from '../services/petCare4YouService';
 import { useToast } from '../context/ToastContext';
 
 export default function AppointmentsProviderPage() {

@@ -123,7 +123,7 @@ export default function ResetPasswordScreen() {
               <PawPrint className="text-primary-foreground" size={28} />
             </View>
             <View>
-              <Text className="text-3xl font-bold text-foreground">PetCare</Text>
+              <Text className="text-3xl font-bold text-foreground">PetCare4You</Text>
               <Text className="text-sm text-muted-foreground">Connect</Text>
             </View>
           </View>

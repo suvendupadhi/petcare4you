@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, ArrowRight } from 'lucide-react';
 import dogLogo from '../assets/dog_img.jpeg';
-import { authService } from '../services/petCareService';
+import { authService } from '../services/petCare4YouService';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
@@ -49,9 +49,9 @@ export default function LoginPage() {
       <div className="w-full max-w-md bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100">
         <div className="p-8">
           <div className="flex items-center gap-3 mb-8">
-            <img src={dogLogo} alt="PetCare" className="w-12 h-12 rounded-lg object-cover border border-orange-200" />
+            <img src={dogLogo} alt="PetCare4You" className="w-12 h-12 rounded-lg object-cover border border-orange-200" />
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">PetCare</h1>
+              <h1 className="text-2xl font-bold text-slate-900">PetCare4You</h1>
               <p className="text-sm text-slate-500">Connect Web</p>
             </div>
           </div>
@@ -128,7 +128,7 @@ export default function LoginPage() {
 
           <div className="mt-8 text-center">
             <p className="text-slate-600">
-              New to PetCare?{' '}
+              New to PetCare4You?{' '}
               <button
                 onClick={() => navigate(userType === 'owner' ? '/register-owner' : '/register-provider')}
                 className="text-orange-600 font-bold hover:underline cursor-pointer"

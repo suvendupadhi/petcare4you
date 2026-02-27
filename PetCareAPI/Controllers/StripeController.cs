@@ -14,10 +14,10 @@ namespace PetCareAPI.Controllers
     public class StripeController : ControllerBase
     {
         private readonly IStripeService _stripeService;
-        private readonly PetCareContext _context;
+        private readonly PetCare4YouContext _context;
         private readonly IConfiguration _configuration;
 
-        public StripeController(IStripeService stripeService, PetCareContext context, IConfiguration configuration)
+        public StripeController(IStripeService stripeService, PetCare4YouContext context, IConfiguration configuration)
         {
             _stripeService = stripeService;
             _context = context;

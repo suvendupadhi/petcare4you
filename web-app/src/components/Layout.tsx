@@ -17,7 +17,7 @@ import {
   PawPrint,
 } from 'lucide-react';
 import dogLogo from '../assets/dog_img.jpeg';
-import { authService, notificationService, systemConfigService, feedbackService } from '../services/petCareService';
+import { authService, notificationService, systemConfigService, feedbackService } from '../services/petCare4YouService';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
@@ -122,8 +122,8 @@ export default function Layout({ children, userType: propUserType, showFeedback 
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-slate-200 flex flex-col">
         <div className="p-6 flex items-center gap-3">
-          <img src={dogLogo} alt="PetCare" className="w-10 h-10 rounded-lg object-cover border border-orange-200" />
-          <span className="text-xl font-bold text-slate-900">PetCare</span>
+          <img src={dogLogo} alt="PetCare4You" className="w-10 h-10 rounded-lg object-cover border border-orange-200" />
+          <span className="text-xl font-bold text-slate-900">PetCare4You</span>
         </div>
 
         <nav className="flex-1 px-4 py-4 space-y-1">
@@ -178,7 +178,7 @@ export default function Layout({ children, userType: propUserType, showFeedback 
             {location.pathname === '/notifications' ? 'Notifications' : 
              menuItems.find(i => i.path === location.pathname)?.label || 
              commonItems.find(i => i.path === location.pathname)?.label || 
-             'PetCare'}
+             'PetCare4You'}
           </h2>
           <div className="flex items-center gap-6">
             <button 

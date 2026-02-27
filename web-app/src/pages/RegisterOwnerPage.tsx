@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { User, Mail, Lock, MapPin, ArrowRight } from 'lucide-react';
 import dogLogo from '../assets/dog_img.jpeg';
-import { authService } from '../services/petCareService';
+import { authService } from '../services/petCare4YouService';
 import CountryCodePicker from '../components/CountryCodePicker';
 import { countries, Country } from '../constants/countries';
 import { useToast } from '../context/ToastContext';
@@ -75,9 +75,9 @@ export default function RegisterOwnerPage() {
       <div className="w-full max-w-2xl bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100">
         <div className="p-8">
           <div className="flex items-center gap-3 mb-8">
-            <img src={dogLogo} alt="PetCare" className="w-12 h-12 rounded-lg object-cover border border-orange-200" />
+            <img src={dogLogo} alt="PetCare4You" className="w-12 h-12 rounded-lg object-cover border border-orange-200" />
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">PetCare</h1>
+              <h1 className="text-2xl font-bold text-slate-900">PetCare4You</h1>
               <p className="text-sm text-slate-500">Owner Registration</p>
             </div>
           </div>

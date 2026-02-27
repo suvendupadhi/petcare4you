@@ -7,9 +7,9 @@ using System.Text.RegularExpressions;
 
 namespace PetCareAPI.Data
 {
-    public class PetCareContext : DbContext
+    public class PetCare4YouContext : DbContext
     {
-        public PetCareContext(DbContextOptions<PetCareContext> options) : base(options)
+        public PetCare4YouContext(DbContextOptions<PetCare4YouContext> options) : base(options)
         {
         }
 
@@ -245,7 +245,7 @@ namespace PetCareAPI.Data
             foreach (var entity in modelBuilder.Model.GetEntityTypes())
             {
                 // Ensure schema is set for all entities
-                entity.SetSchema("petcare");
+                entity.SetSchema("petcare4you");
 
                 // Set table name to snake_case
                 var tableName = entity.GetTableName();

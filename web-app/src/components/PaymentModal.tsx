@@ -7,7 +7,7 @@ import {
   useStripe,
   useElements,
 } from '@stripe/react-stripe-js';
-import { paymentService, stripeService, Payment } from '../services/petCareService';
+import { paymentService, stripeService, Payment } from '../services/petCare4YouService';
 import { useToast } from '../context/ToastContext';
 
 // Initialize stripe

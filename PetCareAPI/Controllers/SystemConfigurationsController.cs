@@ -11,9 +11,9 @@ namespace PetCareAPI.Controllers
     [Authorize]
     public class SystemConfigurationsController : ControllerBase
     {
-        private readonly PetCareContext _context;
+        private readonly PetCare4YouContext _context;
 
-        public SystemConfigurationsController(PetCareContext context)
+        public SystemConfigurationsController(PetCare4YouContext context)
         {
             _context = context;
         }

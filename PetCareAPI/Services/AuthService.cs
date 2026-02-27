@@ -13,10 +13,10 @@ namespace PetCareAPI.Services
 {
     public class AuthService : IAuthService
     {
-        private readonly PetCareContext _context;
+        private readonly PetCare4YouContext _context;
         private readonly IConfiguration _configuration;
 
-        public AuthService(PetCareContext context, IConfiguration configuration)
+        public AuthService(PetCare4YouContext context, IConfiguration configuration)
         {
             _context = context;
             _configuration = configuration;

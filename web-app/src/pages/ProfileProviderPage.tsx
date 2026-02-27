@@ -25,7 +25,7 @@ import {
   Provider, 
   ProviderService, 
   ServiceType 
-} from '../services/petCareService';
+} from '../services/petCare4YouService';
 import { useToast } from '../context/ToastContext';
 import ConfirmationModal from '../components/ConfirmationModal';
 
@@ -325,7 +325,7 @@ export default function ProfileProviderPage() {
                       <Check size={28} />
                     </div>
                     <div>
-                      <h3 className="text-lg font-bold text-slate-900">{service.serviceType?.name}</h3>
+                      <h3 className="text-lg font-bold text-slate-900">{service.serviceType?.name || serviceTypes.find(t => t.id === service.serviceTypeId)?.name || 'Unknown Service'}</h3>
                       <p className="text-sm text-slate-500 line-clamp-1">{service.description || 'No description provided.'}</p>
                     </div>
                   </div>
@@ -387,11 +387,20 @@ export default function ProfileProviderPage() {
                 <div className="space-y-2 pt-2 border-t border-slate-50">
                   <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Service Specialties</label>
                   <div className="flex flex-wrap gap-2">
-                    {provider?.serviceTypes?.map(st => (
-                      <span key={st.id} className="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wide">
-                        {st.name}
-                      </span>
-                    ))}
+                    {/* Fallback: use providerServices if serviceTypes is not directly available */}
+                    {(provider?.serviceTypes && provider.serviceTypes.length > 0) ? (
+                      provider.serviceTypes.map(st => (
+                        <span key={st.id} className="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wide">
+                          {st.name}
+                        </span>
+                      ))
+                    ) : (
+                      provider?.providerServices?.map(ps => ps.serviceType).filter((st): st is ServiceType => !!st).map(st => (
+                        <span key={st.id} className="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wide">
+                          {st.name}
+                        </span>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>

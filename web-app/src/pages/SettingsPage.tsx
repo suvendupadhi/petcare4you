@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import Layout from '../components/Layout';
 import { useNavigate } from 'react-router-dom';
-import { authService, feedbackService } from '../services/petCareService';
+import { authService, feedbackService } from '../services/petCare4YouService';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 

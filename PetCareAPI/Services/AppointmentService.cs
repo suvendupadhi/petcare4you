@@ -7,9 +7,9 @@ namespace PetCareAPI.Services
 {
     public class AppointmentService : IAppointmentService
     {
-        private readonly PetCareContext _context;
+        private readonly PetCare4YouContext _context;
 
-        public AppointmentService(PetCareContext context)
+        public AppointmentService(PetCare4YouContext context)
         {
             _context = context;
         }

@@ -126,7 +126,7 @@ export default function RegisterOwnerScreen() {
             Create Your Account
           </Text>
           <Text className="text-base text-muted-foreground">
-            Join PetCare Connect to book trusted pet care services for your furry friends
+            Join PetCare4You Connect to book trusted pet care services for your furry friends
           </Text>
         </View>
 

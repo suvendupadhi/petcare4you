@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { PawPrint, Lock, Key, ArrowLeft, ArrowRight, CheckCircle2 } from 'lucide-react';
-import { authService } from '../services/petCareService';
+import { authService } from '../services/petCare4YouService';
 import { useToast } from '../context/ToastContext';
 
 export default function ResetPasswordPage() {

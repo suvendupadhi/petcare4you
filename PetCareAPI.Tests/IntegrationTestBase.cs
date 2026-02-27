@@ -34,12 +34,12 @@ namespace PetCareAPI.Tests
                     services.Remove(descriptor);
                 }
 
-                // Specifically remove the PetCareContext
+                // Specifically remove the PetCare4YouContext
                 var contextDescriptor = services.SingleOrDefault(
-                    d => d.ServiceType == typeof(DbContextOptions<PetCareContext>));
+                    d => d.ServiceType == typeof(DbContextOptions<PetCare4YouContext>));
                 if (contextDescriptor != null) services.Remove(contextDescriptor);
 
-                services.AddDbContext<PetCareContext>(options =>
+                services.AddDbContext<PetCare4YouContext>(options =>
                 {
                     options.UseInMemoryDatabase(_dbName);
                 });
@@ -53,7 +53,7 @@ namespace PetCareAPI.Tests
             
             using (var scope = Services.CreateScope())
             {
-                var db = scope.ServiceProvider.GetRequiredService<PetCareContext>();
+                var db = scope.ServiceProvider.GetRequiredService<PetCare4YouContext>();
                 db.Database.EnsureCreated();
                 SeedData(db);
             }
@@ -61,7 +61,7 @@ namespace PetCareAPI.Tests
             return client;
         }
 
-        private void SeedData(PetCareContext db)
+        private void SeedData(PetCare4YouContext db)
         {
             lock (_seedLock)
             {

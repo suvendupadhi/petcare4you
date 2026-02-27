@@ -4,6 +4,8 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>PetCare4YouAPI</AssemblyName>
+    <RootNamespace>PetCare4YouAPI</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

@@ -13,9 +13,9 @@ namespace PetCareAPI.Controllers
     [Authorize]
     public class AvailabilityController : ControllerBase
     {
-        private readonly PetCareContext _context;
+        private readonly PetCare4YouContext _context;
 
-        public AvailabilityController(PetCareContext context)
+        public AvailabilityController(PetCare4YouContext context)
         {
             _context = context;
         }
