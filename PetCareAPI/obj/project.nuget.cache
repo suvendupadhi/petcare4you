@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "qDI5qcg4EcU=",
+  "dgSpecHash": "HUBR8oTYd2I=",
   "success": true,
-  "projectFilePath": "D:\\W\\Asnet123\\petcare\\PetCareAPI\\PetCare4YouAPI.csproj",
+  "projectFilePath": "D:\\W\\Asnet123\\petcare4you\\PetCareAPI\\PetCare4YouAPI.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\suven\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512",
     "C:\\Users\\suven\\.nuget\\packages\\bouncycastle.cryptography\\2.6.2\\bouncycastle.cryptography.2.6.2.nupkg.sha512",
@@ -73,9 +73,9 @@
       "code": "NU1701",
       "level": "Warning",
       "message": "Package 'iTextSharp 5.5.13.5' was restored using '.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1' instead of the project target framework 'net9.0'. This package may not be fully compatible with your project.",
-      "projectPath": "D:\\W\\Asnet123\\petcare\\PetCareAPI\\PetCare4YouAPI.csproj",
+      "projectPath": "D:\\W\\Asnet123\\petcare4you\\PetCareAPI\\PetCare4YouAPI.csproj",
       "warningLevel": 1,
-      "filePath": "D:\\W\\Asnet123\\petcare\\PetCareAPI\\PetCare4YouAPI.csproj",
+      "filePath": "D:\\W\\Asnet123\\petcare4you\\PetCareAPI\\PetCare4YouAPI.csproj",
       "libraryId": "iTextSharp",
       "targetGraphs": [
         "net9.0"
