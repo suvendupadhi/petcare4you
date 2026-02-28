@@ -91,13 +91,18 @@ namespace PetCareAPI
             });
 
             var app = builder.Build();
+            
+            // Health check endpoint at root
+            app.MapGet("/", () => Results.Ok(new { message = "PetCare4You API is running!", version = "1.0.0" }));
 
             // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
+            // Enable Swagger for all environments to help debugging on Render
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
             {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "PetCare4You API v1");
+                c.RoutePrefix = "swagger"; // Keep the /swagger path
+            });
 
             app.UseCors("AllowAll");
             app.UseStaticFiles(); // Enable serving static files from wwwroot
