@@ -228,7 +228,7 @@ export default function ManageAvailabilityPage() {
                         <span className="px-3 py-1 bg-blue-50 text-blue-600 text-xs font-bold rounded-full border border-blue-100 uppercase tracking-wider">Available</span>
                       )}
                       <button 
-                        onClick={() => handleDeleteSlot(slot.id)}
+                        onClick={() => slot.id && handleDeleteSlot(slot.id)}
                         disabled={slot.isBooked}
                         className={`p-2 rounded-lg transition-colors ${slot.isBooked ? 'text-slate-300 cursor-not-allowed' : 'text-red-500 hover:bg-red-50 cursor-pointer'}`}
                         title={slot.isBooked ? "Cannot delete booked slot" : "Delete slot"}

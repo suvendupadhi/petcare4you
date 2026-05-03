@@ -307,6 +307,10 @@ export const paymentService = {
     const response = await api.get('/Payments/provider');
     return response.data;
   },
+  getOwnerPayments: async (): Promise<Payment[]> => {
+    const response = await api.get('/Payments/owner');
+    return response.data;
+  },
   getPayment: async (id: number): Promise<Payment> => {
     const response = await api.get(`/Payments/${id}`);
     return response.data;

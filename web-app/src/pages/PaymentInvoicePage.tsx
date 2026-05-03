@@ -26,13 +26,13 @@ export default function PaymentInvoicePage() {
         setPayments(payData);
         // Calculate simple revenue summary for owners
         setRevenue({
-          totalRevenue: payData.filter(p => p.status === 6).reduce((sum, p) => sum + p.amount, 0),
-          pendingRevenue: payData.filter(p => p.status === 5).reduce((sum, p) => sum + p.amount, 0),
+          totalRevenue: payData.filter((p: Payment) => p.status === 6).reduce((sum: number, p: Payment) => sum + p.amount, 0),
+          pendingRevenue: payData.filter((p: Payment) => p.status === 5).reduce((sum: number, p: Payment) => sum + p.amount, 0),
           monthlyRevenue: 0,
           weeklyRevenue: 0,
           growthRate: 0,
           totalAppointments: payData.length,
-          completedAppointments: payData.filter(p => p.status === 6).length,
+          completedAppointments: payData.filter((p: Payment) => p.status === 6).length,
           averageRevenuePerAppointment: 0
         });
       } else {
